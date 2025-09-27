@@ -22,15 +22,19 @@ public class Kanji extends BaseEntity {
     Long Id;
 
     @Column(name = "character_name", nullable = false)
-    String characterName;
+    String characterName;// tra kanji nào
 
     @Column(nullable = false, name = "sino_vi_name")
-    String sinoViName;
-    String romaji;
-    String meaning;
+    String sinoViName; //nghĩa hán tự, nghĩa hán việt
+
+// cách đọc romaji　
+// String romaji;
+
+    @Column(columnDefinition = "TEXT")
+    String meaning; //nghĩa chính
 
     @Enumerated(EnumType.STRING)
-    jlptLevel level;
+    JlptLevel level;
 
     @ManyToMany(mappedBy = "kanjis")
     List<Vocabularies> vocabularies;

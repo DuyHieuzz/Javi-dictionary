@@ -1,6 +1,6 @@
 package com.example.javi.entity;
 
-public enum jlptLevel {
+public enum JlptLevel {
     N5,
     N4,
     N3,

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -36,4 +38,12 @@ public class Users extends BaseEntity {
     @Enumerated(EnumType.STRING)
     UserStatus status;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    List<Comment> comments;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<HistorySearch> histories;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Translation> translations;
 }

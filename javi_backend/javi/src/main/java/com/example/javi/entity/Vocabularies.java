@@ -21,18 +21,17 @@ public class Vocabularies extends BaseEntity {
     Long vocabId;
 
     @Column(nullable = false)
-    String word;
+    String word; //từ vựng cần tra
 
-    String romaji;
-    String hiragana;
-    String katakana;
-
-    String wordType;
-
-    String scriptType;
+    String romaji;//cách đọc romaji
+    String hiragana;//cách đọc hiragane
+    String katakana;//cách đọc katakana
+    @Enumerated(EnumType.STRING)
+    @Column(name = "word_type")
+    WordType wordType;//từ loại danh từ, tính từ...
 
     @Enumerated(EnumType.STRING)
-    jlptLevel level;
+    JlptLevel level;
 
     @ManyToMany
     @JoinTable(
@@ -41,4 +40,8 @@ public class Vocabularies extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "kanji_id")
     )
     private List<Kanji> kanjis;
+
+    @OneToMany(mappedBy = "vocabularies", cascade = CascadeType.ALL)
+    List<Meaning> meanings;
+
 }
