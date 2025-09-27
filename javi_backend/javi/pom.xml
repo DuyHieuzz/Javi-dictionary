@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>Javi</artifactId>
+	<artifactId>javi</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Javi</name>
-	<description>Vi-Ja dictionary</description>
+	<name>javi</name>
+	<description>Vietnamese-Japanese dictionary</description>
 	<url/>
 	<licenses>
 		<license/>
