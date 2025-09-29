@@ -8,3 +8,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+javi:
+  upload-file:
+    base-uri: file:///D:/Javi-dictionary/upload/
+api:
+  prefix: /api/v1
