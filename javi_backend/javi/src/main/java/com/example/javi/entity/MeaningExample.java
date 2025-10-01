@@ -1,5 +1,7 @@
 package com.example.javi.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,5 +24,6 @@ public class MeaningExample extends BaseEntity {
     String viSentence; //câu ví dụ tiếng Việt
     @ManyToOne
     @JoinColumn(name = "mean_id")
+    @JsonBackReference
     private Meaning meaning;
 }

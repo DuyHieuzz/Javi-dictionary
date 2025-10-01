@@ -1,5 +1,7 @@
 package com.example.javi.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +23,7 @@ public class Meaning extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "vocab_id", nullable = false)
+    @JsonBackReference
     Vocabularies vocabularies;
 
     @Column(nullable = false)
@@ -30,5 +33,6 @@ public class Meaning extends BaseEntity {
     String description;//mô tả thêm cho nghĩa tiếng việt, (nếu có)
 
     @OneToMany(mappedBy = "meaning", cascade = CascadeType.ALL)
+    @JsonManagedReference
     List<MeaningExample> examples;
 }

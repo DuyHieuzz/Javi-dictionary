@@ -3,7 +3,7 @@ package com.example.javi.service.Impl;
 import com.example.javi.dto.request.ChangePassRequest;
 import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.response.CreateUserResponse;
-import com.example.javi.entity.UserStatus;
+import com.example.javi.entity.Status;
 import com.example.javi.entity.Users;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -93,7 +92,7 @@ public class UsersServiceImpl implements UsersService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         Users user = users.get();
-        user.setStatus(UserStatus.BLOCKED);
+        user.setStatus(Status.BLOCKED);
         usersRepository.save(user);
     }
 
@@ -104,7 +103,7 @@ public class UsersServiceImpl implements UsersService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         Users user = users.get();
-        user.setStatus(UserStatus.ACTIVE);
+        user.setStatus(Status.ACTIVE);
         usersRepository.save(user);
     }
 }

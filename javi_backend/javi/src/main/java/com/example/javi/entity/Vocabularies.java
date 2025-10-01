@@ -1,9 +1,13 @@
 package com.example.javi.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,7 +28,7 @@ public class Vocabularies extends BaseEntity {
     String word; //từ vựng cần tra
 
     String romaji;//cách đọc romaji
-    String hiragana;//cách đọc hiragane
+    String hiragana;//cách đọc hiragana
     String katakana;//cách đọc katakana
     @Enumerated(EnumType.STRING)
     @Column(name = "word_type")
@@ -39,9 +43,11 @@ public class Vocabularies extends BaseEntity {
             joinColumns = @JoinColumn(name = "vocab_id"),
             inverseJoinColumns = @JoinColumn(name = "kanji_id")
     )
+//    @JsonIgnore
     private List<Kanji> kanjis;
 
-    @OneToMany(mappedBy = "vocabularies", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "vocabularies", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     List<Meaning> meanings;
 
 }

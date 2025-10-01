@@ -1,6 +1,6 @@
 package com.example.javi.entity;
 
-public enum UserStatus {
+public enum Status {
     ACTIVE,
     BLOCKED,
 }

@@ -1,6 +1,7 @@
 package com.example.javi.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -24,7 +25,7 @@ public class Kanji extends BaseEntity {
     @Column(name = "character_name", nullable = false)
     String characterName;// tra kanji nào
 
-    @Column(nullable = false, name = "sino_vi_name")
+    @Column(name = "sino_vi_name")
     String sinoViName; //nghĩa hán tự, nghĩa hán việt
 
 // cách đọc romaji　
@@ -37,6 +38,7 @@ public class Kanji extends BaseEntity {
     JlptLevel level;
 
     @ManyToMany(mappedBy = "kanjis")
+    @JsonIgnore
     List<Vocabularies> vocabularies;
 }
 

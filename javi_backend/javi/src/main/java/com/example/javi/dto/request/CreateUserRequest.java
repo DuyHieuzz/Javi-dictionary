@@ -1,7 +1,7 @@
 package com.example.javi.dto.request;
 
 import com.example.javi.entity.Role;
-import com.example.javi.entity.UserStatus;
+import com.example.javi.entity.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -31,7 +31,7 @@ public class CreateUserRequest {
 
     Role role = Role.ROLE_USER;
 
-    UserStatus status = UserStatus.ACTIVE;
+    Status status = Status.ACTIVE;
 }
 //@Column(nullable = false, unique = true)
 //String username;

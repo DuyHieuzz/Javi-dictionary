@@ -36,7 +36,7 @@ public class Users extends BaseEntity {
     Role role;
 
     @Enumerated(EnumType.STRING)
-    UserStatus status;
+    Status status;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     List<Comment> comments;

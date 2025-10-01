@@ -39,6 +39,15 @@ public enum ErrorCode {
     INVALID_FILE_TYPE(1018, "Loại file không phải file ảnh, vui lòng chọn file khác", HttpStatus.BAD_REQUEST),
     FILE_TOO_LARGE(1017, "File quá lớn, vui lòng chọn file khác", HttpStatus.BAD_REQUEST),
 
+    //VOCAB
+    EMPTY_WORD(1020, "Từ vựng rỗng, mời nhập từ vựng", HttpStatus.BAD_REQUEST),
+    INVALID_WORD(1021, "Từ vựng không phải tiếng Nhật, mời nhập tiếng Nhật", HttpStatus.BAD_REQUEST),
+    EXIST_WORD(1023, "Từ vựng đã tồn tại", HttpStatus.BAD_REQUEST),
+    WORD_NOT_FOUND(1024, "Không tìm thấy từ vựng tương ứng", HttpStatus.NOT_FOUND),
+
+    //MEANING
+    EMPTY_MEANING(1022, "Từ vựng đang không có nghĩa, mời nhập nghĩa", HttpStatus.BAD_REQUEST),
+
     ;
 
 
