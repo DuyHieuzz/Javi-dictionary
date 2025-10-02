@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -32,6 +33,7 @@ public class FileServiceImpl implements FileService {
     private String baseURI;
 
     @Override
+    @Transactional
     public void createDirectory(String folder) throws URISyntaxException {
         URI uri = new URI(folder);
         Path path = Paths.get(uri);
@@ -49,6 +51,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @Transactional
     public String store(MultipartFile file, String folder) throws IOException, URISyntaxException {
         // Lấy tên file gốc
 

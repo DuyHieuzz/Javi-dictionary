@@ -14,6 +14,6 @@ public class VocabUpdateResponse {
     private String level;
     private String wordType;
     private List<MeaningDTO> meanings;
-    private List<KanjiDTO> kanjis;
+    private List<KanjiResponse> kanjis;
 }
 

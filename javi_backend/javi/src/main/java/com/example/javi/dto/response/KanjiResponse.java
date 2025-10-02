@@ -1,9 +1,12 @@
 package com.example.javi.dto.response;
 
-import lombok.Data;
 
-@Data
-public class KanjiDTO {
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class KanjiResponse {
     private Long id;
     private String characterName;
     private String sinoViName;

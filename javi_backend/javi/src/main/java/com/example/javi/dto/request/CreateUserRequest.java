@@ -33,21 +33,3 @@ public class CreateUserRequest {
 
     Status status = Status.ACTIVE;
 }
-//@Column(nullable = false, unique = true)
-//String username;
-//
-//@Column(nullable = false, unique = true)
-//String email;
-//
-//@Column(nullable = false)
-//String password;
-//
-//@Column(name = "avatar_url")
-//String avatarUrl;
-//
-//@Enumerated(EnumType.STRING)
-//@Column(nullable = false)
-//Role role;
-//
-//@Enumerated(EnumType.STRING)
-//UserStatus status;

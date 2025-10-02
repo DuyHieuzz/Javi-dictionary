@@ -40,6 +40,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     VocabulariesMapper vocabulariesMapper;
 
     @Override
+    @Transactional
     public String createVocabulary(VocabRequest request) {
         Optional<Vocabularies> existWord = vocabulariesRepository.findByWord(request.getWord());
         if (existWord.isPresent()) {
@@ -53,21 +54,21 @@ public class VocabulariesServiceImpl implements VocabulariesService {
             String japaneseCharacter = Character.toString(c);
             // Tách từng kí tự, nếu là kanji cho vào trong
             if (ValidationUtils.isKanji(japaneseCharacter)) {
-                // 1. Kiểm tra sự tồn tại
+                // Kiểm tra sự tồn tại
                 Optional<Kanji> existingKanji = kanjiRepository.findByCharacterName(japaneseCharacter);
 
                 Kanji kanji;
                 if (existingKanji.isEmpty()) {
-                    // 2. Nếu chưa tồn tại, tạo mới (placeholder) và lưu
+                    // Nếu chưa tồn tại, tạo mới và lưu
                     kanji = new Kanji();
                     kanji.setCharacterName(japaneseCharacter);
-                    kanji = kanjiRepository.save(kanji); // Phải lưu để có ID
+                    kanji = kanjiRepository.save(kanji); //lưu để có ID
                 } else {
-                    // 3. Nếu tồn tại, lấy đối tượng đó
+                    // Nếu tồn tại, lấy đối tượng đó
                     kanji = existingKanji.get();
                 }
 
-                // 4. Thêm vào danh sách liên kết
+                // Thêm vào danh sách liên kết
                 associatedKanjis.add(kanji);
             }
         });
@@ -81,7 +82,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
                 .level(request.getLevel())
                 .build();
 
-        // ... (Phần ánh xạ MEANING và MEANING EXAMPLE - giữ nguyên)
+        // (ánh xạ MEANING và MEANING EXAMPLE giữ nguyên)
         List<Meaning> meanings = new ArrayList<>();
         for (MeaningRequest meaningDto : request.getMeanings()) {
             Meaning meaning = Meaning.builder()
@@ -102,65 +103,20 @@ public class VocabulariesServiceImpl implements VocabulariesService {
             meanings.add(meaning);
         }
 
-        // 3. XỬ LÝ LIÊN KẾT KANJI THIẾU
-        // Gán danh sách Kanji đã tìm/tạo vào đối tượng Vocabularies
+        // XỬ LÝ LIÊN KẾT KANJI THIẾU
+        // Gán danh sách Kanji vào đối tượng Vocabularies
         vocab.setKanjis(associatedKanjis);
 
         // Gán ngược lại Meaning vào Vocabularies
         vocab.setMeanings(meanings);
 
-        // Lưu Vocabularies sẽ lưu:
+        // Lưu Vocabularies để:
         // - Lưu Vocabularies
         // - Lưu Meanings và Examples (do cascade)
         // - Lưu các liên kết Many-to-Many vào bảng 'vocabulary_kanji' (do đã setKanjis)
         vocabulariesRepository.save(vocab);
         return "";
     }
-
-//    @Override
-//    public Vocabularies updateVocabulary(Long id, VocabUpdateDTO request) {
-//        Optional<Vocabularies> existingWord = vocabulariesRepository.findById(id);
-//        if (existingWord.isEmpty()) {
-//            throw new AppException(ErrorCode.WORD_NOT_FOUND);
-//        }
-//        if (request.getMeanings() == null || request.getMeanings().isEmpty()) {
-//            throw new AppException(ErrorCode.EMPTY_MEANING);
-//        }
-//        Vocabularies vocab = existingWord.get();
-//        vocabulariesMapper.toVocabularies(vocab, request);
-//        // 3. Xử lý Cập nhật Nghĩa (Logic phức tạp hơn do quan hệ 1-Nhiều)
-//        // Để cập nhật nghĩa, bạn thường phải XÓA nghĩa cũ (nếu không còn trong request)
-//        // và THÊM nghĩa mới/cập nhật nghĩa hiện có.
-//
-//        // Ví dụ đơn giản: Xóa toàn bộ nghĩa cũ, tạo lại toàn bộ nghĩa mới (Dùng khi CascadeType.ALL)
-//        vocab.getMeanings().clear(); // Xóa tất cả các nghĩa cũ (và ví dụ do cascade)
-//
-//        List<Meaning> newMeanings = request.getMeanings().stream()
-//                .map(meaningDto -> {
-//                    Meaning meaning = Meaning.builder()
-//                            .meaningVn(meaningDto.getMeaningVn())
-//                            .description(meaningDto.getDescription())
-//                            .vocabularies(vocab)
-//                            .build();
-//
-//                    List<MeaningExample> examples = meaningDto.getExamples().stream()
-//                            .map(exampleDto -> MeaningExample.builder()
-//                                    .jaSentence(exampleDto.getJaSentence())
-//                                    .viSentence(exampleDto.getViSentence())
-//                                    .meaning(meaning)
-//                                    .build())
-//                            .collect(Collectors.toList()); // ✅ mutable
-//
-//                    meaning.setExamples(examples);
-//                    return meaning;
-//                })
-//                .collect(Collectors.toList()); // ✅ mutable
-//
-//        vocab.setMeanings(new ArrayList<>(newMeanings)); // ✅ mutable
-//
-//        // 4. Lưu và Trả về: JPA sẽ tự động cập nhật mọi thứ trong transaction
-//        return vocabulariesRepository.save(vocab);
-//    }
 
     @Override
     @Transactional
@@ -284,6 +240,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     }
 
     @Override
+    @Transactional
     public void deleteVocabularyById(Long id) {
         Vocabularies vocabularies = vocabulariesRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));

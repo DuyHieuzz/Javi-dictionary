@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -27,7 +28,6 @@ import java.util.Optional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UsersServiceImpl implements UsersService {
     UsersRepository usersRepository;
-//    ValidationUtils validationUtils;
     UsersMapper usersMapper;
 
     @Override
@@ -36,6 +36,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @Transactional
     public CreateUserResponse createUser(CreateUserRequest user) {
         boolean isValidEmail = ValidationUtils.isValidEmail(user.getEmail());
         boolean existEmail = usersRepository.existsByEmail(user.getEmail());
@@ -59,6 +60,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @Transactional
     public String updateAvatar(Long userId, String fileName) {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -68,6 +70,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @Transactional
     public String changePassword(Long userId, ChangePassRequest changePassRequest) {
         Optional<Users> users = usersRepository.findById(userId);
         if (users.isEmpty()) {
@@ -86,6 +89,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @Transactional
     public void blockUser(Long userId) {
         Optional<Users> users = usersRepository.findById(userId);
         if (users.isEmpty()) {
@@ -97,6 +101,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @Transactional
     public void unblockUser(Long userId) {
         Optional<Users> users = usersRepository.findById(userId);
         if (users.isEmpty()) {
