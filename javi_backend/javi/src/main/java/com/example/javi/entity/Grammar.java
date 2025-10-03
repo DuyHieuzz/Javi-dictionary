@@ -29,8 +29,8 @@ public class Grammar extends BaseEntity {
     @Column(nullable = false)
     String structure; //cách chia ngữ pháp
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    String explanation; //phạm vị sử dụng
+    @Column(name = "usage_note", nullable = false, columnDefinition = "TEXT")
+    String usageNote; //phạm vị sử dụng
 
     @Enumerated(EnumType.STRING)
     JlptLevel level;

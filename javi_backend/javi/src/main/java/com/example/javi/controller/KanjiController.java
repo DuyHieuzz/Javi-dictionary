@@ -74,8 +74,7 @@ public class KanjiController {
     }
 
     @GetMapping("")
-// ... (các annotations khác)
-    public ApiResponse findByKanjiByFilter(
+    public ApiResponse findKanjiByFilter(
             @Filter Specification<Kanji> spec,
             @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();

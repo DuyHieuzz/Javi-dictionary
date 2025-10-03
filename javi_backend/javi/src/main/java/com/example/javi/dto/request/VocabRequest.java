@@ -26,5 +26,4 @@ public class VocabRequest {
 
     @NotNull(message = "EMPTY_MEANING")
     List<MeaningRequest> meanings; // Danh sách các nghĩa
-//    List<String> kanjiCharacters; // Danh sách các ký tự Hán tự liên quan
 }

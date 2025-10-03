@@ -44,16 +44,30 @@ public enum ErrorCode {
     INVALID_WORD(1021, "Từ vựng không phải tiếng Nhật, mời nhập tiếng Nhật", HttpStatus.BAD_REQUEST),
     EXIST_WORD(1023, "Từ vựng đã tồn tại", HttpStatus.BAD_REQUEST),
     WORD_NOT_FOUND(1024, "Không tìm thấy từ vựng tương ứng", HttpStatus.NOT_FOUND),
-
-    //MEANING
     EMPTY_MEANING(1022, "Từ vựng đang không có nghĩa, mời nhập nghĩa", HttpStatus.BAD_REQUEST),
 
     //KANJI
     EMPTY_KANJI(1025, "Kanji không được để trống, mời nhập lại", HttpStatus.BAD_REQUEST),
     NOT_KANJI(1027, "Ký tự bạn nhập không phải Kanji, mời nhập lại", HttpStatus.BAD_REQUEST),
     KANJI_NOT_FOUND(1026, "Không có dữ liệu về chữ Kanji bạn cần tìm, mời nhập lại hán tự", HttpStatus.NOT_FOUND),
-    KANJI_HAS_NO_MEANING(1027, "Kanji đang không có nghĩa", HttpStatus.BAD_REQUEST),
+    KANJI_HAS_NO_MEANING(1027, "Kanji đang không có nghĩa", HttpStatus.BAD_REQUEST), //có dùng ở kanjiRequest mục valid
     KANJI_STILL_IN_USE(1028, "Không thể xóa Kanji. Kanji vẫn đang được sử dụng bởi từ vựng khác", HttpStatus.BAD_REQUEST),
+
+    //GRAMMAR
+    GRAMMAR_HAS_NO_ID(1040, "Id ngữ pháp không được để trống", HttpStatus.BAD_REQUEST),
+    EMPTY_GRAMMAR(1029, "Ngữ pháp cần tìm không được để trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_HAS_NO_PATTERN(1030, "Mẫu câu ngữ pháp không được để trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_HAS_NO_MEANING(1031, "Nghĩa của ngữ pháp không được để trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_HAS_NO_STRUCTURE(1032, "Cách chia ngữ pháp không được để trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_HAS_NO_USAGE_NOTE(1033, "Phạm vi sử dụng ngữ pháp không được để trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_NOT_FOUND(1034, "Không có dữ liệu về ngữ pháp bạn vừa tìm, mời tìm lại", HttpStatus.NOT_FOUND),
+    EXISTING_GRAMMAR_PATTERN(1035, "Ngữ pháp này đã tồn tại rồi", HttpStatus.BAD_REQUEST),
+
+    //GRAMMAR_EXAMPLE
+    GRAMMAR_EXAMPLE_HAS_NO_JA_SENTENCE(1036, "Ví dụ tiếng Nhật không được bỏ trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_EXAMPLE_HAS_NO_TRANSCRIPTION(1037, "Câu không có kanji không được bỏ trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_EXAMPLE_HAS_NO_VI_SENTENCE(1038, "Nghĩa tiếng Việt không được để trống", HttpStatus.BAD_REQUEST),
+    GRAMMAR_EXAMPLE_NOT_FOUND(1039, "Không có dữ liệu về ví dụ này", HttpStatus.NOT_FOUND),
     ;
 
 

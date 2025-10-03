@@ -1,5 +1,6 @@
-package com.example.javi.dto.response;
+package com.example.javi.dto.request;
 
+import com.example.javi.entity.JlptLevel;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -8,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ExampleDTO {
-    Long id;
-    String jaSentence;
-    String viSentence;
+public class GrammarSearchRequest {
+    String keyword;
+    JlptLevel level;
+
 }

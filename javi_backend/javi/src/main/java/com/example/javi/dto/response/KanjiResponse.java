@@ -1,15 +1,18 @@
 package com.example.javi.dto.response;
 
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class KanjiResponse {
-    private Long id;
-    private String characterName;
-    private String sinoViName;
-    private String meaning;
-    private String level;
+    Long grammarId;
+    String characterName;
+    String sinoViName;
+    String meaning;
+    String level;
 }

@@ -1,15 +1,18 @@
 package com.example.javi.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MeaningDTO {
-    private Long id;
-    private String meaningVn;
-    private String description;
-    private List<ExampleDTO> examples;
+    Long id;
+    String meaningVn;
+    String description;
+    List<ExampleDTO> examples;
 }

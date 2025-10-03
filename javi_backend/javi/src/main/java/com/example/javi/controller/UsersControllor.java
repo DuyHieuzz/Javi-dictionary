@@ -31,13 +31,6 @@ public class UsersControllor {
     UsersService usersService;
     FileService fileService;
 
-//    @GetMapping("")
-//    public ResponseEntity<ApiResponse> getAllUsers(@RequestParam(defaultValue = "0") int page,
-//                                                   @RequestParam(defaultValue = "10") int limit) {
-//        PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("id").ascending());
-//
-//    }
-
     @PostMapping("")
     public ApiResponse createUser(@Valid @RequestBody CreateUserRequest user) {
         return ApiResponse.builder()

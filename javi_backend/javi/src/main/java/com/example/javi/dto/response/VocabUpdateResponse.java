@@ -1,19 +1,24 @@
 package com.example.javi.dto.response;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class VocabUpdateResponse {
-    private Long id;
-    private String word;
-    private String hiragana;
-    private String katakana;
-    private String romaji;
-    private String level;
-    private String wordType;
-    private List<MeaningDTO> meanings;
-    private List<KanjiResponse> kanjis;
+    Long id;
+    String word;
+    String hiragana;
+    String katakana;
+    String romaji;
+    String level;
+    String wordType;
+    List<MeaningDTO> meanings;
+    List<KanjiResponse> kanjis;
 }
 
