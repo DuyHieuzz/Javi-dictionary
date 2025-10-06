@@ -82,6 +82,11 @@ public enum ErrorCode {
     REFRESH_TOKEN_HAS_EXPIRED(1043, "Refresh token hết hạn", HttpStatus.BAD_REQUEST),
     REFRESH_TOKEN_REVOKED(1045, "Refresh token bị thu hồi", HttpStatus.BAD_REQUEST),
     TOKEN_HAS_EXPIRED(1043, "Token đã hết hạn", HttpStatus.BAD_REQUEST),
+
+    //ROLE
+    ROLE_HAS_NO_NAME(1046, "Tên của role không được để trống", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_FOUND(1047, "Không có dữ liệu về role cần tìm", HttpStatus.NOT_FOUND),
+    ROLE_NAME_ALREADY_EXISTING(1048, "Tên role đã tồn tại", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

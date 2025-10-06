@@ -1,0 +1,96 @@
+package com.example.javi.service.Impl;
+
+import com.example.javi.dto.request.RoleRequest;
+import com.example.javi.entity.Permission;
+import com.example.javi.entity.Role;
+import com.example.javi.exeption.AppException;
+import com.example.javi.exeption.ErrorCode;
+import com.example.javi.mapper.RoleMapper;
+import com.example.javi.repository.PermissionRepository;
+import com.example.javi.repository.RoleRepository;
+import com.example.javi.service.RoleService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class RoleServiceImpl implements RoleService {
+    RoleRepository roleRepository;
+    PermissionRepository permissionRepository;
+    RoleMapper roleMapper;
+
+
+    @Override
+    public Role createRole(RoleRequest request) {
+        if (roleRepository.findByName(request.getName()).isPresent()) {
+            throw new AppException(ErrorCode.ROLE_NAME_ALREADY_EXISTING);
+        }
+        // check permissions
+        if (request.getPermissions() != null) {
+            List<Long> reqPermissions = request.getPermissions()
+                    .stream().map(Permission::getId)
+                    .collect(Collectors.toList());
+
+            List<Permission> dbPermissions = this.permissionRepository.findByIdIn(reqPermissions);
+            request.setPermissions(dbPermissions);
+        }
+        Role role = roleMapper.toRole(request);
+
+        return roleRepository.save(role);
+    }
+
+    @Override
+    public Role updateRole(Long id, RoleRequest request) {
+        Role roleToUpdate = roleRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        // Xử lý và ánh xạ Permissions (giống createRole)
+        if (request.getPermissions() != null) {
+            List<Long> reqPermissions = request.getPermissions()
+                    .stream().map(Permission::getId) // Dùng method reference cho gọn
+                    .collect(Collectors.toList());
+
+            List<Permission> dbPermissions = this.permissionRepository.findByIdIn(reqPermissions);
+            // Cập nhật Permissions vào DTO Request trước khi mapping
+            request.setPermissions(dbPermissions);
+        }
+
+        // Cập nhật Entity từ Request DTO
+        // Sử dụng phương thức updateRoleFromRoleRequest đã định nghĩa trong RoleMapper
+        roleMapper.updateRoleFromRoleRequest(request, roleToUpdate);
+        return roleRepository.save(roleToUpdate);
+    }
+
+    @Override
+    public void deleteRole(Long id) {
+        Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        roleRepository.delete(role);
+    }
+
+    @Override
+    public Role getRoleById(Long id) {
+        Optional<Role> role = roleRepository.findById(id);
+        if (role.isEmpty()) {
+            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+        }
+        return role.get();
+    }
+
+    @Override
+    public Page<Role> getAllRolesByFilter(Specification<Role> spec, Pageable pageable) {
+        return roleRepository.findAll(spec, pageable);
+    }
+
+}

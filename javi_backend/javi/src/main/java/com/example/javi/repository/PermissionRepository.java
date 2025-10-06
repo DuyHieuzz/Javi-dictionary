@@ -4,4 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.javi.entity.Permission;
 
-public interface PermissionRepository extends JpaRepository<Permission, Long> {}
+import java.util.List;
+
+public interface PermissionRepository extends JpaRepository<Permission, Long> {
+    List<Permission> findByIdIn(List<Long> id);
+}

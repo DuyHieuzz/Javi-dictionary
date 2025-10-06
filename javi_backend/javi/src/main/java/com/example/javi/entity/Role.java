@@ -21,8 +21,7 @@ public class Role {
     Long id;
 
     @Column(nullable = false, unique = true)
-    @Enumerated(EnumType.STRING)
-    RoleName name; // ROLE_USER, ROLE_ADMIN, ROLE_EDITOR
+    String name; // ROLE_USER, ROLE_ADMIN, ROLE_EDITOR
 
     @Column(columnDefinition = "MEDIUMTEXT")
     String description;

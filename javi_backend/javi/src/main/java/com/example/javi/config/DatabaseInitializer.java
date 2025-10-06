@@ -54,30 +54,30 @@ public class DatabaseInitializer implements ApplicationRunner {
             permissionRepository.saveAll(arr);
         }
 
-        if (roleRepository.findByName(RoleName.ADMIN).isEmpty()) {
+        if (roleRepository.findByName("ADMIN").isEmpty()) {
             List<Permission> allPermissions = permissionRepository.findAll();
             Role adminRole = new Role();
-            adminRole.setName(RoleName.ADMIN);
+            adminRole.setName("ADMIN");
             adminRole.setDescription("Admin có toàn quyền hệ thống");
             adminRole.setPermissions(allPermissions);
             roleRepository.save(adminRole);
         }
 
-        if (roleRepository.findByName(RoleName.USER).isEmpty()) {
+        if (roleRepository.findByName("USER").isEmpty()) {
             List<Permission> userPermissions = permissionRepository.findAll().stream()
                     .filter(p ->
                             p.getName().equals("CREATE_COMMENT") || p.getName().equals("DELETE_COMMENT"))
                     .toList();
 
             Role userRole = new Role();
-            userRole.setName(RoleName.USER);
+            userRole.setName("USER");
             userRole.setDescription("Người dùng cơ bản");
             userRole.setPermissions(userPermissions);
             roleRepository.save(userRole);
         }
 
         if (usersRepository.findByUsername(ADMIN_USER_NAME).isEmpty()) {
-            Role adminRole = roleRepository.findByName(RoleName.ADMIN).get();
+            Role adminRole = roleRepository.findByName("ADMIN").get();
             Users adminUser = new Users();
             adminUser.setUsername(ADMIN_USER_NAME);
             adminUser.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
