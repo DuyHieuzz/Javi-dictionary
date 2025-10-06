@@ -1,13 +1,15 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.JlptLevel;
+import java.util.List;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import com.example.javi.entity.JlptLevel;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -19,16 +21,16 @@ public class UpdateGrammarRequest {
     Long id;
 
     @NotBlank(message = "GRAMMAR_HAS_NO_PATTERN")
-    String pattern; //mẫu câu ngữ pháp
+    String pattern; // mẫu câu ngữ pháp
 
     @NotBlank(message = "GRAMMAR_HAS_NO_MEANING")
-    String meaning; //nghĩa khi dịch ngữ pháp
+    String meaning; // nghĩa khi dịch ngữ pháp
 
     @NotBlank(message = "GRAMMAR_HAS_NO_STRUCTURE")
-    String structure; //cách chia ngữ pháp
+    String structure; // cách chia ngữ pháp
 
     @NotBlank(message = "GRAMMAR_HAS_NO_USAGE_NOTE")
-    String usageNote; //phạm vị sử dụng
+    String usageNote; // phạm vị sử dụng
 
     JlptLevel level;
 

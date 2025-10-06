@@ -1,12 +1,13 @@
 package com.example.javi.entity;
 
+import java.util.List;
+
+import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Entity
 @Table(name = "Kanji")
@@ -23,16 +24,16 @@ public class Kanji extends BaseEntity {
     Long Id;
 
     @Column(name = "character_name", nullable = false)
-    String characterName;// tra kanji nào
+    String characterName; // tra kanji nào
 
     @Column(name = "sino_vi_name")
-    String sinoViName; //nghĩa hán tự, nghĩa hán việt
+    String sinoViName; // nghĩa hán tự, nghĩa hán việt
 
-// cách đọc romaji　
-// String romaji;
+    // cách đọc romaji
+    // String romaji;
 
     @Column(columnDefinition = "TEXT")
-    String meaning; //nghĩa chính
+    String meaning; // nghĩa chính
 
     @Enumerated(EnumType.STRING)
     JlptLevel level;
@@ -41,4 +42,3 @@ public class Kanji extends BaseEntity {
     @JsonIgnore
     List<Vocabularies> vocabularies;
 }
-

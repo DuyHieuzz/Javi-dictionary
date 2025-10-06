@@ -1,13 +1,15 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.JlptLevel;
-import com.example.javi.entity.WordType;
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import com.example.javi.entity.JlptLevel;
+import com.example.javi.entity.WordType;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -18,6 +20,7 @@ import java.util.List;
 public class VocabRequest {
     @NotBlank(message = "EMPTY_WORD")
     String word;
+
     String romaji;
     String hiragana;
     String katakana;

@@ -1,14 +1,13 @@
 package com.example.javi.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import java.util.List;
+
 import jakarta.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "vocabularies")
@@ -25,14 +24,15 @@ public class Vocabularies extends BaseEntity {
     Long vocabId;
 
     @Column(nullable = false)
-    String word; //từ vựng cần tra
+    String word; // từ vựng cần tra
 
-    String romaji;//cách đọc romaji
-    String hiragana;//cách đọc hiragana
-    String katakana;//cách đọc katakana
+    String romaji; // cách đọc romaji
+    String hiragana; // cách đọc hiragana
+    String katakana; // cách đọc katakana
+
     @Enumerated(EnumType.STRING)
     @Column(name = "word_type")
-    WordType wordType;//từ loại danh từ, tính từ...
+    WordType wordType; // từ loại danh từ, tính từ...
 
     @Enumerated(EnumType.STRING)
     JlptLevel level;
@@ -41,13 +41,11 @@ public class Vocabularies extends BaseEntity {
     @JoinTable(
             name = "vocabulary_kanji",
             joinColumns = @JoinColumn(name = "vocab_id"),
-            inverseJoinColumns = @JoinColumn(name = "kanji_id")
-    )
-//    @JsonIgnore
+            inverseJoinColumns = @JoinColumn(name = "kanji_id"))
+    //    @JsonIgnore
     private List<Kanji> kanjis;
 
     @OneToMany(mappedBy = "vocabularies", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     List<Meaning> meanings;
-
 }

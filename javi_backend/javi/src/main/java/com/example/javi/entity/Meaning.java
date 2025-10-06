@@ -1,12 +1,14 @@
 package com.example.javi.entity;
 
+import java.util.List;
+
+import jakarta.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Entity
 @Table(name = "meaning")
@@ -27,10 +29,10 @@ public class Meaning extends BaseEntity {
     Vocabularies vocabularies;
 
     @Column(nullable = false)
-    String meaningVn;//nghĩa tiengsr việt
+    String meaningVn; // nghĩa tiengsr việt
 
     @Column(columnDefinition = "TEXT")
-    String description;//mô tả thêm cho nghĩa tiếng việt, (nếu có)
+    String description; // mô tả thêm cho nghĩa tiếng việt, (nếu có)
 
     @OneToMany(mappedBy = "meaning", cascade = CascadeType.ALL)
     @JsonManagedReference

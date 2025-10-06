@@ -1,6 +1,5 @@
-package com.example.javi.dto.response;
+package com.example.javi.dto.request;
 
-import com.example.javi.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,10 +8,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateUserResponse {
-    long id;
-    String username;
+public class AuthenticationRequest {
     String email;
     String password;
-    Role role;
 }

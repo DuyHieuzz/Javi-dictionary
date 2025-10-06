@@ -1,14 +1,15 @@
 package com.example.javi.service;
 
-import com.example.javi.dto.request.VocabRequest;
-import com.example.javi.dto.request.VocabUpdateDTO;
-import com.example.javi.dto.response.VocabUpdateResponse;
-import com.example.javi.entity.Vocabularies;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.List;
+import com.example.javi.dto.request.VocabRequest;
+import com.example.javi.dto.request.VocabUpdateDTO;
+import com.example.javi.dto.response.VocabUpdateResponse;
+import com.example.javi.entity.Vocabularies;
 
 public interface VocabulariesService {
     String createVocabulary(VocabRequest request);

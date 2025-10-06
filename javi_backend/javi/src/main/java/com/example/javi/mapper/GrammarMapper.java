@@ -1,12 +1,13 @@
 package com.example.javi.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+
 import com.example.javi.dto.request.CreateGrammarRequest;
 import com.example.javi.dto.request.UpdateGrammarRequest;
 import com.example.javi.dto.response.GrammarResponse;
 import com.example.javi.entity.Grammar;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface GrammarMapper {
@@ -20,5 +21,4 @@ public interface GrammarMapper {
 
     @Mapping(source = "grammarId", target = "id")
     GrammarResponse toGrammarResponse(Grammar grammar);
-
 }

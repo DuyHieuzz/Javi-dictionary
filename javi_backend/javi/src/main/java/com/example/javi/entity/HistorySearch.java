@@ -1,10 +1,11 @@
 package com.example.javi.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "history_search")
@@ -25,13 +26,13 @@ public class HistorySearch {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "entity_type")
-    EntityType entityType; //tra từ hay kanji hay ngữ pháp
+    EntityType entityType; // tra từ hay kanji hay ngữ pháp
 
     @Column(name = "entity_id")
     Long entityId; // id của từ hoặc kanji hay ngữ pháp
 
     @Column(nullable = false)
-    String content; //tra từ, kanji, ngữ pháp nên không cần kiểu text
+    String content; // tra từ, kanji, ngữ pháp nên không cần kiểu text
 
     @Column(name = "searched_at")
     LocalDate searchedAt;

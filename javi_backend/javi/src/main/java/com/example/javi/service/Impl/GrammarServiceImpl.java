@@ -1,5 +1,14 @@
 package com.example.javi.service.Impl;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.javi.dto.request.CreateGrammarRequest;
 import com.example.javi.dto.request.GrammarExampleRequest;
 import com.example.javi.dto.request.GrammarSearchRequest;
@@ -15,18 +24,11 @@ import com.example.javi.repository.GrammarExampleRepository;
 import com.example.javi.repository.GrammarRepository;
 import com.example.javi.service.GrammarService;
 import com.example.javi.specification.GrammarSpecification;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,12 +52,12 @@ public class GrammarServiceImpl implements GrammarService {
 
         final Grammar finalGrammar = grammar;
 
-        List<GrammarExample> examples = Optional.ofNullable(request.getExamples()).orElse(Collections.emptyList())
-                .stream()
-                .map(grammarExampleMapper::toGrammarExample)
-                // Gán Foreign Key: example.setGrammar(grammar)
-                .peek(example -> example.setGrammar(finalGrammar))
-                .collect(Collectors.toCollection(ArrayList::new));
+        List<GrammarExample> examples =
+                Optional.ofNullable(request.getExamples()).orElse(Collections.emptyList()).stream()
+                        .map(grammarExampleMapper::toGrammarExample)
+                        // Gán Foreign Key: example.setGrammar(grammar)
+                        .peek(example -> example.setGrammar(finalGrammar))
+                        .collect(Collectors.toCollection(ArrayList::new));
 
         grammar.setExamples(examples);
 
@@ -67,8 +69,8 @@ public class GrammarServiceImpl implements GrammarService {
     @Override
     @Transactional
     public GrammarResponse updateGrammar(Long id, UpdateGrammarRequest request) {
-        Grammar existingGrammar = grammarRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
+        Grammar existingGrammar =
+                grammarRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
 
         // Kiểm tra pattern đã tồn tại ở grammar khác chưa
         if (grammarRepository.existsByPatternAndGrammarIdNot(request.getPattern(), id)) {
@@ -96,7 +98,8 @@ public class GrammarServiceImpl implements GrammarService {
                 .map(req -> {
                     if (req.getId() != null) {
                         // Cập nhật ví dụ cũ
-                        GrammarExample example = grammarExampleRepository.findById(req.getId())
+                        GrammarExample example = grammarExampleRepository
+                                .findById(req.getId())
                                 .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_EXAMPLE_NOT_FOUND));
                         grammarExampleMapper.updateGrammarExampleFromRequest(req, example);
                         return example;
@@ -133,13 +136,8 @@ public class GrammarServiceImpl implements GrammarService {
     @Override
     @Transactional(readOnly = true)
     public Page<GrammarResponse> searchGrammars(GrammarSearchRequest request, Pageable pageable) {
-        Specification<Grammar> spec = GrammarSpecification.buildSpecification(
-                request.getKeyword(),
-                request.getLevel()
-        );
+        Specification<Grammar> spec = GrammarSpecification.buildSpecification(request.getKeyword(), request.getLevel());
         Page<Grammar> grammarPage = grammarRepository.findAll(spec, pageable);
         return grammarPage.map(grammarMapper::toGrammarResponse);
     }
-
-
 }

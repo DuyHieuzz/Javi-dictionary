@@ -1,8 +1,9 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.JlptLevel;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
+import com.example.javi.entity.JlptLevel;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,6 +22,4 @@ public class KanjiRequest {
     String meaning;
 
     JlptLevel level;
-
-
 }

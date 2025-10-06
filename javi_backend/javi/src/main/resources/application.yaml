@@ -17,3 +17,8 @@ javi:
     base-uri: file:///D:/Javi-dictionary/upload/
 api:
   prefix: /api/v1
+
+jwt:
+  signerKey: "TRrx3ZoD9xgevlM73MU8/ay9VO+8RJ7NjvFh5Ab0xoTsKzuPYwCOKDZugGYsVxroYRfP94DH6jBxBhFyBPaQQQ=="
+  valid-duration: 3600 # in second
+  refreshable-duration: 36000 # in seconds

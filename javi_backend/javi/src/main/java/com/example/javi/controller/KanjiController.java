@@ -1,26 +1,28 @@
 package com.example.javi.controller;
 
-import com.example.javi.dto.request.KanjiRequest;
-import com.example.javi.dto.response.ApiResponse;
-import com.example.javi.dto.response.KanjiDetailResponse;
-import com.example.javi.dto.response.KanjiResponse;
-import com.example.javi.entity.Kanji;
-import com.example.javi.entity.Vocabularies;
-import com.example.javi.exeption.AppException;
-import com.example.javi.exeption.ErrorCode;
-import com.example.javi.service.KanjiService;
-import com.example.javi.utils.ValidationUtils;
-import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.javi.dto.request.KanjiRequest;
+import com.example.javi.dto.response.ApiResponse;
+import com.example.javi.dto.response.KanjiDetailResponse;
+import com.example.javi.dto.response.KanjiResponse;
+import com.example.javi.entity.Kanji;
+import com.example.javi.exeption.AppException;
+import com.example.javi.exeption.ErrorCode;
+import com.example.javi.service.KanjiService;
+import com.example.javi.utils.ValidationUtils;
+import com.turkraft.springfilter.boot.Filter;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("${api.prefix}/kanji")
@@ -75,8 +77,7 @@ public class KanjiController {
 
     @GetMapping("")
     public ApiResponse findKanjiByFilter(
-            @Filter Specification<Kanji> spec,
-            @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
+            @Filter Specification<Kanji> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();
         if (page > 0) {
             page = page - 1;

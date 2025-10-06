@@ -1,5 +1,16 @@
 package com.example.javi.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.javi.dto.request.VocabRequest;
 import com.example.javi.dto.request.VocabUpdateDTO;
 import com.example.javi.dto.response.ApiResponse;
@@ -10,19 +21,11 @@ import com.example.javi.exeption.ErrorCode;
 import com.example.javi.service.VocabulariesService;
 import com.example.javi.utils.ValidationUtils;
 import com.turkraft.springfilter.boot.Filter;
-import jakarta.validation.Valid;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/vocab")
@@ -39,9 +42,7 @@ public class VocabulariesController {
             throw new AppException(ErrorCode.INVALID_WORD);
         }
         vocabulariesService.createVocabulary(request);
-        return ApiResponse.builder()
-                .message("Đã tạo từ vựng")
-                .build();
+        return ApiResponse.builder().message("Đã tạo từ vựng").build();
     }
 
     @PutMapping("/{id}")
@@ -76,19 +77,15 @@ public class VocabulariesController {
     }
 
     @GetMapping("")
-    public ApiResponse getAllVocabularyByFilter(@Filter Specification<Vocabularies> spec,
-                                                @PageableDefault(size = 20, sort = "vocabId") Pageable pageable) {
+    public ApiResponse getAllVocabularyByFilter(
+            @Filter Specification<Vocabularies> spec, @PageableDefault(size = 20, sort = "vocabId") Pageable pageable) {
         int page = pageable.getPageNumber();
         // Nếu người dùng gửi page=1, page ở đây là 1. trừ đi 1 để nó thành 0 (trang đầu tiên).
         // Nếu người dùng gửi page=0, page ở đây là 0 (hoặc lỗi), giữ nguyên 0.
         if (page > 0) {
             page = page - 1;
         }
-        Pageable oneIndexPageable = PageRequest.of(
-                page,
-                pageable.getPageSize(),
-                pageable.getSort()
-        );
+        Pageable oneIndexPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
         return ApiResponse.builder()
                 .message("Lấy từ vựng thành công")
                 .result(vocabulariesService.getAllVocabulariesByFilter(spec, oneIndexPageable))
@@ -98,10 +95,6 @@ public class VocabulariesController {
     @DeleteMapping("/{id}")
     public ApiResponse deleteVocabulary(@PathVariable Long id) {
         vocabulariesService.deleteVocabularyById(id);
-        return ApiResponse.builder()
-                .message("Xóa từ vựng thành công")
-                .build();
+        return ApiResponse.builder().message("Xóa từ vựng thành công").build();
     }
-
-
 }

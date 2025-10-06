@@ -1,6 +1,7 @@
 package com.example.javi.dto.request;
 
 import com.example.javi.entity.JlptLevel;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,5 +13,4 @@ import lombok.experimental.FieldDefaults;
 public class GrammarSearchRequest {
     String keyword;
     JlptLevel level;
-
 }

@@ -1,6 +1,7 @@
 package com.example.javi.entity;
 
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -22,14 +23,14 @@ public class Translation extends BaseEntity {
     Users user;
 
     @Column(name = "source_lang")
-    String sourceLang; //ngôn ngữ nguồn
+    String sourceLang; // ngôn ngữ nguồn
+
     @Column(name = "target_lang")
-    String targetLang; //ngôn ngữ đích
+    String targetLang; // ngôn ngữ đích
 
     @Column(name = "source_text", nullable = false, columnDefinition = "TEXT")
-    String sourceText; //đoạn văn cần dịch
+    String sourceText; // đoạn văn cần dịch
 
     @Column(name = "translated_text", nullable = false, columnDefinition = "TEXT")
-    String translatedText; //đoạn văn đã dịch
-
+    String translatedText; // đoạn văn đã dịch
 }

@@ -1,10 +1,11 @@
 package com.example.javi.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Entity
 @Table(name = "grammar")
@@ -21,16 +22,16 @@ public class Grammar extends BaseEntity {
     Long grammarId;
 
     @Column(nullable = false)
-    String pattern; //mẫu câu ngữ pháp
+    String pattern; // mẫu câu ngữ pháp
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    String meaning; //nghĩa khi dịch ngữ pháp
+    String meaning; // nghĩa khi dịch ngữ pháp
 
     @Column(nullable = false)
-    String structure; //cách chia ngữ pháp
+    String structure; // cách chia ngữ pháp
 
     @Column(name = "usage_note", nullable = false, columnDefinition = "TEXT")
-    String usageNote; //phạm vị sử dụng
+    String usageNote; // phạm vị sử dụng
 
     @Enumerated(EnumType.STRING)
     JlptLevel level;

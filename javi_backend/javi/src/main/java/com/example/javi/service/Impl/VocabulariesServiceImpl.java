@@ -1,5 +1,16 @@
 package com.example.javi.service.Impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.javi.dto.request.MeaningRequest;
 import com.example.javi.dto.request.VocabRequest;
 import com.example.javi.dto.request.VocabUpdateDTO;
@@ -15,20 +26,11 @@ import com.example.javi.repository.KanjiRepository;
 import com.example.javi.repository.VocabulariesRepository;
 import com.example.javi.service.VocabulariesService;
 import com.example.javi.utils.ValidationUtils;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -62,7 +64,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
                     // Nếu chưa tồn tại, tạo mới và lưu
                     kanji = new Kanji();
                     kanji.setCharacterName(japaneseCharacter);
-                    kanji = kanjiRepository.save(kanji); //lưu để có ID
+                    kanji = kanjiRepository.save(kanji); // lưu để có ID
                 } else {
                     // Nếu tồn tại, lấy đối tượng đó
                     kanji = existingKanji.get();
@@ -121,8 +123,8 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     @Override
     @Transactional
     public VocabUpdateResponse updateVocabulary(Long id, VocabUpdateDTO request) {
-        Vocabularies vocab = vocabulariesRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+        Vocabularies vocab =
+                vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
 
         if (request.getMeanings() == null || request.getMeanings().isEmpty()) {
             throw new AppException(ErrorCode.EMPTY_MEANING);
@@ -193,7 +195,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return List.of();
         }
-        //ĐIỀU KIỆN 1: Nếu chứa kanji sẽ tìm chính xác trong word trước
+        //  Nếu chứa kanji sẽ tìm chính xác trong word trước
         if (ValidationUtils.containsKanji(keyword.trim())) {
             // Tìm kiếm chính xác (EQUAL) - chỉ trả về một kết quả nếu khớp 100%
             Optional<Vocabularies> exactResult = vocabulariesRepository.findByWord(keyword.trim());
@@ -201,7 +203,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
                 return List.of(exactResult.get());
             }
 
-            //Không có chính xác sẽ tìm kiếm like bởi có thể user điền thiếu từ
+            // Không có chính xác sẽ tìm kiếm like bởi có thể user điền thiếu từ
             List<Vocabularies> likeResult = vocabulariesRepository.findByWordContainingIgnoreCase(keyword.trim());
             if (!likeResult.isEmpty()) {
                 return likeResult;
@@ -209,8 +211,8 @@ public class VocabulariesServiceImpl implements VocabulariesService {
             throw new AppException(ErrorCode.WORD_NOT_FOUND);
         }
 
-        // KIỂM TRA ĐIỀU KIỆN 2: Không có Kanji (là Hiragana/Tiếng Việt), tìm kiếm MỜ
-        // Chạy truy vấn LIKE trên Hiragana và MeaningVn
+        // Không có Kanji (là Hiragana/Tiếng Việt), tìm kiếm MỜ
+        // Chạy truy vấn like trên Hiragana và MeaningVn
         List<Vocabularies> fuzzyResults = vocabulariesRepository.findFuzzySearch(keyword.trim());
 
         if (fuzzyResults.isEmpty()) {
@@ -230,8 +232,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
 
     @Override
     public Vocabularies getVocabularyById(Long id) {
-        return vocabulariesRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+        return vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
     }
 
     @Override
@@ -242,9 +243,8 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     @Override
     @Transactional
     public void deleteVocabularyById(Long id) {
-        Vocabularies vocabularies = vocabulariesRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+        Vocabularies vocabularies =
+                vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
         vocabulariesRepository.delete(vocabularies);
     }
-
 }

@@ -1,12 +1,13 @@
 package com.example.javi.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import lombok.*;
 
-import java.time.LocalDate;
+import lombok.*;
 
 @Data
 @Getter
@@ -14,13 +15,13 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @MappedSuperclass
-public class BaseEntity{
+public class BaseEntity {
     @Column(name = "created_at")
-    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
+    // @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDate createdAt;
 
     @Column(name = "updated_at")
-    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
+    // @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDate updatedAt;
 
     @PrePersist
@@ -33,5 +34,4 @@ public class BaseEntity{
     protected void onUpdate() {
         updatedAt = LocalDate.now();
     }
-
 }

@@ -1,10 +1,12 @@
 package com.example.javi.entity;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -19,6 +21,8 @@ public class Users extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    String fullName;
+
     @Column(nullable = false, unique = true)
     String username;
 
@@ -31,12 +35,21 @@ public class Users extends BaseEntity {
     @Column(name = "avatar_url")
     String avatarUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    Role role;
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Column(name = "self_introduction", columnDefinition = "TEXT")
+    String selfIntroduction;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     @Enumerated(EnumType.STRING)
     Status status;
+
+    @Enumerated(EnumType.STRING)
+    JlptLevel level;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     List<Comment> comments;

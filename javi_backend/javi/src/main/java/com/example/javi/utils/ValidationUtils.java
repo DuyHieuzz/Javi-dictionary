@@ -28,5 +28,4 @@ public class ValidationUtils {
         }
         return input.trim().matches(".*\\p{IsHan}.*");
     }
-
 }

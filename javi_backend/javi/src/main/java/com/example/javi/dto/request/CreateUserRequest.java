@@ -1,9 +1,14 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.Role;
-import com.example.javi.entity.Status;
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import com.example.javi.entity.JlptLevel;
+import com.example.javi.entity.RoleName;
+import com.example.javi.entity.Status;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,6 +18,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateUserRequest {
+    String fullName;
+
     @Size(min = 4, message = "USERNAME_INVALID")
     @NotBlank(message = "USERNAME_CANNOT_BLANK")
     String username;
@@ -22,14 +29,17 @@ public class CreateUserRequest {
 
     @Size(min = 6, message = "INVALID_PASSWORD")
     @NotBlank(message = "PASSWORD_CANNOT_BLANK")
-
     String password;
 
     String confirmPassword;
 
+    LocalDate dateOfBirth;
+
+    JlptLevel level = JlptLevel.N5;
+
     String avatarUrl;
 
-    Role role = Role.ROLE_USER;
+    RoleName roleName = RoleName.USER;
 
     Status status = Status.ACTIVE;
 }

@@ -1,21 +1,23 @@
 package com.example.javi.controller;
 
+import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.javi.dto.request.CreateGrammarRequest;
 import com.example.javi.dto.request.GrammarSearchRequest;
 import com.example.javi.dto.request.UpdateGrammarRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.GrammarResponse;
 import com.example.javi.service.GrammarService;
-import jakarta.validation.Valid;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("${api.prefix}/grammar")
@@ -36,8 +38,7 @@ public class GrammarController {
 
     @PutMapping("/{id}")
     public ApiResponse<GrammarResponse> updateGrammar(
-            @PathVariable Long id,
-            @RequestBody @Valid UpdateGrammarRequest request) {
+            @PathVariable Long id, @RequestBody @Valid UpdateGrammarRequest request) {
         GrammarResponse response = grammarService.updateGrammar(id, request);
         return ApiResponse.<GrammarResponse>builder()
                 .message("Cập nhật ngữ pháp thành công.")
@@ -48,9 +49,7 @@ public class GrammarController {
     @DeleteMapping("/{id}")
     public ApiResponse deleteGrammar(@PathVariable Long id) {
         grammarService.deleteGrammar(id);
-        return ApiResponse.builder()
-                .message("Xóa ngữ pháp thành công")
-                .build();
+        return ApiResponse.builder().message("Xóa ngữ pháp thành công").build();
     }
 
     @GetMapping("/{id}")

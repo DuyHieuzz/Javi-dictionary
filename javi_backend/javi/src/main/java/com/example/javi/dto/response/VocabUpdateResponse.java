@@ -1,9 +1,9 @@
 package com.example.javi.dto.response;
 
+import java.util.List;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -21,4 +21,3 @@ public class VocabUpdateResponse {
     List<MeaningDTO> meanings;
     List<KanjiResponse> kanjis;
 }
-

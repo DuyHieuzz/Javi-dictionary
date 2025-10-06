@@ -6,15 +6,13 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class StaticResourcesWebConfiguration
-        implements WebMvcConfigurer {
+public class StaticResourcesWebConfiguration implements WebMvcConfigurer {
 
     @Value("${javi.upload-file.base-uri}")
     private String baseURI;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/storage/**")
-                .addResourceLocations(baseURI);
+        registry.addResourceHandler("/storage/**").addResourceLocations(baseURI);
     }
 }

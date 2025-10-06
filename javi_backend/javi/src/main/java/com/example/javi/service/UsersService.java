@@ -1,17 +1,24 @@
 package com.example.javi.service;
 
-import com.example.javi.dto.request.ChangePassRequest;
-import com.example.javi.dto.request.CreateUserRequest;
-import com.example.javi.dto.response.CreateUserResponse;
-import com.example.javi.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
+import com.example.javi.dto.request.ChangePassRequest;
+import com.example.javi.dto.request.CreateUserRequest;
+import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.request.UpdateUserRequest;
+import com.example.javi.dto.response.UserResponse;
+import com.example.javi.entity.Users;
 
 public interface UsersService {
-    Page<Users> getAllUsers(Pageable pageable);
+    Page<Users> getAllUsersByFilter(Specification<Users> spec, Pageable pageable);
 
-    CreateUserResponse createUser(CreateUserRequest user);
+    UserResponse getUserById(Long id);
+
+    UserResponse createUser(CreateUserRequest user);
+
+    UserResponse getMyInfo();
 
     String updateAvatar(Long userId, String fileName);
 
@@ -20,4 +27,11 @@ public interface UsersService {
     void blockUser(Long userId);
 
     void unblockUser(Long userId);
+
+    String login(LoginRequest loginRequest);
+
+    UserResponse updateUser(Long userId, UpdateUserRequest updateUserRequest);
+
+    // Hàm thủ công, getMyInfo hiệu năng cao hơn
+    Users getUserDetailsFromToken(String token);
 }

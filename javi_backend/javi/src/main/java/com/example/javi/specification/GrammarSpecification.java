@@ -1,13 +1,15 @@
 package com.example.javi.specification;
 
-import com.example.javi.entity.Grammar;
-import com.example.javi.entity.JlptLevel;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.criteria.Predicate;
+
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.List;
+import com.example.javi.entity.Grammar;
+import com.example.javi.entity.JlptLevel;
 
 public class GrammarSpecification {
     public static Specification<Grammar> buildSpecification(String q, JlptLevel level) {
@@ -21,8 +23,7 @@ public class GrammarSpecification {
                 String likePattern = "%" + q.toLowerCase() + "%";
                 Predicate qSearchPredicate = criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("pattern")), likePattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("meaning")), likePattern)
-                );
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("meaning")), likePattern));
                 predicates.add(qSearchPredicate);
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
