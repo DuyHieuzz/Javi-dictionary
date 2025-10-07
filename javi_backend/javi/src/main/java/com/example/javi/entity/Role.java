@@ -26,6 +26,9 @@ public class Role {
     @Column(columnDefinition = "MEDIUMTEXT")
     String description;
 
+    @Column(nullable = false)
+    boolean isSystemRole = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permissions",

@@ -1,21 +1,24 @@
 package com.example.javi.controller;
 
-import com.example.javi.dto.request.RoleRequest;
-import com.example.javi.dto.response.ApiResponse;
-import com.example.javi.entity.Role;
-import com.example.javi.service.RoleService;
-import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.javi.dto.request.RoleRequest;
+import com.example.javi.dto.response.ApiResponse;
+import com.example.javi.entity.Role;
+import com.example.javi.service.RoleService;
+import com.turkraft.springfilter.boot.Filter;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("${api.prefix}/role")
@@ -28,15 +31,11 @@ public class RoleController {
     @PostMapping("")
     public ApiResponse createRole(@Valid @RequestBody RoleRequest request) {
         Role role = roleService.createRole(request);
-        return ApiResponse.builder()
-                .message("Tạo role thành công")
-                .result(role)
-                .build();
+        return ApiResponse.builder().message("Tạo role thành công").result(role).build();
     }
 
     @PutMapping("/{id}")
-    public ApiResponse updateRole(@PathVariable Long id,
-                                  @Valid @RequestBody RoleRequest request) {
+    public ApiResponse updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
         Role role = roleService.updateRole(id, request);
         return ApiResponse.builder()
                 .message("Cập nhật role thành công")
@@ -46,10 +45,9 @@ public class RoleController {
 
     @DeleteMapping("/{id}")
     public ApiResponse deleteRole(@PathVariable Long id) {
+
         roleService.deleteRole(id);
-        return ApiResponse.builder()
-                .message("Xóa role thành công")
-                .build();
+        return ApiResponse.builder().message("Xóa role thành công").build();
     }
 
     @GetMapping("/{id}")
@@ -62,7 +60,8 @@ public class RoleController {
     }
 
     @GetMapping("")
-    public ApiResponse getAllRoles(@Filter Specification<Role> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
+    public ApiResponse getAllRoles(
+            @Filter Specification<Role> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();
         if (page > 0) {
             page = page - 1;

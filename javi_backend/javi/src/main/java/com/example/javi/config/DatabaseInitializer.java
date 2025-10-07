@@ -59,6 +59,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             Role adminRole = new Role();
             adminRole.setName("ADMIN");
             adminRole.setDescription("Admin có toàn quyền hệ thống");
+            adminRole.setSystemRole(true);
             adminRole.setPermissions(allPermissions);
             roleRepository.save(adminRole);
         }
@@ -72,6 +73,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             Role userRole = new Role();
             userRole.setName("USER");
             userRole.setDescription("Người dùng cơ bản");
+            userRole.setSystemRole(true);
             userRole.setPermissions(userPermissions);
             roleRepository.save(userRole);
         }

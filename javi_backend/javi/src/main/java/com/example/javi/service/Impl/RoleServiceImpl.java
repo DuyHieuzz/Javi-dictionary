@@ -31,7 +31,6 @@ public class RoleServiceImpl implements RoleService {
     PermissionRepository permissionRepository;
     RoleMapper roleMapper;
 
-
     @Override
     public Role createRole(RoleRequest request) {
         if (roleRepository.findByName(request.getName()).isPresent()) {
@@ -39,9 +38,8 @@ public class RoleServiceImpl implements RoleService {
         }
         // check permissions
         if (request.getPermissions() != null) {
-            List<Long> reqPermissions = request.getPermissions()
-                    .stream().map(Permission::getId)
-                    .collect(Collectors.toList());
+            List<Long> reqPermissions =
+                    request.getPermissions().stream().map(Permission::getId).collect(Collectors.toList());
 
             List<Permission> dbPermissions = this.permissionRepository.findByIdIn(reqPermissions);
             request.setPermissions(dbPermissions);
@@ -53,13 +51,17 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public Role updateRole(Long id, RoleRequest request) {
-        Role roleToUpdate = roleRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        Role roleToUpdate = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        // Không cho đổi tên hệ thống (cần xem xét có cho đổi tên hệ thống không)
+        if (roleToUpdate.isSystemRole() && !roleToUpdate.getName().equals(request.getName())) {
+            throw new AppException(ErrorCode.SYSTEM_ROLE_CANNOT_RENAME);
+        }
 
         // Xử lý và ánh xạ Permissions (giống createRole)
         if (request.getPermissions() != null) {
-            List<Long> reqPermissions = request.getPermissions()
-                    .stream().map(Permission::getId) // Dùng method reference cho gọn
+            List<Long> reqPermissions = request.getPermissions().stream()
+                    .map(Permission::getId) // Dùng method reference cho gọn
                     .collect(Collectors.toList());
 
             List<Permission> dbPermissions = this.permissionRepository.findByIdIn(reqPermissions);
@@ -75,7 +77,19 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void deleteRole(Long id) {
-        Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        if (role.isSystemRole()) {
+            throw new AppException(ErrorCode.SYSTEM_ROLE_CANNOT_DELETE);
+        }
+
+        // Bắt phải đổi hết người dùng có role cần xóa sang một role khác, role không có ai dùng mới cho xóa
+        // Chắc là không nên đổi người dùng đang có role cần xóa sang role mặc định là user
+        if (role.getUsers() != null && !role.getUsers().isEmpty()) {
+            throw new AppException(ErrorCode.ROLE_IN_USE);
+        }
+
         roleRepository.delete(role);
     }
 
@@ -92,5 +106,4 @@ public class RoleServiceImpl implements RoleService {
     public Page<Role> getAllRolesByFilter(Specification<Role> spec, Pageable pageable) {
         return roleRepository.findAll(spec, pageable);
     }
-
 }

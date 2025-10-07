@@ -83,10 +83,18 @@ public enum ErrorCode {
     REFRESH_TOKEN_REVOKED(1045, "Refresh token bị thu hồi", HttpStatus.BAD_REQUEST),
     TOKEN_HAS_EXPIRED(1043, "Token đã hết hạn", HttpStatus.BAD_REQUEST),
 
-    //ROLE
+    // ROLE
     ROLE_HAS_NO_NAME(1046, "Tên của role không được để trống", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1047, "Không có dữ liệu về role cần tìm", HttpStatus.NOT_FOUND),
     ROLE_NAME_ALREADY_EXISTING(1048, "Tên role đã tồn tại", HttpStatus.BAD_REQUEST),
+    SYSTEM_ROLE_CANNOT_DELETE(1052, "Không thể xóa role hệ thống", HttpStatus.BAD_REQUEST),
+    SYSTEM_ROLE_CANNOT_RENAME(1053, "Role hệ thống, không thể đổi tên", HttpStatus.BAD_REQUEST),
+    ROLE_IN_USE(1054, "Role đang được sử dụng bởi người dùng khác", HttpStatus.BAD_REQUEST),
+
+    // PERMISSION
+    PERMISSION_HAS_NO_NAME(1049, "Tên của quyền không được để trống", HttpStatus.BAD_REQUEST),
+    PERMISSION_NOT_FOUND(1050, "Không có dữ liệu về quyền cần tìm", HttpStatus.BAD_REQUEST),
+    PERMISSION_NAME_ALREADY_EXISTING(1051, "Tên quyền đã tồn tại", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

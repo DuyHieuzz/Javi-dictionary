@@ -1,11 +1,9 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.Permission;
 import jakarta.validation.constraints.NotBlank;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -13,12 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RoleRequest {
-    @NotBlank(message = "ROLE_HAS_NO_NAME")
+public class PermissionRequest {
+    @NotBlank(message = "PERMISSION_HAS_NO_NAME")
     String name;
 
     String description;
-
-    boolean isSystemRole = false;
-    List<Permission> permissions;
 }

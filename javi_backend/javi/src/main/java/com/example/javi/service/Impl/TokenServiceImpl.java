@@ -99,75 +99,75 @@ public class TokenServiceImpl implements TokenService {
 
     // 2 method này không đúng logic và không an toàn như mong muốn, cứ để đây sau xem lại
 
-//    @Override
-//    @Transactional
-//    public Token refreshToken(String refreshToken, Users user) throws Exception {
-//        Token existingToken = tokenRepository
-//                .findByRefreshToken(refreshToken)
-//                .orElseThrow(() -> new AppException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
-//
-//        // Kiểm tra thời gian hết hạn của refresh token
-//        if (existingToken.getRefreshExpirationDate().compareTo(LocalDateTime.now()) < 0) {
-//            // Nếu refresh token đã hết hạn, xóa và thông báo lỗi
-//            tokenRepository.delete(existingToken);
-//            throw new AppException(ErrorCode.REFRESH_TOKEN_HAS_EXPIRED);
-//        }
-//
-//        // Tạo JWT mới
-//        String newJwt = securityUtil.generateToken(user);
-//        LocalDateTime expirationDateTime = LocalDateTime.now().plusSeconds(VALID_DURATION);
-//        LocalDateTime newRefreshTokenExpiry = LocalDateTime.now().plusSeconds(REFRESHABLE_DURATION);
-//
-//        // Cập nhật thông tin token
-//        existingToken.setExpirationDate(expirationDateTime);
-//        existingToken.setToken(newJwt);
-//        existingToken.setRefreshToken(UUID.randomUUID().toString()); // Tạo Refresh Token mới
-//        existingToken.setRefreshExpirationDate(newRefreshTokenExpiry);
-//
-//        return tokenRepository.save(existingToken);
-//    }
-//
-//    @Override
-//    @Transactional
-//    public Token refreshToken2(String refreshToken) {
-//        Token existingToken = tokenRepository
-//                .findByRefreshToken(refreshToken)
-//                .orElseThrow(() -> new AppException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
-//
-//        if (existingToken.isRevoked()) {
-//            throw new AppException(ErrorCode.REFRESH_TOKEN_REVOKED);
-//        }
-//
-//        if (existingToken.getRefreshExpirationDate().isBefore(LocalDateTime.now())) {
-//            existingToken.setRevoked(true);
-//            tokenRepository.save(existingToken);
-//            throw new AppException(ErrorCode.REFRESH_TOKEN_HAS_EXPIRED);
-//        }
-//
-//        Users user = existingToken.getUser();
-//
-//        // Tạo token mới
-//        String newJwt = securityUtil.generateToken(user);
-//        LocalDateTime expirationDateTime = LocalDateTime.now().plusSeconds(VALID_DURATION);
-//        LocalDateTime newRefreshTokenExpiry = LocalDateTime.now().plusSeconds(REFRESHABLE_DURATION);
-//
-//        // Revoke token cũ
-//        existingToken.setRevoked(true);
-//        tokenRepository.save(existingToken);
-//
-//        // Tạo token mới
-//        Token newToken = Token.builder()
-//                .user(user)
-//                .token(newJwt)
-//                .refreshToken(UUID.randomUUID().toString())
-//                .expirationDate(expirationDateTime)
-//                .refreshExpirationDate(newRefreshTokenExpiry)
-//                .revoked(false)
-//                .expired(false)
-//                .build();
-//
-//        return tokenRepository.save(newToken);
-//    }
+    //    @Override
+    //    @Transactional
+    //    public Token refreshToken(String refreshToken, Users user) throws Exception {
+    //        Token existingToken = tokenRepository
+    //                .findByRefreshToken(refreshToken)
+    //                .orElseThrow(() -> new AppException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+    //
+    //        // Kiểm tra thời gian hết hạn của refresh token
+    //        if (existingToken.getRefreshExpirationDate().compareTo(LocalDateTime.now()) < 0) {
+    //            // Nếu refresh token đã hết hạn, xóa và thông báo lỗi
+    //            tokenRepository.delete(existingToken);
+    //            throw new AppException(ErrorCode.REFRESH_TOKEN_HAS_EXPIRED);
+    //        }
+    //
+    //        // Tạo JWT mới
+    //        String newJwt = securityUtil.generateToken(user);
+    //        LocalDateTime expirationDateTime = LocalDateTime.now().plusSeconds(VALID_DURATION);
+    //        LocalDateTime newRefreshTokenExpiry = LocalDateTime.now().plusSeconds(REFRESHABLE_DURATION);
+    //
+    //        // Cập nhật thông tin token
+    //        existingToken.setExpirationDate(expirationDateTime);
+    //        existingToken.setToken(newJwt);
+    //        existingToken.setRefreshToken(UUID.randomUUID().toString()); // Tạo Refresh Token mới
+    //        existingToken.setRefreshExpirationDate(newRefreshTokenExpiry);
+    //
+    //        return tokenRepository.save(existingToken);
+    //    }
+    //
+    //    @Override
+    //    @Transactional
+    //    public Token refreshToken2(String refreshToken) {
+    //        Token existingToken = tokenRepository
+    //                .findByRefreshToken(refreshToken)
+    //                .orElseThrow(() -> new AppException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+    //
+    //        if (existingToken.isRevoked()) {
+    //            throw new AppException(ErrorCode.REFRESH_TOKEN_REVOKED);
+    //        }
+    //
+    //        if (existingToken.getRefreshExpirationDate().isBefore(LocalDateTime.now())) {
+    //            existingToken.setRevoked(true);
+    //            tokenRepository.save(existingToken);
+    //            throw new AppException(ErrorCode.REFRESH_TOKEN_HAS_EXPIRED);
+    //        }
+    //
+    //        Users user = existingToken.getUser();
+    //
+    //        // Tạo token mới
+    //        String newJwt = securityUtil.generateToken(user);
+    //        LocalDateTime expirationDateTime = LocalDateTime.now().plusSeconds(VALID_DURATION);
+    //        LocalDateTime newRefreshTokenExpiry = LocalDateTime.now().plusSeconds(REFRESHABLE_DURATION);
+    //
+    //        // Revoke token cũ
+    //        existingToken.setRevoked(true);
+    //        tokenRepository.save(existingToken);
+    //
+    //        // Tạo token mới
+    //        Token newToken = Token.builder()
+    //                .user(user)
+    //                .token(newJwt)
+    //                .refreshToken(UUID.randomUUID().toString())
+    //                .expirationDate(expirationDateTime)
+    //                .refreshExpirationDate(newRefreshTokenExpiry)
+    //                .revoked(false)
+    //                .expired(false)
+    //                .build();
+    //
+    //        return tokenRepository.save(newToken);
+    //    }
 
     @Override
     @Transactional

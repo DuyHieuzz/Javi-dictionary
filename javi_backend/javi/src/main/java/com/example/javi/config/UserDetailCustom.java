@@ -37,8 +37,7 @@ public class UserDetailCustom implements UserDetailsService {
         Set<GrantedAuthority> authorities = new HashSet<>();
         if (user.getRole() != null) {
             // Thêm quyền ROLE_*
-            authorities.add(new SimpleGrantedAuthority(
-                    "ROLE_" + user.getRole().getName()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
 
             // Thêm các permission (nếu có)
             user.getRole().getPermissions().forEach(p -> authorities.add(new SimpleGrantedAuthority(p.getName())));
