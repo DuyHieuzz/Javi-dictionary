@@ -1,8 +1,9 @@
 package com.example.javi.exeption;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+
+import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
@@ -98,7 +99,7 @@ public enum ErrorCode {
     SYSTEM_PERMISSION_CANNOT_DELETE(1055, "Không thể xóa quyền hệ thống", HttpStatus.BAD_REQUEST),
     SYSTEM_PERMISSION_CANNOT_RENAME(1056, "Không thể đổi tên quyền hệ thống", HttpStatus.BAD_REQUEST),
 
-    //COMMENT
+    // COMMENT
     COMMENT_HAS_NO_ENTITY_TYPE(1057, "Không được để trống entityType", HttpStatus.BAD_REQUEST),
     COMMENT_HAS_NO_ENTITY_ID(1058, "Id của loại bình luận không được để trông", HttpStatus.BAD_REQUEST),
     COMMENT_HAS_NO_CONTENT(1059, "Bình luận phải có nội dung", HttpStatus.BAD_REQUEST),

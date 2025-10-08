@@ -1,14 +1,16 @@
 package com.example.javi.dto.request;
 
+import java.time.LocalDate;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import com.example.javi.entity.JlptLevel;
 import com.example.javi.entity.Role;
 import com.example.javi.entity.Status;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor

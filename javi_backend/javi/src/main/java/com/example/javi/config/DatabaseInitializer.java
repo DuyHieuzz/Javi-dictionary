@@ -37,7 +37,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (permissionRepository.count() == 0) {
             ArrayList<Permission> arr = new ArrayList<>();
             arr.add(new Permission("CREATE_GRAMMAR", "Cho phép tạo mẫu ngữ pháp mới.", true));
-            arr.add(new Permission("UPDATE_GRAMMAR", "Cho phép cập nhật mẫu ngữ pháp",true));
+            arr.add(new Permission("UPDATE_GRAMMAR", "Cho phép cập nhật mẫu ngữ pháp", true));
             arr.add(new Permission("DELETE_GRAMMAR", "Cho phép xóa mẫu ngữ pháp", true));
             arr.add(new Permission("CREATE_VOCABULARY", "Cho phép tạo từ vựng mới", true));
             arr.add(new Permission("UPDATE_VOCABULARY", "Cho phép cập nhật từ vựng", true));

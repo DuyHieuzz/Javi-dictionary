@@ -1,11 +1,11 @@
 package com.example.javi.dto.response;
 
+import java.time.LocalDate;
+
 import com.example.javi.entity.EntityType;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -22,6 +22,6 @@ public class CommentResponse {
     String content;
     int likeCount;
     int dislikeCount;
-    private Boolean isMyComment; //đúng thì cho thêm thùng rác bên cạnh trên FE để xóa
+    private Boolean isMyComment; // đúng thì cho thêm thùng rác bên cạnh trên FE để xóa
     LocalDate createdAt;
 }

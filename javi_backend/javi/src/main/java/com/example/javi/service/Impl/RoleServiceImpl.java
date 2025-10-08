@@ -1,5 +1,14 @@
 package com.example.javi.service.Impl;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
 import com.example.javi.dto.request.RoleRequest;
 import com.example.javi.entity.Permission;
 import com.example.javi.entity.Role;
@@ -9,18 +18,11 @@ import com.example.javi.mapper.RoleMapper;
 import com.example.javi.repository.PermissionRepository;
 import com.example.javi.repository.RoleRepository;
 import com.example.javi.service.RoleService;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,8 +79,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void deleteRole(Long id) {
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
         if (role.isSystemRole()) {
             throw new AppException(ErrorCode.SYSTEM_ROLE_CANNOT_DELETE);

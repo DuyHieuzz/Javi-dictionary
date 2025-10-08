@@ -1,5 +1,16 @@
 package com.example.javi.service.Impl;
 
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.javi.dto.request.ChangePassRequest;
 import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
@@ -19,21 +30,12 @@ import com.example.javi.utils.ValidationUtils;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jwt.SignedJWT;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -82,8 +84,8 @@ public class UsersServiceImpl implements UsersService {
         }
         Users users = usersMapper.toUsers(user);
         if (user.getRole() == null) {
-            Role defaultRole = roleRepository.findByName("USER")
-                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+            Role defaultRole =
+                    roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
             users.setRole(defaultRole);
         } else {
             users.setRole(user.getRole());
@@ -169,14 +171,13 @@ public class UsersServiceImpl implements UsersService {
     @Override
     @Transactional
     public UserResponse updateUser(Long userId, UpdateUserRequest updateUserRequest) {
-        Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Users currentUser = securityUtil.getCurrentUser();
 
         // Nếu không phải admin, người có quyền hạn và không phải chính mình → cấm không cho cập nhật
-        boolean isAdmin = currentUser.getRole() != null &&
-                currentUser.getRole().getPermissions().stream()
+        boolean isAdmin = currentUser.getRole() != null
+                && currentUser.getRole().getPermissions().stream()
                         .anyMatch(p -> p.getName().equals("MANAGE_USER"));
         boolean isSelf = currentUser.getId().equals(userId);
 

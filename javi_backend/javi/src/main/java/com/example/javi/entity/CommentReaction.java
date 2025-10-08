@@ -1,11 +1,13 @@
 package com.example.javi.entity;
 
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(name = "comment_reactions",
+@Table(
+        name = "comment_reactions",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "comment_id"})})
 @Getter
 @Setter

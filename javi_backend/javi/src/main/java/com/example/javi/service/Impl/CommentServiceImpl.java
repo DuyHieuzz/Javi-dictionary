@@ -1,5 +1,16 @@
 package com.example.javi.service.Impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.javi.dto.request.CreateCommentRequest;
 import com.example.javi.dto.response.CommentResponse;
 import com.example.javi.entity.*;
@@ -9,20 +20,11 @@ import com.example.javi.mapper.CommentMapper;
 import com.example.javi.repository.*;
 import com.example.javi.service.CommentService;
 import com.example.javi.utils.SecurityUtil;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,11 +46,14 @@ public class CommentServiceImpl implements CommentService {
         Users currentUser = securityUtil.getCurrentUser();
         // Kiểm tra entity tồn tại
         switch (request.getEntityType()) {
-            case WORD -> vocabRepository.findById(request.getEntityId())
+            case WORD -> vocabRepository
+                    .findById(request.getEntityId())
                     .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
-            case KANJI -> kanjiRepository.findById(request.getEntityId())
+            case KANJI -> kanjiRepository
+                    .findById(request.getEntityId())
                     .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
-            case GRAMMAR -> grammarRepository.findById(request.getEntityId())
+            case GRAMMAR -> grammarRepository
+                    .findById(request.getEntityId())
                     .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
         }
         Comment comment = Comment.builder()
@@ -61,7 +66,8 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toCommentResponse(comment);
     }
 
-    // Nếu user từng bình luận trong 1 entity cụ thể thì khi tra sẽ ưu tiên hiển thị bình luận lên đầu mặc cho không có ai like, nếu chưa từng bình luận hay chưa đăng nhập thì trả ra bình thường
+    // Nếu user từng bình luận trong 1 entity cụ thể thì khi tra sẽ ưu tiên hiển thị bình luận lên đầu mặc cho không có
+    // ai like, nếu chưa từng bình luận hay chưa đăng nhập thì trả ra bình thường
     // Chấp nhận người dùng có thể nhìn thấy lại bình luận của mình ở trang đúng thực tế của nó
     @Override
     @Transactional(readOnly = true)
@@ -79,13 +85,14 @@ public class CommentServiceImpl implements CommentService {
 
         // Nếu là trang đầu và có user đăng nhập
         if (pageable.getPageNumber() == 0 && currentUser != null) {
-            Optional<Comment> myCommentOpt = commentRepository.findByEntityTypeAndEntityIdAndUser(entityType, entityId, currentUser);
+            Optional<Comment> myCommentOpt =
+                    commentRepository.findByEntityTypeAndEntityIdAndUser(entityType, entityId, currentUser);
             if (myCommentOpt.isPresent()) {
                 Comment myComment = myCommentOpt.get();
 
                 // Nếu comment của mình chưa nằm trong danh sách → thêm vào đầu
-                boolean alreadyInPage = comments.stream()
-                        .anyMatch(c -> c.getId().equals(myComment.getId()));
+                boolean alreadyInPage =
+                        comments.stream().anyMatch(c -> c.getId().equals(myComment.getId()));
 
                 if (!alreadyInPage) {
                     comments.add(0, myComment);
@@ -117,12 +124,11 @@ public class CommentServiceImpl implements CommentService {
         return new PageImpl<>(responses, pageable, commentsPage.getTotalElements());
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public Page<CommentResponse> getCommentsByUsername(String username, Pageable pageable) {
-        Users user = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users user =
+                usersRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Page<Comment> comments = commentRepository.findByUserOrderByCreatedAtDesc(user, pageable);
 
         return comments.map(commentMapper::toCommentResponse);
@@ -140,13 +146,13 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteComment(Long id) {
         Long currentUserId = securityUtil.getCurrentUserId();
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        Comment comment =
+                commentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
         Users currentUser = securityUtil.getCurrentUser();
 
         // Nếu không phải admin, người có quyền hạn và không phải chính mình → cấm không cho cập nhật
-        boolean isAdmin = currentUser.getRole() != null &&
-                currentUser.getRole().getPermissions().stream()
+        boolean isAdmin = currentUser.getRole() != null
+                && currentUser.getRole().getPermissions().stream()
                         .anyMatch(p -> p.getName().equals("MANAGE_USER_COMMENT"));
         boolean isSelf = comment.getUser() != null && comment.getUser().getId().equals(currentUserId);
 
@@ -156,43 +162,43 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.delete(comment);
     }
 
-
     // Nhấn liên tục like, dislike sẽ sinh ra nhiều câu sql hơn, hiệu năng thấp hơn method ở dưới
-//    @Override
-//    @Transactional
-//    public void reactToComment(Long commentId, String type) {
-//        Users currentUser = securityUtil.getCurrentUser();
-//        Comment comment = commentRepository.findById(commentId)
-//                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
-//
-//        ReactionType reactionType;
-//        try {
-//            reactionType = ReactionType.valueOf(type.toUpperCase());
-//        } catch (IllegalArgumentException e) {
-//            throw new AppException(ErrorCode.INVALID_REACTION);
-//        }
-//        var existing = reactionRepository.findByUserAndComment(currentUser, comment);
-//
-//        if (existing.isPresent()) {
-//            var r = existing.get();
-//            if (r.getReactionType() == reactionType) {
-//                reactionRepository.delete(r); // bỏ like/dislike
-//            } else {
-//                r.setReactionType(reactionType); // đổi like <-> dislike
-//                reactionRepository.save(r);
-//            }
-//        } else {
-//            reactionRepository.save(CommentReaction.builder()
-//                    .user(currentUser)
-//                    .comment(comment)
-//                    .reactionType(reactionType)
-//                    .build());
-//        }
-//        // Cập nhật tổng like/dislike
-//        comment.setLikeCount((int) reactionRepository.countByCommentAndReactionType(comment, ReactionType.LIKE));
-//        comment.setDislikeCount((int) reactionRepository.countByCommentAndReactionType(comment, ReactionType.DISLIKE));
-//        commentRepository.save(comment);
-//    }
+    //    @Override
+    //    @Transactional
+    //    public void reactToComment(Long commentId, String type) {
+    //        Users currentUser = securityUtil.getCurrentUser();
+    //        Comment comment = commentRepository.findById(commentId)
+    //                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+    //
+    //        ReactionType reactionType;
+    //        try {
+    //            reactionType = ReactionType.valueOf(type.toUpperCase());
+    //        } catch (IllegalArgumentException e) {
+    //            throw new AppException(ErrorCode.INVALID_REACTION);
+    //        }
+    //        var existing = reactionRepository.findByUserAndComment(currentUser, comment);
+    //
+    //        if (existing.isPresent()) {
+    //            var r = existing.get();
+    //            if (r.getReactionType() == reactionType) {
+    //                reactionRepository.delete(r); // bỏ like/dislike
+    //            } else {
+    //                r.setReactionType(reactionType); // đổi like <-> dislike
+    //                reactionRepository.save(r);
+    //            }
+    //        } else {
+    //            reactionRepository.save(CommentReaction.builder()
+    //                    .user(currentUser)
+    //                    .comment(comment)
+    //                    .reactionType(reactionType)
+    //                    .build());
+    //        }
+    //        // Cập nhật tổng like/dislike
+    //        comment.setLikeCount((int) reactionRepository.countByCommentAndReactionType(comment, ReactionType.LIKE));
+    //        comment.setDislikeCount((int) reactionRepository.countByCommentAndReactionType(comment,
+    // ReactionType.DISLIKE));
+    //        commentRepository.save(comment);
+    //    }
 
     @Override
     @Transactional
@@ -201,8 +207,8 @@ public class CommentServiceImpl implements CommentService {
         Users currentUser = securityUtil.getCurrentUser();
 
         // Tìm comment
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        Comment comment =
+                commentRepository.findById(commentId).orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
 
         // Parse reaction type (LIKE hoặc DISLIKE)
         ReactionType reactionType;
@@ -259,5 +265,4 @@ public class CommentServiceImpl implements CommentService {
         // Lưu lại comment (đã cập nhật count)
         commentRepository.save(comment);
     }
-
 }

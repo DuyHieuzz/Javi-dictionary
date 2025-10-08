@@ -1,9 +1,10 @@
 package com.example.javi.mapper;
 
-import com.example.javi.dto.response.CommentResponse;
-import com.example.javi.entity.Comment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import com.example.javi.dto.response.CommentResponse;
+import com.example.javi.entity.Comment;
 
 @Mapper(componentModel = "spring")
 public interface CommentMapper {

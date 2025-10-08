@@ -1,11 +1,13 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.Permission;
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
+
+import com.example.javi.entity.Permission;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Getter
 @Setter

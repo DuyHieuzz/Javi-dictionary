@@ -1,8 +1,10 @@
 package com.example.javi.dto.request;
 
-import com.example.javi.entity.EntityType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import com.example.javi.entity.EntityType;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
