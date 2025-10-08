@@ -1,12 +1,11 @@
 package com.example.javi.dto.response;
 
-import java.time.LocalDate;
-
 import com.example.javi.entity.JlptLevel;
 import com.example.javi.entity.Role;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -20,5 +19,7 @@ public class UserResponse {
     String email;
     LocalDate dateOfBirth;
     JlptLevel level;
-    Role roleName;
+    String selfIntroduction;
+    String avatarUrl;
+    Role role;
 }

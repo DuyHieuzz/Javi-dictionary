@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,6 +69,7 @@ public class UsersController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal.claims['userId'] or hasAuthority('MANAGE_USER')")
     public ApiResponse updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest user) {
         UserResponse userResponse = usersService.updateUser(id, user);
         return ApiResponse.builder()
@@ -85,7 +87,7 @@ public class UsersController {
                 .build();
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     ApiResponse getAllUsersByFilter(
             @Filter Specification<Users> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();

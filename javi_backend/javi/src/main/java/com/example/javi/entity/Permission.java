@@ -22,8 +22,12 @@ public class Permission {
     @Column(columnDefinition = "TEXT")
     String description;
 
-    public Permission(String name, String description) {
+    @Column(nullable = false)
+    private boolean isSystemPermission = false;
+
+    public Permission(String name, String description, boolean isSystemPermission) {
         this.name = name;
         this.description = description;
+        this.isSystemPermission = isSystemPermission;
     }
 }

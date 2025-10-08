@@ -1,15 +1,14 @@
 package com.example.javi.dto.request;
 
-import java.time.LocalDate;
-
+import com.example.javi.entity.JlptLevel;
+import com.example.javi.entity.Role;
+import com.example.javi.entity.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-import com.example.javi.entity.JlptLevel;
-import com.example.javi.entity.Status;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -34,11 +33,13 @@ public class CreateUserRequest {
 
     LocalDate dateOfBirth;
 
-    JlptLevel level = JlptLevel.N5;
+    JlptLevel level;
+
+    String selfIntroduction;
 
     String avatarUrl;
 
-    String roleName = "USER";
+    Role role;
 
     Status status = Status.ACTIVE;
 }

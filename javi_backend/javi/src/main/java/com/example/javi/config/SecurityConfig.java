@@ -51,7 +51,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint)
             throws Exception {
 
-        String[] whiteList = {"/", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/register"};
+        String[] whiteList = {"/", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/users/register"};
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())

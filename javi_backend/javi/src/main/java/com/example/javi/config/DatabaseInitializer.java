@@ -36,21 +36,21 @@ public class DatabaseInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         if (permissionRepository.count() == 0) {
             ArrayList<Permission> arr = new ArrayList<>();
-            arr.add(new Permission("CREATE_GRAMMAR", "Cho phép tạo mẫu ngữ pháp mới."));
-            arr.add(new Permission("UPDATE_GRAMMAR", "Cho phép cập nhật mẫu ngữ pháp"));
-            arr.add(new Permission("DELETE_GRAMMAR", "Cho phép xóa mẫu ngữ pháp"));
-            arr.add(new Permission("CREATE_VOCABULARY", "Cho phép tạo từ vựng mới"));
-            arr.add(new Permission("UPDATE_VOCABULARY", "Cho phép cập nhật từ vựng"));
-            arr.add(new Permission("DELETE_VOCABULARY", "Cho phép xóa từ vựng"));
-            arr.add(new Permission("CREATE_KANJI", "Cho phép tạo kanji mới"));
-            arr.add(new Permission("UPDATE_KANJI", "Cho phép cập nhật mẫu kanji"));
-            arr.add(new Permission("DELETE_KANJI", "Cho phép xóa kanji"));
-            arr.add(new Permission("USE_EXPLAIN_VOCABULARY", "Cho phép sử dụng Ai giải thích từ vựng"));
-            arr.add(new Permission("CREATE_COMMENT", "Cho phép bình luận"));
-            arr.add(new Permission("DELETE_COMMENT", "Cho phép xóa bình luận của chính mình"));
-            arr.add(new Permission("MANAGE_USER_COMMENT", "Cho phép xóa bình luận của người dùng"));
-            arr.add(new Permission("BLOCK_USER", "Cho phép chặn người dùng"));
-            arr.add(new Permission("MANAGE_USER", "Cho phép quản lý người dùng"));
+            arr.add(new Permission("CREATE_GRAMMAR", "Cho phép tạo mẫu ngữ pháp mới.", true));
+            arr.add(new Permission("UPDATE_GRAMMAR", "Cho phép cập nhật mẫu ngữ pháp",true));
+            arr.add(new Permission("DELETE_GRAMMAR", "Cho phép xóa mẫu ngữ pháp", true));
+            arr.add(new Permission("CREATE_VOCABULARY", "Cho phép tạo từ vựng mới", true));
+            arr.add(new Permission("UPDATE_VOCABULARY", "Cho phép cập nhật từ vựng", true));
+            arr.add(new Permission("DELETE_VOCABULARY", "Cho phép xóa từ vựng", true));
+            arr.add(new Permission("CREATE_KANJI", "Cho phép tạo kanji mới", true));
+            arr.add(new Permission("UPDATE_KANJI", "Cho phép cập nhật mẫu kanji", true));
+            arr.add(new Permission("DELETE_KANJI", "Cho phép xóa kanji", true));
+            arr.add(new Permission("USE_EXPLAIN_VOCABULARY", "Cho phép sử dụng Ai giải thích từ vựng", true));
+            arr.add(new Permission("CREATE_COMMENT", "Cho phép bình luận", true));
+            arr.add(new Permission("DELETE_COMMENT", "Cho phép xóa bình luận", true));
+            arr.add(new Permission("MANAGE_USER_COMMENT", "Cho phép xóa bình luận của người dùng", true));
+            arr.add(new Permission("BLOCK_USER", "Cho phép chặn người dùng", true));
+            arr.add(new Permission("MANAGE_USER", "Cho phép quản lý tạo, cập nhật người dùng", true));
             permissionRepository.saveAll(arr);
         }
 

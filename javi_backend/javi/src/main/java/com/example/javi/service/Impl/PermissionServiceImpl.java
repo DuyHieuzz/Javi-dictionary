@@ -39,6 +39,10 @@ public class PermissionServiceImpl implements PermissionService {
     public Permission updatePermission(Long id, PermissionRequest request) {
         Permission permission =
                 permissionRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+        if (permission.isSystemPermission() &&
+                !permission.getName().equals(request.getName())) {
+            throw new AppException(ErrorCode.SYSTEM_PERMISSION_CANNOT_RENAME);
+        }
         if (!permission.getName().equals(request.getName())
                 && permissionRepository.existsByName(request.getName())) {
             throw new AppException(ErrorCode.PERMISSION_NAME_ALREADY_EXISTING);
@@ -52,6 +56,9 @@ public class PermissionServiceImpl implements PermissionService {
     public void deletePermission(Long id) {
         Permission permission =
                 permissionRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+        if (permission.isSystemPermission()) {
+            throw new AppException(ErrorCode.SYSTEM_PERMISSION_CANNOT_DELETE);
+        }
         permissionRepository.delete(permission);
     }
 

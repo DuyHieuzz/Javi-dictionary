@@ -1,7 +1,29 @@
 package com.example.javi.service.Impl;
 
-import java.util.Optional;
-
+import com.example.javi.dto.request.ChangePassRequest;
+import com.example.javi.dto.request.CreateUserRequest;
+import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.request.UpdateUserRequest;
+import com.example.javi.dto.response.UserResponse;
+import com.example.javi.entity.Role;
+import com.example.javi.entity.Status;
+import com.example.javi.entity.Users;
+import com.example.javi.exeption.AppException;
+import com.example.javi.exeption.ErrorCode;
+import com.example.javi.mapper.UsersMapper;
+import com.example.javi.repository.RoleRepository;
+import com.example.javi.repository.UsersRepository;
+import com.example.javi.service.UsersService;
+import com.example.javi.utils.SecurityUtil;
+import com.example.javi.utils.ValidationUtils;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jose.util.Base64;
+import com.nimbusds.jwt.SignedJWT;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,29 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.javi.dto.request.ChangePassRequest;
-import com.example.javi.dto.request.CreateUserRequest;
-import com.example.javi.dto.request.LoginRequest;
-import com.example.javi.dto.request.UpdateUserRequest;
-import com.example.javi.dto.response.UserResponse;
-import com.example.javi.entity.Status;
-import com.example.javi.entity.Users;
-import com.example.javi.exeption.AppException;
-import com.example.javi.exeption.ErrorCode;
-import com.example.javi.mapper.UsersMapper;
-import com.example.javi.repository.UsersRepository;
-import com.example.javi.service.UsersService;
-import com.example.javi.utils.SecurityUtil;
-import com.example.javi.utils.ValidationUtils;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jose.util.Base64;
-import com.nimbusds.jwt.SignedJWT;
-
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +44,7 @@ public class UsersServiceImpl implements UsersService {
     UsersMapper usersMapper;
     PasswordEncoder passwordEncoder;
     SecurityUtil securityUtil;
+    RoleRepository roleRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -79,8 +80,15 @@ public class UsersServiceImpl implements UsersService {
         if (!user.getPassword().equals(user.getConfirmPassword())) {
             throw new AppException(ErrorCode.MISMATCH_PASSWORD);
         }
-
         Users users = usersMapper.toUsers(user);
+        if (user.getRole() == null) {
+            Role defaultRole = roleRepository.findByName("USER")
+                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+            users.setRole(defaultRole);
+        } else {
+            users.setRole(user.getRole());
+        }
+
         users.setPassword(passwordEncoder.encode(user.getPassword()));
 
         usersRepository.save(users);
@@ -161,8 +169,20 @@ public class UsersServiceImpl implements UsersService {
     @Override
     @Transactional
     public UserResponse updateUser(Long userId, UpdateUserRequest updateUserRequest) {
-        Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        Users currentUser = securityUtil.getCurrentUser();
+
+        // Nếu không phải admin, người có quyền hạn và không phải chính mình → cấm không cho cập nhật
+        boolean isAdmin = currentUser.getRole() != null &&
+                currentUser.getRole().getPermissions().stream()
+                        .anyMatch(p -> p.getName().equals("MANAGE_USER"));
+        boolean isSelf = currentUser.getId().equals(userId);
+
+        if (!isSelf && !isAdmin) {
+            throw new AppException(ErrorCode.NO_PERMISSION_TO_UPDATE_USER);
+        }
         if (updateUserRequest.getUsername() != null) {
             String newUsername = updateUserRequest.getUsername().trim();
             Optional<Users> existingUser = usersRepository.findByUsername(newUsername);
@@ -170,8 +190,13 @@ public class UsersServiceImpl implements UsersService {
             if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
                 throw new AppException(ErrorCode.EXIST_USERNAME);
             }
+            if (newUsername.isEmpty()) {
+                throw new AppException(ErrorCode.USERNAME_CANNOT_BLANK);
+            }
+            updateUserRequest.setUsername(newUsername);
         }
 
+        // Thực hiện update
         usersMapper.updateUserFromDto(updateUserRequest, user);
         usersRepository.save(user);
         return usersMapper.toUserResponse(user);
