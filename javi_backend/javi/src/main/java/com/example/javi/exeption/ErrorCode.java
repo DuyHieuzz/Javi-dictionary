@@ -1,9 +1,8 @@
 package com.example.javi.exeption;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-
-import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
@@ -11,9 +10,9 @@ public enum ErrorCode {
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(
             1006,
-            "Token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...",
+            "Chưa đăng nhập hoặc token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...",
             HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1007, "Bạn không c quyền để dùng chức năng này", HttpStatus.FORBIDDEN),
+    UNAUTHORIZED(1007, "Bạn không có quyền để dùng chức năng này", HttpStatus.FORBIDDEN),
 
     // USER
     USER_EXISTED(1002, "Người dùng đã tồn tại", HttpStatus.BAD_REQUEST),
@@ -98,6 +97,14 @@ public enum ErrorCode {
     PERMISSION_NAME_ALREADY_EXISTING(1051, "Tên quyền đã tồn tại", HttpStatus.BAD_REQUEST),
     SYSTEM_PERMISSION_CANNOT_DELETE(1055, "Không thể xóa quyền hệ thống", HttpStatus.BAD_REQUEST),
     SYSTEM_PERMISSION_CANNOT_RENAME(1056, "Không thể đổi tên quyền hệ thống", HttpStatus.BAD_REQUEST),
+
+    //COMMENT
+    COMMENT_HAS_NO_ENTITY_TYPE(1057, "Không được để trống entityType", HttpStatus.BAD_REQUEST),
+    COMMENT_HAS_NO_ENTITY_ID(1058, "Id của loại bình luận không được để trông", HttpStatus.BAD_REQUEST),
+    COMMENT_HAS_NO_CONTENT(1059, "Bình luận phải có nội dung", HttpStatus.BAD_REQUEST),
+    COMMENT_NOT_FOUND(1060, "Không tìm thấy comment tương ứng", HttpStatus.NOT_FOUND),
+    NO_PERMISSION_TO_DELETE_COMMENT(1062, "Bạn không có quyền xóa bình luận này", HttpStatus.FORBIDDEN),
+    INVALID_REACTION(1063, "Phản ứng không đúng yêu cầu", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

@@ -1,0 +1,15 @@
+package com.example.javi.mapper;
+
+import com.example.javi.dto.response.CommentResponse;
+import com.example.javi.entity.Comment;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring")
+public interface CommentMapper {
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "user.fullName", target = "userName")
+    @Mapping(source = "user.avatarUrl", target = "avatarUrl")
+    @Mapping(target = "isMyComment", ignore = true)
+    CommentResponse toCommentResponse(Comment comment);
+}

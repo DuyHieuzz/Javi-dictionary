@@ -33,7 +33,7 @@ import com.nimbusds.jose.util.Base64;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
     @Value("${jwt.signerKey}")
@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, String.format("%s/kanji/**", apiPrefix))
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, String.format("%s/grammar/**", apiPrefix))
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, String.format("%s/comments/**", apiPrefix))
                         .permitAll()
                         .anyRequest()
                         .authenticated())
