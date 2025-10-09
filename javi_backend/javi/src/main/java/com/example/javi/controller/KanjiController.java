@@ -1,20 +1,28 @@
 package com.example.javi.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.KanjiRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.KanjiDetailResponse;
+import com.example.javi.dto.response.KanjiResponse;
+import com.example.javi.entity.EntityType;
 import com.example.javi.entity.Kanji;
+import com.example.javi.entity.Users;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
+import com.example.javi.service.HistorySearchService;
 import com.example.javi.service.KanjiService;
+import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
 import com.turkraft.springfilter.boot.Filter;
 
@@ -30,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KanjiController {
     KanjiService kanjiService;
+    HistorySearchService historySearchService;
+    SecurityUtil securityUtil;
 
     @PostMapping("")
     public ApiResponse createOrUpdateKanji(@Valid @RequestBody KanjiRequest request) {
@@ -54,20 +64,29 @@ public class KanjiController {
     }
 
     @GetMapping("/search")
-    public ApiResponse searchKanji(@RequestParam String keyword) {
-
+    public ApiResponse searchKanji(@RequestParam String keyword, Authentication authentication) {
+        List<KanjiResponse> response = kanjiService.getKanjiByKeyWord(keyword.toUpperCase());
+        if (authentication != null && authentication.isAuthenticated()) {
+            Users user = securityUtil.getCurrentUser();
+            historySearchService.saveHistoryByKeyword(user, keyword, EntityType.KANJI);
+        }
         return ApiResponse.builder()
-                .result(kanjiService.getKanjiByKeyWord(keyword.toUpperCase()))
+                .result(response)
                 .message("Lấy Kanji thành công")
                 .build();
     }
 
     @GetMapping("/search/get-mean")
-    public ApiResponse searchDetailKanji(@RequestParam String characterName) {
+    public ApiResponse searchDetailKanji(@RequestParam String characterName, Authentication authentication) {
         if (!ValidationUtils.isKanji(characterName.trim())) {
             throw new AppException(ErrorCode.NOT_KANJI);
         }
         KanjiDetailResponse kanjiDetailResponse = kanjiService.getKanjiDetailByCharacterName(characterName);
+        if (authentication != null && authentication.isAuthenticated()) {
+            Users user = securityUtil.getCurrentUser();
+            historySearchService.saveHistoryByEntity(
+                    user, kanjiDetailResponse.getId(), EntityType.KANJI, kanjiDetailResponse.getCharacterName());
+        }
         return ApiResponse.builder()
                 .result(kanjiDetailResponse)
                 .message("Lấy chi tiết kanji thành công")

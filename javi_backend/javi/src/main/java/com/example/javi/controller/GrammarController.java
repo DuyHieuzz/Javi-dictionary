@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.CreateGrammarRequest;
@@ -12,7 +13,11 @@ import com.example.javi.dto.request.GrammarSearchRequest;
 import com.example.javi.dto.request.UpdateGrammarRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.GrammarResponse;
+import com.example.javi.entity.EntityType;
+import com.example.javi.entity.Users;
 import com.example.javi.service.GrammarService;
+import com.example.javi.service.HistorySearchService;
+import com.example.javi.utils.SecurityUtil;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GrammarController {
     GrammarService grammarService;
+    HistorySearchService historySearchService;
+    SecurityUtil securityUtil;
 
     @PostMapping("")
     public ApiResponse createGrammar(@RequestBody CreateGrammarRequest request) {
@@ -53,19 +60,29 @@ public class GrammarController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse getDetailGrammarById(@PathVariable Long id) {
+    public ApiResponse getDetailGrammarById(@PathVariable Long id, Authentication authentication) {
         GrammarResponse grammarResponse = grammarService.getGrammarById(id);
+        if (authentication != null && authentication.isAuthenticated()) {
+            Users user = securityUtil.getCurrentUser();
+            historySearchService.saveHistoryByEntity(
+                    user, grammarResponse.getId(), EntityType.GRAMMAR, grammarResponse.getPattern());
+        }
         return ApiResponse.builder()
                 .result(grammarResponse)
                 .message("Lấy ngữ pháp thành công")
                 .build();
     }
 
-    @GetMapping("/search") // Endpoint GET /grammar/search
+    @GetMapping("/search")
     public ApiResponse<Page<GrammarResponse>> searchGrammars(
             @ModelAttribute GrammarSearchRequest request,
-            @PageableDefault(size = 5, sort = "grammarId") Pageable pageable) {
+            @PageableDefault(size = 5, sort = "grammarId") Pageable pageable,
+            Authentication authentication) {
         Page<GrammarResponse> responsePage = grammarService.searchGrammars(request, pageable);
+        if (authentication != null && authentication.isAuthenticated()) {
+            Users user = securityUtil.getCurrentUser();
+            historySearchService.saveHistoryByKeyword(user, request.getKeyword(), EntityType.GRAMMAR);
+        }
         return ApiResponse.<Page<GrammarResponse>>builder()
                 .message("Tìm kiếm mẫu ngữ pháp thành công.")
                 .result(responsePage)

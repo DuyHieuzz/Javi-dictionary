@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import jakarta.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -20,8 +22,9 @@ public class HistorySearch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
+    @JsonIgnore
     Users user;
 
     @Enumerated(EnumType.STRING)
@@ -31,8 +34,7 @@ public class HistorySearch {
     @Column(name = "entity_id")
     Long entityId; // id của từ hoặc kanji hay ngữ pháp
 
-    @Column(nullable = false)
-    String content; // tra từ, kanji, ngữ pháp nên không cần kiểu text
+    String keyword; // tra từ, kanji, ngữ pháp
 
     @Column(name = "searched_at")
     LocalDate searchedAt;
