@@ -56,6 +56,7 @@ public enum ErrorCode {
     // KANJI
     EMPTY_KANJI(1025, "Kanji không được để trống, mời nhập lại", HttpStatus.BAD_REQUEST),
     NOT_KANJI(1027, "Ký tự bạn nhập không phải Kanji, mời nhập lại", HttpStatus.BAD_REQUEST),
+    NOT_SINGLE_KANJI(1064, "Bạn chỉ có thể xóa 1 kanji, không phải 1 cụm nhiều kanji", HttpStatus.BAD_REQUEST),
     KANJI_NOT_FOUND(1026, "Không có dữ liệu về chữ Kanji bạn cần tìm, mời nhập lại hán tự", HttpStatus.NOT_FOUND),
     KANJI_HAS_NO_MEANING(1027, "Kanji đang không có nghĩa", HttpStatus.BAD_REQUEST), // có dùng ở kanjiRequest mục valid
     KANJI_STILL_IN_USE(

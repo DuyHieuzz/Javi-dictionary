@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import com.example.javi.dto.request.KanjiRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.KanjiDetailResponse;
-import com.example.javi.dto.response.KanjiResponse;
 import com.example.javi.entity.Kanji;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
@@ -45,8 +44,8 @@ public class KanjiController {
 
     @DeleteMapping("")
     public ApiResponse deleteKanjiByCharacterName(@RequestParam String characterName) {
-        if (!ValidationUtils.isKanji(characterName)) {
-            throw new AppException(ErrorCode.NOT_KANJI);
+        if (!ValidationUtils.isSingleKanji(characterName.trim())) {
+            throw new AppException(ErrorCode.NOT_SINGLE_KANJI);
         }
         kanjiService.deleteKanjiByCharacterName(characterName);
         return ApiResponse.builder()
@@ -58,17 +57,17 @@ public class KanjiController {
     public ApiResponse searchKanji(@RequestParam String keyword) {
 
         return ApiResponse.builder()
-                .result(kanjiService.getKanjiByKeyWord(keyword))
+                .result(kanjiService.getKanjiByKeyWord(keyword.toUpperCase()))
                 .message("Lấy Kanji thành công")
                 .build();
     }
 
     @GetMapping("/search/get-mean")
-    public ApiResponse searchDetailKanji(@RequestBody KanjiResponse kanji) {
-        if (!ValidationUtils.isKanji(kanji.getCharacterName())) {
+    public ApiResponse searchDetailKanji(@RequestParam String characterName) {
+        if (!ValidationUtils.isKanji(characterName.trim())) {
             throw new AppException(ErrorCode.NOT_KANJI);
         }
-        KanjiDetailResponse kanjiDetailResponse = kanjiService.getKanjiDetailByCharacterName(kanji.getCharacterName());
+        KanjiDetailResponse kanjiDetailResponse = kanjiService.getKanjiDetailByCharacterName(characterName);
         return ApiResponse.builder()
                 .result(kanjiDetailResponse)
                 .message("Lấy chi tiết kanji thành công")

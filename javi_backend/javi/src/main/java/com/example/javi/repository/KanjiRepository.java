@@ -18,4 +18,6 @@ public interface KanjiRepository extends JpaRepository<Kanji, Long>, JpaSpecific
     void deleteKanjiByCharacterName(String characterName);
 
     List<Kanji> findBySinoViNameContainingIgnoreCase(String sinoViName);
+
+    List<Kanji> findBySinoViName(String sinoViName);
 }

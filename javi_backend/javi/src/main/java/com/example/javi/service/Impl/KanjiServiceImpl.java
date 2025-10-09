@@ -1,7 +1,9 @@
 package com.example.javi.service.Impl;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.KanjiMapper;
 import com.example.javi.repository.KanjiRepository;
+import com.example.javi.repository.VocabulariesRepository;
 import com.example.javi.service.KanjiService;
 import com.example.javi.utils.ValidationUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 public class KanjiServiceImpl implements KanjiService {
     KanjiRepository kanjiRepository;
     KanjiMapper kanjiMapper;
+    VocabulariesRepository vocabulariesRepository;
+    ObjectMapper objectMapper;
     RestTemplate restTemplate = new RestTemplate();
     static String BASE_URL_KANJI_ALIVE = "https://app.kanjialive.com/api/kanji/";
     static String BASE_URL_KANJI_API = "https://kanjiapi.dev/v1/kanji/";
@@ -51,7 +56,12 @@ public class KanjiServiceImpl implements KanjiService {
         }
 
         Optional<Kanji> existingKanji = kanjiRepository.findByCharacterName(kanjiRequest.getCharacterName());
-
+        if (kanjiRequest.getSinoViName() != null
+                && !kanjiRequest.getSinoViName().isBlank()) {
+            String s = Normalizer.normalize(kanjiRequest.getSinoViName().trim(), Normalizer.Form.NFC)
+                    .toUpperCase(Locale.forLanguageTag("vi"));
+            kanjiRequest.setSinoViName(s);
+        }
         if (existingKanji.isPresent()) {
             // Cập nhật nếu đã tồn tại
             Kanji kanji = existingKanji.get();
@@ -70,7 +80,8 @@ public class KanjiServiceImpl implements KanjiService {
     @Override
     @Transactional
     public void deleteKanjiByCharacterName(String characterName) {
-        if (characterName == null || characterName.trim().isEmpty()) {
+        characterName = characterName.trim();
+        if (characterName.isEmpty()) {
             throw new AppException(ErrorCode.EMPTY_KANJI);
         }
         Kanji existingKanji = kanjiRepository
@@ -93,7 +104,7 @@ public class KanjiServiceImpl implements KanjiService {
                 .findByCharacterName(kanjiChar)
                 .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
         KanjiDetailResponse kanjiDetailResponse = kanjiMapper.toKanjiDetailResponse(existingKanji);
-        ObjectMapper mapper = new ObjectMapper();
+
         // Do kanji alive không đầy đủ kanji nên rủi ro -> kết hợp call 2 api (kanji alive có mp4, kanji api không có
         // mp4 nhưng đủ kanji)
         try {
@@ -101,17 +112,17 @@ public class KanjiServiceImpl implements KanjiService {
             String kanjiAliveUrl = BASE_URL_KANJI_ALIVE + kanjiChar;
             String kanjiAliveJson = restTemplate.getForObject(kanjiAliveUrl, String.class);
 
-            JsonNode kanjiAlive = mapper.readTree(kanjiAliveJson);
+            JsonNode kanjiAlive = objectMapper.readTree(kanjiAliveJson);
             kanjiDetailResponse.setVideoUrl(kanjiAlive.path("mp4_video_source").asText(""));
 
             // KANJI API để lấy các trường onyomi, kunyomi, stroke
             String kanjiApiUrl = BASE_URL_KANJI_API + kanjiChar;
             String kanjiApiJson = restTemplate.getForObject(kanjiApiUrl, String.class);
-            JsonNode kanjiApi = mapper.readTree(kanjiApiJson);
+            JsonNode kanjiApi = objectMapper.readTree(kanjiApiJson);
             List<String> onReadings =
-                    mapper.convertValue(kanjiApi.get("on_readings"), new TypeReference<List<String>>() {});
+                    objectMapper.convertValue(kanjiApi.get("on_readings"), new TypeReference<List<String>>() {});
             List<String> kunReadings =
-                    mapper.convertValue(kanjiApi.get("kun_readings"), new TypeReference<List<String>>() {});
+                    objectMapper.convertValue(kanjiApi.get("kun_readings"), new TypeReference<List<String>>() {});
             Integer stroke = kanjiApi.get("stroke_count").asInt();
             kanjiDetailResponse.setOnyomi(onReadings);
             kanjiDetailResponse.setKunyomi(kunReadings);
@@ -128,20 +139,51 @@ public class KanjiServiceImpl implements KanjiService {
         if (keyword == null || keyword.trim().isEmpty()) {
             throw new AppException(ErrorCode.EMPTY_KANJI);
         }
-        List<KanjiResponse> kanjiResponses = new ArrayList<>();
 
-        if (ValidationUtils.isKanji(keyword)) {
-            Kanji existingKanji = kanjiRepository
-                    .findByCharacterName(keyword)
-                    .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
-            kanjiResponses.add(kanjiMapper.toKanjiResponse(existingKanji));
-            return kanjiResponses;
+        String q = keyword.trim();
+        List<KanjiResponse> results = new ArrayList<>();
+
+        // Một chữ Kanji duy nhất
+        if (ValidationUtils.isSingleKanji(q)) {
+            kanjiRepository
+                    .findByCharacterName(q)
+                    .map(kanjiMapper::toKanjiResponse)
+                    .ifPresent(results::add);
+            return results;
         }
-        List<Kanji> existingKanji = kanjiRepository.findBySinoViNameContainingIgnoreCase(keyword);
-        for (Kanji kanji : existingKanji) {
-            kanjiResponses.add(kanjiMapper.toKanjiResponse(kanji));
+
+        // Chuỗi toàn Kanji (ví dụ 勉強)
+        if (ValidationUtils.isAllKanji(q)) {
+            for (String ch : ValidationUtils.extractKanjiChars(q)) {
+                kanjiRepository
+                        .findByCharacterName(ch)
+                        .map(kanjiMapper::toKanjiResponse)
+                        .ifPresent(results::add);
+            }
+            if (!results.isEmpty()) return results;
         }
-        return kanjiResponses;
+
+        // Chuỗi chứa Kana (食べるの見る, 勉強する, v.v.)
+        if (ValidationUtils.containsKana(q)) {
+            vocabulariesRepository.findByWord(q).ifPresent(vocab -> vocab.getKanjis()
+                    .forEach(k -> results.add(kanjiMapper.toKanjiResponse(k))));
+
+            if (!results.isEmpty()) return results;
+
+            for (String ch : ValidationUtils.extractKanjiChars(q)) {
+                kanjiRepository
+                        .findByCharacterName(ch)
+                        .map(kanjiMapper::toKanjiResponse)
+                        .ifPresent(results::add);
+            }
+            if (!results.isEmpty()) return results;
+        }
+
+        // Fallback: Hán Việt
+        results.addAll(kanjiRepository.findBySinoViName(q).stream()
+                .map(kanjiMapper::toKanjiResponse)
+                .toList());
+        return results;
     }
 
     @Override

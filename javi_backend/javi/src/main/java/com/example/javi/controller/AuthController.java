@@ -111,7 +111,7 @@ public class AuthController {
                 .body(res);
     }
 
-    @PostMapping("/refresh-token")
+    @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         // Lấy refresh token từ cookie
         String refreshToken = null;

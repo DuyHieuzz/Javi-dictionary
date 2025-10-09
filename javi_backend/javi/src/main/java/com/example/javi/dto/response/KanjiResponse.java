@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class KanjiResponse {
-    Long grammarId;
+    Long id;
     String characterName;
     String sinoViName;
     String meaning;
