@@ -15,16 +15,16 @@ import com.example.javi.dto.request.MeaningRequest;
 import com.example.javi.dto.request.VocabRequest;
 import com.example.javi.dto.request.VocabUpdateDTO;
 import com.example.javi.dto.response.VocabUpdateResponse;
-import com.example.javi.entity.Kanji;
-import com.example.javi.entity.Meaning;
-import com.example.javi.entity.MeaningExample;
-import com.example.javi.entity.Vocabularies;
+import com.example.javi.entity.*;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.VocabulariesMapper;
 import com.example.javi.repository.KanjiRepository;
+import com.example.javi.repository.UsersRepository;
 import com.example.javi.repository.VocabulariesRepository;
+import com.example.javi.service.GeminiService;
 import com.example.javi.service.VocabulariesService;
+import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
 
 import lombok.AccessLevel;
@@ -40,6 +40,9 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     VocabulariesRepository vocabulariesRepository;
     KanjiRepository kanjiRepository;
     VocabulariesMapper vocabulariesMapper;
+    SecurityUtil securityUtil;
+    GeminiService geminiService;
+    UsersRepository usersRepository;
 
     @Override
     @Transactional
@@ -238,6 +241,20 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     @Override
     public Page<Vocabularies> getAllVocabulariesByFilter(Specification<Vocabularies> spec, Pageable pageable) {
         return vocabulariesRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public String explainVocabulary(String word) {
+        Users currentUser = securityUtil.getCurrentUser();
+        if (currentUser.getAccountType().equals(AccountType.PREMIUM)) {
+            return geminiService.explainWord(word);
+        }
+        if (currentUser.getRemainingTrialExplains() <= 0) {
+            throw new AppException(ErrorCode.NO_TRIAL_LEFT);
+        }
+        currentUser.setRemainingTrialExplains(currentUser.getRemainingTrialExplains() - 1);
+        usersRepository.save(currentUser);
+        return geminiService.explainWord(word);
     }
 
     @Override

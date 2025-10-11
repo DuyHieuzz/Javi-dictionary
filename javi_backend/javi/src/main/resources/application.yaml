@@ -12,6 +12,14 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  ai:
+    openai:
+      api-key: AIzaSyDtT3EjqvkkbNAFXYgDt-xaVU55sUrH3yo
+      chat:
+        base-url: https://generativelanguage.googleapis.com
+        completions-path: /v1beta/openai/chat/completions
+        options:
+          model: gemini-2.0-flash
 javi:
   upload-file:
     base-uri: file:///D:/Javi-dictionary/upload/
@@ -22,3 +30,8 @@ jwt:
   signerKey: "TRrx3ZoD9xgevlM73MU8/ay9VO+8RJ7NjvFh5Ab0xoTsKzuPYwCOKDZugGYsVxroYRfP94DH6jBxBhFyBPaQQQ==" #base64
   valid-duration: 3600 # in second
   refreshable-duration: 36000 # in seconds
+google:
+  translate:
+    base-url: https://translate.googleapis.com/translate_a/single
+  vision:
+    api-key: AIzaSyD-pZ_FRaEjHqnVXiCA-6Gw6wTqAkr18B0

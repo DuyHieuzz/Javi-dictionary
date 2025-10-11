@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpClientErrorException;
 
 import com.example.javi.dto.response.ApiResponse;
 
@@ -77,5 +78,14 @@ public class GlobalExceptionHandler {
         apiResponse.setMessage(errorCode.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(HttpClientErrorException.class)
+    ResponseEntity<ApiResponse> handleHttpClientError(HttpClientErrorException e) {
+        return ResponseEntity.status(e.getStatusCode())
+                .body(ApiResponse.builder()
+                        .code(ErrorCode.ERROR_TRANSLATION.getCode())
+                        .message("Google Translate API error: " + e.getStatusText())
+                        .build());
     }
 }

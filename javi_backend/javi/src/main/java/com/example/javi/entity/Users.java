@@ -41,6 +41,13 @@ public class Users extends BaseEntity {
     @Column(name = "self_introduction", columnDefinition = "TEXT")
     String selfIntroduction;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private AccountType accountType = AccountType.FREE;
+
+    @Column(name = "remaining_trial_explains")
+    int remainingTrialExplains = 5;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;

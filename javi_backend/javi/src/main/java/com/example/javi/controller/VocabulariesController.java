@@ -21,6 +21,7 @@ import com.example.javi.entity.Users;
 import com.example.javi.entity.Vocabularies;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
+import com.example.javi.service.GeminiService;
 import com.example.javi.service.HistorySearchService;
 import com.example.javi.service.VocabulariesService;
 import com.example.javi.utils.SecurityUtil;
@@ -41,6 +42,7 @@ public class VocabulariesController {
     VocabulariesService vocabulariesService;
     HistorySearchService historySearchService;
     SecurityUtil securityUtil;
+    GeminiService geminiService;
 
     @PostMapping("")
     public ApiResponse createVocabulary(@Valid @RequestBody VocabRequest request) {
@@ -116,5 +118,14 @@ public class VocabulariesController {
     public ApiResponse deleteVocabulary(@PathVariable Long id) {
         vocabulariesService.deleteVocabularyById(id);
         return ApiResponse.builder().message("Xóa từ vựng thành công").build();
+    }
+
+    @PostMapping("/explain/{word}")
+    public ApiResponse explainVocabulary(@PathVariable String word) {
+        String response = vocabulariesService.explainVocabulary(word);
+        return ApiResponse.builder()
+                .message("Giải nghĩa thành công")
+                .result(response)
+                .build();
     }
 }

@@ -24,5 +24,7 @@ public interface VocabulariesService {
 
     Page<Vocabularies> getAllVocabulariesByFilter(Specification<Vocabularies> spec, Pageable pageable);
 
+    String explainVocabulary(String word);
+
     void deleteVocabularyById(Long id);
 }

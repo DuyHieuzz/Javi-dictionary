@@ -20,6 +20,10 @@ public enum ErrorCode {
     USER_NOT_FOUND(1005, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
     USER_HAS_BEEN_BLOCK(1043, "Tài khoản của bạn đã bị chặn, vui lòng liên hệ admin", HttpStatus.FORBIDDEN),
     NO_PERMISSION_TO_UPDATE_USER(1055, "Bạn không có quyền cập nhật người dùng này", HttpStatus.FORBIDDEN),
+    NO_TRIAL_LEFT(
+            1071,
+            "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.",
+            HttpStatus.FORBIDDEN),
 
     // LOGIN
     INCORRECT_LOGIN_INFORMATION(1006, "Đăng nhập thất bại. Email hoặc mật khẩu không đúng", HttpStatus.BAD_REQUEST),
@@ -107,6 +111,14 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(1060, "Không tìm thấy comment tương ứng", HttpStatus.NOT_FOUND),
     NO_PERMISSION_TO_DELETE_COMMENT(1062, "Bạn không có quyền xóa bình luận này", HttpStatus.FORBIDDEN),
     INVALID_REACTION(1063, "Phản ứng không đúng yêu cầu", HttpStatus.BAD_REQUEST),
+
+    // TRANSLATION
+    ERROR_TRANSLATION(1068, "Có lỗi xảy ra khi dịch", HttpStatus.BAD_REQUEST),
+    SOURCE_LANG_CANNOT_EMPTY(1065, "Ngôn ngữ nguồn không được để trống", HttpStatus.BAD_REQUEST),
+    TARGET_LANG_CANNOT_EMPTY(1066, "Ngôn ngữ đích không được để trống", HttpStatus.BAD_REQUEST),
+    SOURCE_TEXT_CANNOT_EMPTY(1067, "Đoạn văn cần dịch không được để trống", HttpStatus.BAD_REQUEST),
+    SOURCE_TEXT_TOO_LONG(1069, "Đoạn văn cần dịch không được quá 5000 từ", HttpStatus.BAD_REQUEST),
+    CANNOT_DETECTED_TEXT_IN_IMAGE(1070, "Không thể phát hiện chữ trong ảnh của bạn", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

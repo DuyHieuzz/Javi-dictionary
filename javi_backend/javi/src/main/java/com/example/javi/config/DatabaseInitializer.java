@@ -31,6 +31,9 @@ public class DatabaseInitializer implements ApplicationRunner {
     static final String ADMIN_USER_NAME = "admin";
     static final String ADMIN_PASSWORD = "123456";
     static final String ADMIN_EMAIL = "admin@gmail.com";
+    static final String USER_USER_NAME = "user";
+    static final String USER_PASSWORD = "123456";
+    static final String USER_EMAIL = "user@gmail.com";
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -86,7 +89,23 @@ public class DatabaseInitializer implements ApplicationRunner {
             adminUser.setEmail(ADMIN_EMAIL);
             adminUser.setStatus(Status.ACTIVE);
             adminUser.setRole(adminRole);
+            adminUser.setAccountType(AccountType.PREMIUM);
+            adminUser.setRemainingTrialExplains(5);
             usersRepository.save(adminUser);
+        }
+
+        if (usersRepository.findByUsername(USER_USER_NAME).isEmpty()) {
+            Role userRole =
+                    roleRepository.findByName(USER_USER_NAME.toUpperCase()).get();
+            Users user = new Users();
+            user.setUsername(USER_USER_NAME);
+            user.setPassword(passwordEncoder.encode(USER_PASSWORD));
+            user.setEmail(USER_EMAIL);
+            user.setStatus(Status.ACTIVE);
+            user.setRole(userRole);
+            user.setAccountType(AccountType.FREE);
+            user.setRemainingTrialExplains(5);
+            usersRepository.save(user);
         }
     }
 }
