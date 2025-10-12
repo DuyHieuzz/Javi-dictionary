@@ -211,4 +211,20 @@ public class SecurityUtil {
         }
         return null;
     }
+
+    public boolean hasPermission(String permissionName) {
+        Users currentUser = getCurrentUser();
+
+        return currentUser.getRole().getPermissions().stream()
+                .anyMatch(p -> p.getName().equalsIgnoreCase(permissionName));
+    }
+
+    /**
+     * Nếu không có quyền thì ném exception
+     */
+    public void requirePermission(String permissionName) {
+        if (!hasPermission(permissionName)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+    }
 }

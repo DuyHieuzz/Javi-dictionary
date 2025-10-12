@@ -14,6 +14,7 @@ public enum ErrorCode {
             "Chưa đăng nhập hoặc token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...",
             HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "Bạn không có quyền để dùng chức năng này", HttpStatus.FORBIDDEN),
+    INVALID_PREMIUM_TYPE(1072, "Thời gian premium không hợp lệ hoặc không truyền xuống", HttpStatus.BAD_REQUEST),
 
     // USER
     USER_EXISTED(1002, "Người dùng đã tồn tại", HttpStatus.BAD_REQUEST),

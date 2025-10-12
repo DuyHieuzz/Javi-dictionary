@@ -28,6 +28,11 @@ public class BaseEntity {
     protected void onCreate() {
         createdAt = createdAt != null ? createdAt : LocalDate.now();
         updatedAt = LocalDate.now();
+        if (this instanceof Users user) {
+            if (user.getAccountType() == null) user.setAccountType(AccountType.FREE);
+            if (user.getStatus() == null) user.setStatus(Status.ACTIVE);
+            if (user.getRemainingTrialExplains() == 0) user.setRemainingTrialExplains(5);
+        }
     }
 
     @PreUpdate

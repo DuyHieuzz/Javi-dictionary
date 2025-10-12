@@ -35,5 +35,15 @@ public interface UsersMapper {
         if (user.getUsername() != null) {
             user.setUsername(user.getUsername().trim());
         }
+
+        if (user.getAccountType() == null) {
+            user.setAccountType(com.example.javi.entity.AccountType.FREE);
+        }
+        if (user.getStatus() == null) {
+            user.setStatus(com.example.javi.entity.Status.ACTIVE);
+        }
+        if (user.getRemainingTrialExplains() == 0) {
+            user.setRemainingTrialExplains(5);
+        }
     }
 }

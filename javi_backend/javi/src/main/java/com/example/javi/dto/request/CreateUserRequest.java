@@ -1,10 +1,12 @@
 package com.example.javi.dto.request;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import com.example.javi.entity.AccountType;
 import com.example.javi.entity.JlptLevel;
 import com.example.javi.entity.Role;
 import com.example.javi.entity.Status;
@@ -44,4 +46,8 @@ public class CreateUserRequest {
     Role role;
 
     Status status = Status.ACTIVE;
+
+    AccountType accountType = AccountType.FREE;
+
+    LocalDateTime premiumExpiredAt;
 }

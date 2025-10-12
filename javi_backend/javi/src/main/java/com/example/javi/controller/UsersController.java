@@ -19,6 +19,7 @@ import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.UserResponse;
+import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
@@ -141,5 +142,12 @@ public class UsersController {
         return ApiResponse.builder()
                 .message("Mở khóa tài khoản người dùng thành công")
                 .build();
+    }
+
+    @PreAuthorize("hasAuthority('MANAGE_USER')")
+    @PutMapping("/{id}/upgrade-premium")
+    public ApiResponse upgrade(@PathVariable Long id, @RequestParam PremiumType type) {
+        String message = usersService.setPremiumManually(id, type);
+        return ApiResponse.builder().message(message).build();
     }
 }

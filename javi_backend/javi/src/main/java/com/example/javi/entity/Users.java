@@ -1,6 +1,7 @@
 package com.example.javi.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -44,6 +45,13 @@ public class Users extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AccountType accountType = AccountType.FREE;
+
+    @Column(name = "premium_expired_at")
+    private LocalDateTime premiumExpiredAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "premium_type")
+    private PremiumType premiumType;
 
     @Column(name = "remaining_trial_explains")
     int remainingTrialExplains = 5;

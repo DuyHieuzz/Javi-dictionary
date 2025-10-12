@@ -9,6 +9,7 @@ import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
 import com.example.javi.dto.response.UserResponse;
+import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
 
 public interface UsersService {
@@ -34,4 +35,6 @@ public interface UsersService {
 
     // Hàm thủ công, getMyInfo hiệu năng cao hơn
     Users getUserDetailsFromToken(String token);
+
+    String setPremiumManually(Long userId, PremiumType premiumType);
 }

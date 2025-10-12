@@ -1,5 +1,6 @@
 package com.example.javi.service.Impl;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +17,7 @@ import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
 import com.example.javi.dto.response.UserResponse;
-import com.example.javi.entity.Role;
-import com.example.javi.entity.Status;
-import com.example.javi.entity.Users;
+import com.example.javi.entity.*;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.UsersMapper;
@@ -90,7 +89,6 @@ public class UsersServiceImpl implements UsersService {
         } else {
             users.setRole(user.getRole());
         }
-
         users.setPassword(passwordEncoder.encode(user.getPassword()));
 
         usersRepository.save(users);
@@ -228,5 +226,35 @@ public class UsersServiceImpl implements UsersService {
             log.error("Token verification failed: {}", e.getMessage());
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
+    }
+
+    @Override
+    public String setPremiumManually(Long userId, PremiumType premiumType) {
+        if (premiumType == null) {
+            throw new AppException(ErrorCode.INVALID_PREMIUM_TYPE);
+        }
+
+        // Check quyền
+        securityUtil.requirePermission("MANAGE_USER");
+
+        Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiredAt =
+                switch (premiumType) {
+                    case MONTHLY_1 -> now.plusMonths(1);
+                    case MONTHLY_3 -> now.plusMonths(3);
+                    case MONTHLY_6 -> now.plusMonths(6);
+                    case LIFETIME -> null;
+                };
+
+        user.setAccountType(AccountType.PREMIUM);
+        user.setPremiumType(premiumType);
+        user.setPremiumExpiredAt(expiredAt);
+
+        usersRepository.save(user);
+        return "Đã cấp premium cho người dùng có email là: " + user.getEmail() + ", hiệu lực đến "
+                + (user.getPremiumExpiredAt() == null
+                        ? "trọn đời"
+                        : user.getPremiumExpiredAt().toString());
     }
 }
