@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "translation")
@@ -13,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Translation extends BaseEntity {
+public class Translation  {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -33,4 +37,11 @@ public class Translation extends BaseEntity {
 
     @Column(name = "translated_text", nullable = false, columnDefinition = "TEXT")
     String translatedText; // đoạn văn đã dịch
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    EngineType engine;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }

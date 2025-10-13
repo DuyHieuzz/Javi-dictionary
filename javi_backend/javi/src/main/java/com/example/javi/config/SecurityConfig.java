@@ -65,6 +65,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, String.format("%s/comments/**", apiPrefix))
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/translate")
+                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .oauth2ResourceServer(

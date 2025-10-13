@@ -37,4 +37,6 @@ public interface UsersService {
     Users getUserDetailsFromToken(String token);
 
     String setPremiumManually(Long userId, PremiumType premiumType);
+
+    void checkAndUpdateImageQuota(Users users);
 }

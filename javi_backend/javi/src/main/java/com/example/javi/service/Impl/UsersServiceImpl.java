@@ -1,6 +1,8 @@
 package com.example.javi.service.Impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -48,8 +50,16 @@ public class UsersServiceImpl implements UsersService {
     RoleRepository roleRepository;
 
     @NonFinal
+    @Value("${app.time-zone}")
+    private String timezone;
+
+    @NonFinal
     @Value("${jwt.signerKey}")
     String signerKey;
+
+    private ZoneId getZoneId() {
+        return ZoneId.of(timezone);
+    }
 
     @Override
     public Page<Users> getAllUsersByFilter(Specification<Users> spec, Pageable pageable) {
@@ -256,5 +266,61 @@ public class UsersServiceImpl implements UsersService {
                 + (user.getPremiumExpiredAt() == null
                         ? "trọn đời"
                         : user.getPremiumExpiredAt().toString());
+    }
+
+    @Override
+    @Transactional
+    public synchronized void checkAndUpdateImageQuota(Users user) {
+        ZoneId zoneId = getZoneId();
+        LocalDate today = LocalDate.now(zoneId);
+
+        // Hạ cấp nếu premium đã hết hạn
+        if (user.getAccountType() == AccountType.PREMIUM
+                && user.getPremiumExpiredAt() != null
+                && user.getPremiumExpiredAt().isBefore(LocalDateTime.now(zoneId))) {
+            log.info(
+                    "[PREMIUM] User {} hết hạn lúc {}, tự động hạ cấp về FREE",
+                    user.getEmail(),
+                    user.getPremiumExpiredAt());
+            user.setAccountType(AccountType.FREE);
+            user.setPremiumExpiredAt(null);
+            usersRepository.save(user);
+        }
+
+        // PREMIUM user còn hạn thì bỏ qua quota
+        if (user.getAccountType() == AccountType.PREMIUM
+                && (user.getPremiumExpiredAt() == null
+                        || user.getPremiumExpiredAt().isAfter(LocalDateTime.now(zoneId)))) {
+            log.debug("[QUOTA] PREMIUM user {} dịch ảnh, không trừ lượt", user.getEmail());
+            return;
+        }
+
+        // Reset quota nếu sang ngày mới
+        LocalDate lastDate = Optional.ofNullable(user.getLastImageTranslationDate())
+                .map(LocalDateTime::toLocalDate)
+                .orElse(null);
+
+        if (lastDate == null || !lastDate.isEqual(today)) {
+            log.info("[QUOTA] Reset lượt dịch ảnh cho user {} - Ngày mới {}", user.getEmail(), today);
+            user.setDailyImageTranslations(2);
+            user.setLastImageTranslationDate(LocalDateTime.now(zoneId));
+            usersRepository.save(user);
+        }
+
+        // FREE user vượt quota
+        if (user.getDailyImageTranslations() <= 0) {
+            log.warn("[QUOTA] User {} đã vượt giới hạn 2 lượt dịch ảnh/ngày (FREE)", user.getEmail());
+            throw new AppException(ErrorCode.FREE_USER_QUOTA_EXCEEDED);
+        }
+
+        // Trừ lượt cho FREE user
+        user.setDailyImageTranslations(user.getDailyImageTranslations() - 1);
+        user.setLastImageTranslationDate(LocalDateTime.now(zoneId));
+        usersRepository.save(user);
+
+        log.info(
+                "[QUOTA] User {} (FREE) còn {}/2 lượt dịch ảnh hôm nay",
+                user.getEmail(),
+                user.getDailyImageTranslations());
     }
 }

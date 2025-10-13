@@ -22,5 +22,5 @@ public class TranslateRequest {
     @Size(max = 5000, message = "SOURCE_TEXT_TOO_LONG")
     String sourceText;
 
-    String engin = "GOOGLE"; // Xác định dùng GOOGLE hay AI (GEMINI);
+    String engine = "GOOGLE"; // Xác định dùng GOOGLE hay AI (GEMINI);
 }

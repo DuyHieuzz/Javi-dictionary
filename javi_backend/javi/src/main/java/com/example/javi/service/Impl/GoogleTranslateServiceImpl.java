@@ -3,9 +3,10 @@ package com.example.javi.service.Impl;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
+import com.example.javi.entity.EngineType;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,10 +22,12 @@ import com.example.javi.mapper.TranslationMapper;
 import com.example.javi.repository.TranslationRepository;
 import com.example.javi.service.GoogleTranslateService;
 import com.example.javi.service.OcrService;
+import com.example.javi.service.UsersService;
 import com.example.javi.utils.SecurityUtil;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
+import com.jayway.jsonpath.JsonPath;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,7 @@ public class GoogleTranslateServiceImpl implements GoogleTranslateService {
     SecurityUtil securityUtil;
     TranslationMapper translationMapper;
     TranslationRepository translationRepository;
+    UsersService usersService;
 
     @NonFinal
     @Value("${google.translate.base-url}")
@@ -52,8 +56,7 @@ public class GoogleTranslateServiceImpl implements GoogleTranslateService {
             .build();
 
     @Override
-    public TranslateResponse translateWithGoogleTranslate(
-            TranslateRequest translateRequest, Authentication authentication) {
+    public TranslateResponse translateWithGoogleTranslate(TranslateRequest translateRequest) {
         try {
             // Detect ngôn ngữ thật của đoạn text
             Language detectedLang = detector.detectLanguageOf(translateRequest.getSourceText());
@@ -90,13 +93,18 @@ public class GoogleTranslateServiceImpl implements GoogleTranslateService {
                 throw new AppException(ErrorCode.ERROR_TRANSLATION);
             }
 
-            // Trích text dịch
-            String translatedText = response.split("\"")[1];
-            if (authentication != null) {
+            // Trích xuất toàn bộ đoạn dịch từ JSON trả về
+            List<String> parts = JsonPath.read(response, "$[0][*][0]");
+            String translatedText = String.join("", parts).trim();
+
+            log.info("Đã ghép {} đoạn dịch, tổng độ dài: {} ký tự", parts.size(), translatedText.length());
+            Long userId = securityUtil.getCurrentUserId();
+            if (userId != null) {
                 Users currentUser = securityUtil.getCurrentUser();
                 Translation translation = translationMapper.toTranslation(translateRequest);
                 translation.setUser(currentUser);
                 translation.setTranslatedText(translatedText);
+                translation.setEngine(EngineType.GOOGLE);
                 translationRepository.save(translation);
             }
             TranslateResponse translateResponse = translationMapper.toTranslateResponse(translateRequest);
@@ -110,37 +118,24 @@ public class GoogleTranslateServiceImpl implements GoogleTranslateService {
     }
 
     @Override
-    public TranslateResponse translateImage(MultipartFile imageFile, String targetLang, Authentication authentication) {
-        try {
-            // OCR trích xuất chữ
-            String detectedText = ocrService.extractTextFromImage(imageFile);
-            if (detectedText == null || detectedText.isBlank()) {
-                throw new AppException(ErrorCode.CANNOT_DETECTED_TEXT_IN_IMAGE);
-            }
+    public TranslateResponse translateImage(MultipartFile imageFile, String targetLang, String sourceLang) {
+        Users user = securityUtil.getCurrentUser();
 
-            // Detect ngôn ngữ thật
-            Language detected = detector.detectLanguageOf(detectedText);
-            String detectedLang = detected.getIsoCode639_1().toString();
+        // Kiểm tra quota
+        usersService.checkAndUpdateImageQuota(user);
 
-            // Dịch văn bản
-            TranslateRequest request = TranslateRequest.builder()
-                    .sourceText(detectedText)
-                    .sourceLang(detectedLang)
-                    .targetLang(targetLang)
-                    .build();
-
-            TranslateResponse response = translateWithGoogleTranslate(request, authentication);
-
-            return TranslateResponse.builder()
-                    .sourceLang(detectedLang)
-                    .targetLang(targetLang)
-                    .sourceText(detectedText)
-                    .translatedText(response != null ? response.getTranslatedText() : "Không thể dịch")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Lỗi dịch ảnh", e);
-            throw new AppException(ErrorCode.ERROR_TRANSLATION);
+        // OCR
+        String sourceText = ocrService.extractTextFromImage(imageFile);
+        if (sourceText.isBlank()) {
+            throw new AppException(ErrorCode.CANNOT_DETECTED_TEXT_IN_IMAGE);
         }
+
+        TranslateRequest translateRequest = new TranslateRequest();
+        translateRequest.setSourceText(sourceText);
+        translateRequest.setTargetLang(targetLang);
+        translateRequest.setSourceLang(sourceLang);
+
+        // Dịch
+        return translateWithGoogleTranslate(translateRequest);
     }
 }

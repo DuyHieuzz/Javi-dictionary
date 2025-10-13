@@ -23,6 +23,7 @@ spring:
 javi:
   upload-file:
     base-uri: file:///D:/Javi-dictionary/upload/
+  max-size-image-translate: 4194304  #4MB
 api:
   prefix: /api/v1
 
@@ -34,4 +35,6 @@ google:
   translate:
     base-url: https://translate.googleapis.com/translate_a/single
   vision:
-    api-key: AIzaSyD-pZ_FRaEjHqnVXiCA-6Gw6wTqAkr18B0
+    api-key: ${GOOGLE_CLOUD_API_KEY}
+app:
+  time-zone: Asia/Ho_Chi_Minh

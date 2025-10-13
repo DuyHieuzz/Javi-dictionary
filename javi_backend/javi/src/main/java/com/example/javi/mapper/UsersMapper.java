@@ -45,5 +45,9 @@ public interface UsersMapper {
         if (user.getRemainingTrialExplains() == 0) {
             user.setRemainingTrialExplains(5);
         }
+
+        if (user.getDailyImageTranslations() == 0) {
+            user.setDailyImageTranslations(2);
+        }
     }
 }

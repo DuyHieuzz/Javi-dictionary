@@ -25,6 +25,8 @@ public enum ErrorCode {
             1071,
             "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.",
             HttpStatus.FORBIDDEN),
+    FREE_USER_QUOTA_EXCEEDED(1073, "Bạn đã dùng hết lượt dịch ảnh miễn phí hôm nay.", HttpStatus.FORBIDDEN),
+    IMAGE_TOO_LARGE(1074, "Dung lượng ảnh không được quá 4MB", HttpStatus.BAD_REQUEST),
 
     // LOGIN
     INCORRECT_LOGIN_INFORMATION(1006, "Đăng nhập thất bại. Email hoặc mật khẩu không đúng", HttpStatus.BAD_REQUEST),
@@ -120,6 +122,8 @@ public enum ErrorCode {
     SOURCE_TEXT_CANNOT_EMPTY(1067, "Đoạn văn cần dịch không được để trống", HttpStatus.BAD_REQUEST),
     SOURCE_TEXT_TOO_LONG(1069, "Đoạn văn cần dịch không được quá 5000 từ", HttpStatus.BAD_REQUEST),
     CANNOT_DETECTED_TEXT_IN_IMAGE(1070, "Không thể phát hiện chữ trong ảnh của bạn", HttpStatus.BAD_REQUEST),
+    REQUIRE_PREMIUM(1077, "Bạn cần nâng cấp tài khoản lên premium để thực hiện chức năng này", HttpStatus.FORBIDDEN),
+    INVALID_ENGINE(1078, "Engin bạn truyền xuống không đúng", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

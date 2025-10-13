@@ -56,6 +56,12 @@ public class Users extends BaseEntity {
     @Column(name = "remaining_trial_explains")
     int remainingTrialExplains = 5;
 
+    @Column(name = "daily_image_translations")
+    private int dailyImageTranslations = 2;
+
+    @Column(name = "last_image_translation_date")
+    private LocalDateTime lastImageTranslationDate;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
