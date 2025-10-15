@@ -1,5 +1,6 @@
 package com.example.javi.controller;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,10 +22,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.request.ResetPassRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.LoginResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.Token;
+import com.example.javi.entity.TokenType;
 import com.example.javi.entity.Users;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
@@ -199,8 +202,33 @@ public class AuthController {
 
     // Nếu token hết hạn, chưa verify mà user đăng nhập sẽ báo lỗi và FE sẽ hiển thị nút để gửi lại token cho verify lại
     @PostMapping("/resend-verification")
-    public ApiResponse<Void> resend(@RequestParam String email) throws MessagingException {
-        verificationTokenService.resendVerification(email);
+    public ApiResponse<Void> resend(@RequestParam String email)
+            throws MessagingException, UnsupportedEncodingException {
+        verificationTokenService.resendVerification(email, TokenType.EMAIL_VERIFICATION);
         return ApiResponse.<Void>builder().message("Xác thực thành công").build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@RequestParam String email) {
+        verificationTokenService.sendPasswordResetEmail(email);
+        return ApiResponse.<Void>builder()
+                .message("Đã gửi email khôi phục mật khẩu. Kiểm tra hòm thư hoặc mục spam trong gmail của bạn.")
+                .build();
+    }
+
+    @GetMapping("/verify-reset-token")
+    public ApiResponse<Void> verifyResetToken(@RequestParam String token) {
+        verificationTokenService.verifyPasswordResetToken(token);
+        return ApiResponse.<Void>builder()
+                .message("Token hợp lệ. Cho phép đặt lại mật khẩu.")
+                .build();
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@RequestBody ResetPassRequest resetPassRequest) {
+        verificationTokenService.resetPassword(resetPassRequest);
+        return ApiResponse.<Void>builder()
+                .message("Đặt lại mật khẩu thành công.")
+                .build();
     }
 }

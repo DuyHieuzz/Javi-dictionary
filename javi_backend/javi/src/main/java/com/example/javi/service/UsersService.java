@@ -1,5 +1,7 @@
 package com.example.javi.service;
 
+import java.io.UnsupportedEncodingException;
+
 import jakarta.mail.MessagingException;
 
 import org.springframework.data.domain.Page;
@@ -19,7 +21,7 @@ public interface UsersService {
 
     UserResponse getUserById(Long id);
 
-    UserResponse createUser(CreateUserRequest user) throws MessagingException;
+    UserResponse createUser(CreateUserRequest user) throws MessagingException, UnsupportedEncodingException;
 
     UserResponse getMyInfo();
 

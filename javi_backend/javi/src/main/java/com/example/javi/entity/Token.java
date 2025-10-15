@@ -13,7 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Token {
+public class Token { // bảng này là cho đăng nhập
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

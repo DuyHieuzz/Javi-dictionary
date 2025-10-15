@@ -1,5 +1,6 @@
 package com.example.javi.service.Impl;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,6 +28,7 @@ import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.UsersMapper;
 import com.example.javi.repository.RoleRepository;
 import com.example.javi.repository.UsersRepository;
+import com.example.javi.repository.VerificationTokenRepository;
 import com.example.javi.service.UsersService;
 import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
@@ -52,6 +54,7 @@ public class UsersServiceImpl implements UsersService {
     SecurityUtil securityUtil;
     RoleRepository roleRepository;
     VerificationTokenService verificationTokenService;
+    VerificationTokenRepository verificationTokenRepository;
 
     @NonFinal
     @Value("${app.time-zone}")
@@ -78,7 +81,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional
-    public UserResponse createUser(CreateUserRequest user) throws MessagingException {
+    public UserResponse createUser(CreateUserRequest user) throws MessagingException, UnsupportedEncodingException {
         // Validate email & password
         if (!ValidationUtils.isValidEmail(user.getEmail())) {
             throw new AppException(ErrorCode.INVALID_EMAIL);
@@ -101,7 +104,7 @@ public class UsersServiceImpl implements UsersService {
                 throw new AppException(ErrorCode.EXIST_EMAIL);
             } else {
                 // Chưa xác thực → gửi lại email xác thực
-                verificationTokenService.resendVerification(existingUser.getEmail());
+                verificationTokenService.resendVerification(existingUser.getEmail(), TokenType.EMAIL_VERIFICATION);
                 throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
             }
         }
@@ -119,7 +122,8 @@ public class UsersServiceImpl implements UsersService {
         usersRepository.save(newUser);
 
         // Tạo token xác minh và gửi mail
-        VerificationToken token = verificationTokenService.createVerificationTokenForUser(newUser);
+        VerificationToken token =
+                verificationTokenService.createVerificationTokenForUser(newUser, TokenType.EMAIL_VERIFICATION);
         verificationTokenService.sendVerificationEmail(newUser, token);
 
         // Trả kết quả

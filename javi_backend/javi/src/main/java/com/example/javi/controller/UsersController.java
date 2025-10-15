@@ -1,6 +1,7 @@
 package com.example.javi.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 
 import jakarta.mail.MessagingException;
@@ -49,7 +50,8 @@ public class UsersController {
     FileService fileService;
 
     @PostMapping("/register")
-    public ApiResponse createUser(@Valid @RequestBody CreateUserRequest user) throws MessagingException {
+    public ApiResponse createUser(@Valid @RequestBody CreateUserRequest user)
+            throws MessagingException, UnsupportedEncodingException {
 
         if (!ValidationUtils.isValidEmail(user.getEmail())) {
             throw new AppException(ErrorCode.INVALID_EMAIL);

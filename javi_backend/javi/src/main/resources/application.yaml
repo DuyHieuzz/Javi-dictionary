@@ -55,3 +55,6 @@ app:
   time-zone: Asia/Ho_Chi_Minh
   verification:
     token-expiration-minutes: 10
+    reset-password-token-expiration-minutes: 10
+  frontend:
+    base-url: http://localhost:5173

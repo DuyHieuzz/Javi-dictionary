@@ -8,14 +8,14 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(name = "verification_token")
+@Table(name = "verification_token", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "token_type"}))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class VerificationToken {
+public class VerificationToken { // bảng này để xác thực email, reset-password....
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -23,8 +23,8 @@ public class VerificationToken {
     @Column(nullable = false, unique = true)
     String token;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     Users user;
 
     @Column(nullable = false)
@@ -32,4 +32,8 @@ public class VerificationToken {
 
     @Column(nullable = false)
     boolean used = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "token_type", nullable = false)
+    TokenType tokenType;
 }
