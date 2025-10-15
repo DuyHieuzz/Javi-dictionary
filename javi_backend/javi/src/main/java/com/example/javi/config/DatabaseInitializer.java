@@ -91,6 +91,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             adminUser.setRole(adminRole);
             adminUser.setAccountType(AccountType.PREMIUM);
             adminUser.setRemainingTrialExplains(5);
+            adminUser.setVerified(true);
             usersRepository.save(adminUser);
         }
 
@@ -105,6 +106,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             user.setRole(userRole);
             user.setAccountType(AccountType.FREE);
             user.setRemainingTrialExplains(5);
+            user.setVerified(true);
             usersRepository.save(user);
         }
     }

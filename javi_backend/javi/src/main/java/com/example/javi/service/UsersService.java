@@ -1,5 +1,7 @@
 package com.example.javi.service;
 
+import jakarta.mail.MessagingException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,7 +19,7 @@ public interface UsersService {
 
     UserResponse getUserById(Long id);
 
-    UserResponse createUser(CreateUserRequest user);
+    UserResponse createUser(CreateUserRequest user) throws MessagingException;
 
     UserResponse getMyInfo();
 

@@ -62,6 +62,9 @@ public class Users extends BaseEntity {
     @Column(name = "last_image_translation_date")
     private LocalDateTime lastImageTranslationDate;
 
+    @Column(nullable = false)
+    private boolean verified = false;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;

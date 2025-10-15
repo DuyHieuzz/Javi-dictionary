@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
 
+import jakarta.mail.MessagingException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +28,7 @@ import com.example.javi.mapper.UsersMapper;
 import com.example.javi.repository.RoleRepository;
 import com.example.javi.repository.UsersRepository;
 import com.example.javi.service.UsersService;
+import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -48,6 +51,7 @@ public class UsersServiceImpl implements UsersService {
     PasswordEncoder passwordEncoder;
     SecurityUtil securityUtil;
     RoleRepository roleRepository;
+    VerificationTokenService verificationTokenService;
 
     @NonFinal
     @Value("${app.time-zone}")
@@ -74,35 +78,52 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional
-    public UserResponse createUser(CreateUserRequest user) {
-        boolean isValidEmail = ValidationUtils.isValidEmail(user.getEmail());
-        boolean existEmail = usersRepository.existsByEmail(user.getEmail());
-        boolean existUsername = usersRepository.existsByUsername(user.getUsername());
-
-        if (!isValidEmail) {
+    public UserResponse createUser(CreateUserRequest user) throws MessagingException {
+        // Validate email & password
+        if (!ValidationUtils.isValidEmail(user.getEmail())) {
             throw new AppException(ErrorCode.INVALID_EMAIL);
-        }
-        if (existEmail) {
-            throw new AppException(ErrorCode.EXIST_EMAIL);
-        }
-        if (existUsername) {
-            throw new AppException(ErrorCode.EXIST_USERNAME);
         }
         if (!user.getPassword().equals(user.getConfirmPassword())) {
             throw new AppException(ErrorCode.MISMATCH_PASSWORD);
         }
-        Users users = usersMapper.toUsers(user);
-        if (user.getRole() == null) {
-            Role defaultRole =
-                    roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-            users.setRole(defaultRole);
-        } else {
-            users.setRole(user.getRole());
-        }
-        users.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        usersRepository.save(users);
-        return usersMapper.toCreateUserResponse(users);
+        // Kiểm tra username đã tồn tại chưa
+        if (usersRepository.existsByUsername(user.getUsername())) {
+            throw new AppException(ErrorCode.EXIST_USERNAME);
+        }
+
+        // Kiểm tra email tồn tại
+        Optional<Users> existingUserOpt = usersRepository.findByEmail(user.getEmail());
+        if (existingUserOpt.isPresent()) {
+            Users existingUser = existingUserOpt.get();
+            if (existingUser.isVerified()) {
+                // Đã xác thực rồi → chặn
+                throw new AppException(ErrorCode.EXIST_EMAIL);
+            } else {
+                // Chưa xác thực → gửi lại email xác thực
+                verificationTokenService.resendVerification(existingUser.getEmail());
+                throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
+            }
+        }
+
+        // Tạo user mới
+        Users newUser = usersMapper.toUsers(user);
+
+        Role defaultRole = (user.getRole() == null)
+                ? roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND))
+                : user.getRole();
+
+        newUser.setRole(defaultRole);
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        newUser.setVerified(false); // chưa kích hoạt
+        usersRepository.save(newUser);
+
+        // Tạo token xác minh và gửi mail
+        VerificationToken token = verificationTokenService.createVerificationTokenForUser(newUser);
+        verificationTokenService.sendVerificationEmail(newUser, token);
+
+        // Trả kết quả
+        return usersMapper.toCreateUserResponse(newUser);
     }
 
     @Override

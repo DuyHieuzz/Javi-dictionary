@@ -1,12 +1,9 @@
 package com.example.javi.controller;
 
-import com.example.javi.entity.EngineType;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.javi.dto.request.TranslateRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.TranslateResponse;
+import com.example.javi.entity.EngineType;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
 import com.example.javi.service.GeminiService;
@@ -46,10 +44,11 @@ public class TranslateController {
             throw new AppException(ErrorCode.INVALID_ENGINE);
         }
 
-        TranslateResponse response = switch (engine) {
-            case GOOGLE -> googleTranslateService.translateWithGoogleTranslate(request);
-            case AI -> geminiService.translateText(request);
-        };
+        TranslateResponse response =
+                switch (engine) {
+                    case GOOGLE -> googleTranslateService.translateWithGoogleTranslate(request);
+                    case AI -> geminiService.translateText(request);
+                };
 
         return ApiResponse.<TranslateResponse>builder()
                 .message("Dịch thành công")
@@ -71,10 +70,11 @@ public class TranslateController {
             throw new AppException(ErrorCode.INVALID_ENGINE);
         }
 
-        TranslateResponse response = switch (engine) {
-            case AI -> geminiService.translateImage(file, targetLang, sourceLang);
-            case GOOGLE -> googleTranslateService.translateImage(file, targetLang, sourceLang);
-        };
+        TranslateResponse response =
+                switch (engine) {
+                    case AI -> geminiService.translateImage(file, targetLang, sourceLang);
+                    case GOOGLE -> googleTranslateService.translateImage(file, targetLang, sourceLang);
+                };
 
         return ApiResponse.<TranslateResponse>builder()
                 .message("Dịch thành công")
@@ -84,8 +84,11 @@ public class TranslateController {
 
     @GetMapping("/history")
     public ApiResponse<Page<TranslateResponse>> translateHistory(
-            @PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
-            Pageable pageable) {
+            @PageableDefault(
+                            size = 10,
+                            sort = "createdAt",
+                            direction = org.springframework.data.domain.Sort.Direction.DESC)
+                    Pageable pageable) {
 
         Page<TranslateResponse> history = translateService.getTranslations(pageable);
 

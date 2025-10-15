@@ -12,6 +12,7 @@ public interface TranslationMapper {
     TranslateResponse toTranslateResponse(TranslateRequest translateRequest);
 
     Translation toTranslation(TranslateRequest translateRequest);
+
     @Mapping(target = "createdAt", source = "createdAt")
     TranslateResponse translationToTranslateResponse(Translation translation);
 }

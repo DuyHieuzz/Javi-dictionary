@@ -35,6 +35,8 @@ public enum ErrorCode {
     EMAIL_CANNOT_BLANK(1009, "Email không được bỏ trống", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1012, "Email không hợp lệ, mời nhập lại", HttpStatus.BAD_REQUEST),
     EXIST_EMAIL(1013, "Email đã tồn tại, xin mời nhập email khác", HttpStatus.BAD_REQUEST),
+    EMAIL_ALREADY_VERIFIED(1014, "Email đã được xác thực", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED(1080, "Email chưa được xác thực", HttpStatus.BAD_REQUEST),
 
     // USERNAME
     USERNAME_CANNOT_BLANK(1010, "Tên người dùng không được bỏ trống", HttpStatus.BAD_REQUEST),
@@ -91,6 +93,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_HAS_EXPIRED(1043, "Refresh token hết hạn", HttpStatus.BAD_REQUEST),
     REFRESH_TOKEN_REVOKED(1045, "Refresh token bị thu hồi", HttpStatus.BAD_REQUEST),
     TOKEN_HAS_EXPIRED(1043, "Token đã hết hạn", HttpStatus.BAD_REQUEST),
+    INVALID_TOKEN(1079, "Token không hợp lệ", HttpStatus.BAD_REQUEST),
 
     // ROLE
     ROLE_HAS_NO_NAME(1046, "Tên của role không được để trống", HttpStatus.BAD_REQUEST),

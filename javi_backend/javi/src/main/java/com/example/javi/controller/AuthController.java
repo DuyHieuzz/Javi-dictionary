@@ -3,6 +3,7 @@ package com.example.javi.controller;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,12 +18,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.LoginResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.Token;
@@ -33,6 +32,7 @@ import com.example.javi.mapper.UsersMapper;
 import com.example.javi.repository.UsersRepository;
 import com.example.javi.service.TokenService;
 import com.example.javi.service.UsersService;
+import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
 
 import lombok.AccessLevel;
@@ -53,6 +53,7 @@ public class AuthController {
     UsersMapper usersMapper;
     SecurityUtil securityUtil;
     TokenService tokenService;
+    VerificationTokenService verificationTokenService;
 
     @NonFinal
     @Value("${jwt.refreshable-duration}")
@@ -83,6 +84,9 @@ public class AuthController {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         Users currentUser = currentUserDB.get();
+        if (!currentUser.isVerified()) {
+            throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
         UserResponse userResponse = usersMapper.toUserResponse(currentUser);
 
         res.setUser(userResponse);
@@ -185,5 +189,18 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
                 .body(Map.of("message", "Đăng xuất thành công"));
+    }
+
+    @GetMapping("/verify-email")
+    public ApiResponse<Void> verify(@RequestParam("token") String token) {
+        verificationTokenService.verifyToken(token);
+        return ApiResponse.<Void>builder().message("Xác thực thành công").build();
+    }
+
+    // Nếu token hết hạn, chưa verify mà user đăng nhập sẽ báo lỗi và FE sẽ hiển thị nút để gửi lại token cho verify lại
+    @PostMapping("/resend-verification")
+    public ApiResponse<Void> resend(@RequestParam String email) throws MessagingException {
+        verificationTokenService.resendVerification(email);
+        return ApiResponse.<Void>builder().message("Xác thực thành công").build();
     }
 }

@@ -3,6 +3,7 @@ package com.example.javi.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +49,7 @@ public class UsersController {
     FileService fileService;
 
     @PostMapping("/register")
-    public ApiResponse createUser(@Valid @RequestBody CreateUserRequest user) {
+    public ApiResponse createUser(@Valid @RequestBody CreateUserRequest user) throws MessagingException {
 
         if (!ValidationUtils.isValidEmail(user.getEmail())) {
             throw new AppException(ErrorCode.INVALID_EMAIL);

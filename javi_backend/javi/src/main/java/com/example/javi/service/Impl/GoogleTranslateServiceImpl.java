@@ -5,7 +5,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import com.example.javi.entity.EngineType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -14,6 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.javi.dto.request.TranslateRequest;
 import com.example.javi.dto.response.TranslateResponse;
+import com.example.javi.entity.EngineType;
 import com.example.javi.entity.Translation;
 import com.example.javi.entity.Users;
 import com.example.javi.exeption.AppException;

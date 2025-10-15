@@ -1,0 +1,18 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<p>Chào bạn <span th:text="${name}"></span>,</p>
+<p>Bạn đã đăng ký thành công tài khoản trên Javi - Từ điển tra cứu Việt-Nhật</p>
+<p>Đây là thông tin tài khoản của bạn.</p>
+<p>Email: <span th:text="${name}"></span></p>
+<p>Vui lòng nhấp vào nút bên dưới để xác minh địa chỉ email của bạn. Liên kết sẽ hết hạn trong <span
+        th:text="${expiryMinutes}"></span> phút.</p>
+<p>
+    <a th:href="${verificationUrl}"
+       style="display:inline-block;padding:12px 20px;background:#4CAF50;color:#fff;text-decoration:none;border-radius:6px;">
+        Xác minh email
+    </a>
+</p>
+<p>Nếu bạn không tạo tài khoản, vui lòng bỏ qua email này.</p>
+</body>
+</html>

@@ -5,17 +5,25 @@ import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.entity.AccountType;
 import com.example.javi.entity.Users;
 import com.example.javi.repository.UsersRepository;
+import com.example.javi.repository.VerificationTokenRepository;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class Scheduler {
-    private final UsersRepository usersRepository;
+    UsersRepository usersRepository;
+    VerificationTokenRepository verificationTokenRepository;
 
     // Chạy mỗi ngày lúc 3 giờ sáng
     @Scheduled(cron = "0 0 3 * * *")
@@ -33,5 +41,14 @@ public class Scheduler {
             usersRepository.saveAll(expiredUsers);
             System.out.println("Đã hạ cấp" + expiredUsers.size() + " user hết hạn Premium.");
         }
+    }
+
+    @Scheduled(fixedRate = 15 * 60 * 1000) // 15 phút chạy 1 lần
+    @Transactional
+    public void cleanupExpiredTokens() {
+        int beforeCount = (int) verificationTokenRepository.count();
+        verificationTokenRepository.deleteAllByExpirationDateBefore(LocalDateTime.now());
+        int afterCount = (int) verificationTokenRepository.count();
+        log.info("[TOKEN CLEANUP] Đã dọn token hết hạn. Trước: {}, Sau: {}", beforeCount, afterCount);
     }
 }

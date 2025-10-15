@@ -1,13 +1,13 @@
 package com.example.javi.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "translation")
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Translation  {
+public class Translation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
