@@ -8,21 +8,21 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.example.javi.dto.request.VocabRequest;
 import com.example.javi.dto.request.VocabUpdateDTO;
-import com.example.javi.dto.response.VocabUpdateResponse;
+import com.example.javi.dto.response.VocabResponse;
 import com.example.javi.entity.Vocabularies;
 
 public interface VocabulariesService {
-    String createVocabulary(VocabRequest request);
+    VocabResponse createVocabulary(VocabRequest request);
 
-    VocabUpdateResponse updateVocabulary(Long id, VocabUpdateDTO request);
+    VocabResponse updateVocabulary(Long id, VocabUpdateDTO request);
 
-    List<Vocabularies> searchVocabularies(String keyword);
+    List<VocabResponse> searchVocabularies(String keyword);
 
-    Vocabularies getVocabularyByWord(String word);
+    VocabResponse getVocabularyByWord(String word);
 
-    Vocabularies getVocabularyById(Long id);
+    VocabResponse getVocabularyById(Long id);
 
-    Page<Vocabularies> getAllVocabulariesByFilter(Specification<Vocabularies> spec, Pageable pageable);
+    Page<VocabResponse> getAllVocabulariesByFilter(Specification<Vocabularies> spec, Pageable pageable, String filter);
 
     String explainVocabulary(String word);
 

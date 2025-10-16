@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,13 +16,12 @@ import org.springframework.web.bind.annotation.*;
 import com.example.javi.dto.request.VocabRequest;
 import com.example.javi.dto.request.VocabUpdateDTO;
 import com.example.javi.dto.response.ApiResponse;
-import com.example.javi.dto.response.VocabUpdateResponse;
+import com.example.javi.dto.response.VocabResponse;
 import com.example.javi.entity.EntityType;
 import com.example.javi.entity.Users;
 import com.example.javi.entity.Vocabularies;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
-import com.example.javi.service.GeminiService;
 import com.example.javi.service.HistorySearchService;
 import com.example.javi.service.VocabulariesService;
 import com.example.javi.utils.SecurityUtil;
@@ -42,45 +42,51 @@ public class VocabulariesController {
     VocabulariesService vocabulariesService;
     HistorySearchService historySearchService;
     SecurityUtil securityUtil;
-    GeminiService geminiService;
 
     @PostMapping("")
-    public ApiResponse createVocabulary(@Valid @RequestBody VocabRequest request) {
+    public ApiResponse<VocabResponse> createVocabulary(@Valid @RequestBody VocabRequest request) {
         boolean isJapanese = ValidationUtils.isJapanese(request.getWord());
         if (!isJapanese) {
             throw new AppException(ErrorCode.INVALID_WORD);
         }
-        vocabulariesService.createVocabulary(request);
-        return ApiResponse.builder().message("Đã tạo từ vựng").build();
+        VocabResponse vocabResponse = vocabulariesService.createVocabulary(request);
+        return ApiResponse.<VocabResponse>builder()
+                .message("Tạo từ vựng thành công")
+                .result(vocabResponse)
+                .build();
     }
 
     @PutMapping("/{id}")
-    public ApiResponse updateVocabulary(@PathVariable Long id, @Valid @RequestBody VocabUpdateDTO request) {
+    public ApiResponse<VocabResponse> updateVocabulary(
+            @PathVariable Long id, @Valid @RequestBody VocabUpdateDTO request) {
         boolean isJapanese = ValidationUtils.isJapanese(request.getWord());
         if (!isJapanese) {
             throw new AppException(ErrorCode.INVALID_WORD);
         }
-        VocabUpdateResponse vocab = vocabulariesService.updateVocabulary(id, request);
-        return ApiResponse.builder()
+        VocabResponse vocab = vocabulariesService.updateVocabulary(id, request);
+        return ApiResponse.<VocabResponse>builder()
                 .message("Cập nhật thành công")
                 .result(vocab)
                 .build();
     }
 
     @GetMapping("/search/{keyword}")
-    public ResponseEntity<List<Vocabularies>> searchVocabularies(
+    public ApiResponse<List<VocabResponse>> searchVocabularies(
             @PathVariable String keyword, Authentication authentication) {
-        List<Vocabularies> results = vocabulariesService.searchVocabularies(keyword);
+        List<VocabResponse> results = vocabulariesService.searchVocabularies(keyword);
         if (authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, keyword, EntityType.WORD);
         }
-        return ResponseEntity.ok(results);
+        return ApiResponse.<List<VocabResponse>>builder()
+                .message("Lấy từ vựng thành công")
+                .result(results)
+                .build();
     }
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<Vocabularies> getVocabularyById(@PathVariable Long id, Authentication authentication) {
-        Vocabularies vocab = vocabulariesService.getVocabularyById(id);
+    public ResponseEntity<VocabResponse> getVocabularyById(@PathVariable Long id, Authentication authentication) {
+        VocabResponse vocab = vocabulariesService.getVocabularyById(id);
         if (authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByEntity(user, id, EntityType.WORD, vocab.getWord());
@@ -89,18 +95,23 @@ public class VocabulariesController {
     }
 
     @GetMapping("/search/word/{word}")
-    public ResponseEntity<Vocabularies> getVocabularyByWord(@PathVariable String word, Authentication authentication) {
-        Vocabularies vocab = vocabulariesService.getVocabularyByWord(word);
+    public ApiResponse<VocabResponse> getVocabularyByWord(@PathVariable String word, Authentication authentication) {
+        VocabResponse vocab = vocabulariesService.getVocabularyByWord(word);
         if (authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
-            historySearchService.saveHistoryByEntity(user, vocab.getVocabId(), EntityType.WORD, vocab.getWord());
+            historySearchService.saveHistoryByEntity(user, vocab.getId(), EntityType.WORD, vocab.getWord());
         }
-        return ResponseEntity.ok(vocab);
+        return ApiResponse.<VocabResponse>builder()
+                .message("Lấy từ vựng thành công")
+                .result(vocab)
+                .build();
     }
 
     @GetMapping("")
-    public ApiResponse getAllVocabularyByFilter(
-            @Filter Specification<Vocabularies> spec, @PageableDefault(size = 20, sort = "vocabId") Pageable pageable) {
+    public ApiResponse<Page<VocabResponse>> getAllVocabularyByFilter(
+            @Filter Specification<Vocabularies> spec,
+            @RequestParam(required = false) String filter,
+            @PageableDefault(size = 20, sort = "vocabId") Pageable pageable) {
         int page = pageable.getPageNumber();
         // Nếu người dùng gửi page=1, page ở đây là 1. trừ đi 1 để nó thành 0 (trang đầu tiên).
         // Nếu người dùng gửi page=0, page ở đây là 0 (hoặc lỗi), giữ nguyên 0.
@@ -108,22 +119,22 @@ public class VocabulariesController {
             page = page - 1;
         }
         Pageable oneIndexPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
-        return ApiResponse.builder()
+        return ApiResponse.<Page<VocabResponse>>builder()
                 .message("Lấy từ vựng thành công")
-                .result(vocabulariesService.getAllVocabulariesByFilter(spec, oneIndexPageable))
+                .result(vocabulariesService.getAllVocabulariesByFilter(spec, oneIndexPageable, filter))
                 .build();
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse deleteVocabulary(@PathVariable Long id) {
+    public ApiResponse<Void> deleteVocabulary(@PathVariable Long id) {
         vocabulariesService.deleteVocabularyById(id);
-        return ApiResponse.builder().message("Xóa từ vựng thành công").build();
+        return ApiResponse.<Void>builder().message("Xóa từ vựng thành công").build();
     }
 
     @PostMapping("/explain/{word}")
-    public ApiResponse explainVocabulary(@PathVariable String word) {
+    public ApiResponse<String> explainVocabulary(@PathVariable String word) {
         String response = vocabulariesService.explainVocabulary(word);
-        return ApiResponse.builder()
+        return ApiResponse.<String>builder()
                 .message("Giải nghĩa thành công")
                 .result(response)
                 .build();

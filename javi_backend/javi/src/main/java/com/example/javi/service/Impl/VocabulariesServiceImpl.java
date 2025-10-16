@@ -10,11 +10,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 
 import com.example.javi.dto.request.MeaningRequest;
 import com.example.javi.dto.request.VocabRequest;
 import com.example.javi.dto.request.VocabUpdateDTO;
-import com.example.javi.dto.response.VocabUpdateResponse;
+import com.example.javi.dto.response.VocabResponse;
 import com.example.javi.entity.*;
 import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
@@ -24,6 +25,7 @@ import com.example.javi.repository.UsersRepository;
 import com.example.javi.repository.VocabulariesRepository;
 import com.example.javi.service.GeminiService;
 import com.example.javi.service.VocabulariesService;
+import com.example.javi.service.cache.VocabulariesCacheService;
 import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
 
@@ -43,10 +45,11 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     SecurityUtil securityUtil;
     GeminiService geminiService;
     UsersRepository usersRepository;
+    VocabulariesCacheService vocabulariesCacheService;
 
     @Override
     @Transactional
-    public String createVocabulary(VocabRequest request) {
+    public VocabResponse createVocabulary(VocabRequest request) {
         Optional<Vocabularies> existWord = vocabulariesRepository.findByWord(request.getWord());
         if (existWord.isPresent()) {
             throw new AppException(ErrorCode.EXIST_WORD);
@@ -119,13 +122,18 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         // - Lưu Vocabularies
         // - Lưu Meanings và Examples (do cascade)
         // - Lưu các liên kết Many-to-Many vào bảng 'vocabulary_kanji' (do đã setKanjis)
-        vocabulariesRepository.save(vocab);
-        return "";
+        Vocabularies vocabularies = vocabulariesRepository.save(vocab);
+        VocabResponse vocabResponse = vocabulariesMapper.toDto(vocabularies);
+        // Xóa cache danh sách do có thêm từ mới
+        vocabulariesCacheService.clearAllPages();
+        log.info("[CACHE CLEAR] Xóa toàn bộ cache page sau khi thêm từ mới");
+        vocabulariesCacheService.save(vocabResponse.getWord(), vocabResponse);
+        return vocabResponse;
     }
 
     @Override
     @Transactional
-    public VocabUpdateResponse updateVocabulary(Long id, VocabUpdateDTO request) {
+    public VocabResponse updateVocabulary(Long id, VocabUpdateDTO request) {
         Vocabularies vocab =
                 vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
 
@@ -188,13 +196,23 @@ public class VocabulariesServiceImpl implements VocabulariesService {
 
         // Lưu entity
         Vocabularies saved = vocabulariesRepository.save(vocab);
+        VocabResponse vocabResponse = vocabulariesMapper.toDto(saved);
 
-        // Trả về DTO để tránh recursion JSON
-        return vocabulariesMapper.toDto(saved);
+        // Cache
+        vocabulariesCacheService.delete(vocabResponse.getWord());
+        log.info("[CACHE EVICT] Đã xóa cache từ: {}", vocabResponse.getWord());
+        vocabulariesCacheService.save(vocabResponse.getWord(), vocabResponse);
+        log.info("[CACHE SAVE] Đã lưu cache từ: {}", vocabResponse.getWord());
+        vocabulariesCacheService.clearAllPages();
+        log.info("[CACHE CLEAR] Xóa toàn bộ cache page sau khi cập nhật từ: {}", vocabResponse.getWord());
+        vocabulariesCacheService.deleteExplain(vocabResponse.getWord());
+        log.info("[CACHE DELETE] Xóa cache explain của từ '{}'", vocabResponse.getWord());
+
+        return vocabResponse;
     }
 
     @Override
-    public List<Vocabularies> searchVocabularies(String keyword) {
+    public List<VocabResponse> searchVocabularies(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return List.of();
         }
@@ -203,13 +221,13 @@ public class VocabulariesServiceImpl implements VocabulariesService {
             // Tìm kiếm chính xác (EQUAL) - chỉ trả về một kết quả nếu khớp 100%
             Optional<Vocabularies> exactResult = vocabulariesRepository.findByWord(keyword.trim());
             if (exactResult.isPresent()) {
-                return List.of(exactResult.get());
+                return List.of(vocabulariesMapper.toDto(exactResult.get()));
             }
 
             // Không có chính xác sẽ tìm kiếm like bởi có thể user điền thiếu từ
             List<Vocabularies> likeResult = vocabulariesRepository.findByWordContainingIgnoreCase(keyword.trim());
             if (!likeResult.isEmpty()) {
-                return likeResult;
+                return likeResult.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());
             }
             throw new AppException(ErrorCode.WORD_NOT_FOUND);
         }
@@ -221,40 +239,113 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         if (fuzzyResults.isEmpty()) {
             throw new AppException(ErrorCode.WORD_NOT_FOUND);
         }
-        return fuzzyResults;
+        return fuzzyResults.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
-    public Vocabularies getVocabularyByWord(String word) {
+    public VocabResponse getVocabularyByWord(String word) {
+        VocabResponse cached = vocabulariesCacheService.get(word);
+        if (cached != null) {
+            log.info("[CACHE HIT] vocab: {}", word);
+            return cached;
+        }
+        log.info("[CACHE MISS] Vào DB tìm từ vựng: {}", word);
         Optional<Vocabularies> vocabulary = vocabulariesRepository.findByWord(word);
         if (vocabulary.isEmpty()) {
             throw new AppException(ErrorCode.WORD_NOT_FOUND);
         }
-        return vocabulary.get();
+        VocabResponse response = vocabulariesMapper.toDto(vocabulary.get());
+        vocabulariesCacheService.save(word, response);
+        return vocabulariesMapper.toDto(vocabulary.get());
     }
 
     @Override
-    public Vocabularies getVocabularyById(Long id) {
-        return vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+    public VocabResponse getVocabularyById(Long id) {
+        String cacheKey = "vocab:id:" + id;
+
+        VocabResponse cached = vocabulariesCacheService.get(cacheKey);
+        if (cached != null) {
+            log.info("[CACHE HIT] vocab id:{}", id);
+            return cached;
+        }
+
+        Vocabularies currentVocab =
+                vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+
+        VocabResponse response = vocabulariesMapper.toDto(currentVocab);
+        vocabulariesCacheService.save(cacheKey, response);
+
+        log.info("[CACHE SAVE] vocab id:{}", id);
+        return response;
     }
 
     @Override
-    public Page<Vocabularies> getAllVocabulariesByFilter(Specification<Vocabularies> spec, Pageable pageable) {
-        return vocabulariesRepository.findAll(spec, pageable);
+    public Page<VocabResponse> getAllVocabulariesByFilter(
+            Specification<Vocabularies> spec, Pageable pageable, String filter) {
+
+        String filterKey = (filter != null && !filter.isBlank()) ? filter.trim() : "no-filter";
+
+        // Hash đúng chuỗi filter gốc, không dựa vào spec.toString()
+        String filterHash = DigestUtils.md5DigestAsHex(filterKey.getBytes());
+
+        String cacheKey =
+                String.format("vocab:page:%s:%d:%d", filterHash, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<VocabResponse> cached = vocabulariesCacheService.getPage(cacheKey);
+        if (cached != null) {
+            log.info("[CACHE HIT] key={} (filter='{}')", cacheKey, filterKey);
+            return cached;
+        }
+
+        Page<Vocabularies> page = vocabulariesRepository.findAll(spec, pageable);
+        Page<VocabResponse> responsePage = page.map(vocabulariesMapper::toDto);
+
+        vocabulariesCacheService.savePage(cacheKey, responsePage);
+        log.info("[CACHE SAVE] key={} (filter='{}')", cacheKey, filterKey);
+        return responsePage;
     }
 
     @Override
     public String explainVocabulary(String word) {
+        String cached = vocabulariesCacheService.getExplain(word);
         Users currentUser = securityUtil.getCurrentUser();
+
+        // PREMIUM user: dùng cache nếu có, nếu không thì gọi AI và cache lại
         if (currentUser.getAccountType().equals(AccountType.PREMIUM)) {
-            return geminiService.explainWord(word);
+            if (cached != null) {
+                log.info("[CACHE HIT] Giải nghĩa từ '{}' (PREMIUM user)", word);
+                return cached;
+            }
+            String explain = geminiService.explainWord(word);
+            vocabulariesCacheService.saveExplain(word, explain);
+            log.info("[CACHE SAVE] Giải nghĩa từ '{}' (PREMIUM user)", word);
+            return explain;
         }
+
+        // FREE user: kiểm tra lượt
         if (currentUser.getRemainingTrialExplains() <= 0) {
             throw new AppException(ErrorCode.NO_TRIAL_LEFT);
         }
+
+        // Luôn trừ lượt trước, kể cả khi có cache
         currentUser.setRemainingTrialExplains(currentUser.getRemainingTrialExplains() - 1);
         usersRepository.save(currentUser);
-        return geminiService.explainWord(word);
+        log.info(
+                "[TRIAL] User '{}' dùng lượt giải nghĩa. Còn lại: {}",
+                currentUser.getEmail(),
+                currentUser.getRemainingTrialExplains());
+
+        // Nếu có cache, trả cache (vẫn đã bị trừ lượt)
+        if (cached != null) {
+            log.info("[CACHE HIT] Giải nghĩa từ '{}' (FREE user, vẫn trừ lượt)", word);
+            return cached;
+        }
+
+        // Nếu chưa có cache, gọi AI, cache lại và trả về
+        String explain = geminiService.explainWord(word);
+        vocabulariesCacheService.saveExplain(word, explain);
+        log.info("[CACHE SAVE] Giải nghĩa từ '{}' (FREE user)", word);
+        return explain;
     }
 
     @Override
@@ -263,5 +354,11 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         Vocabularies vocabularies =
                 vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
         vocabulariesRepository.delete(vocabularies);
+        // Xóa cache
+        vocabulariesCacheService.delete(vocabularies.getWord());
+        vocabulariesCacheService.clearAllPages();
+        log.info("[CACHE DELETE] Đã xóa cache từ '{}' và toàn bộ cache page", vocabularies.getWord());
+        vocabulariesCacheService.deleteExplain(vocabularies.getWord());
+        log.info("[CACHE DELETE] Đã xóa cache explain của từ: {}", vocabularies.getWord());
     }
 }
