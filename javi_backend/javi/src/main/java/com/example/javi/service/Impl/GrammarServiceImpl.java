@@ -168,20 +168,13 @@ public class GrammarServiceImpl implements GrammarService {
     public Page<GrammarResponse> searchGrammars(GrammarSearchRequest request, Pageable pageable) {
         // Chuẩn hóa input
         String keyword = normalizeKeyword(request.getKeyword());
-        String level = Optional.ofNullable(request.getLevel())
-                .map(Enum::name)
-                .orElse("_");
+        String level = Optional.ofNullable(request.getLevel()).map(Enum::name).orElse("_");
         String sort = canonicalSort(pageable.getSort());
 
         // Tạo cache key an toàn, ngắn gọn, rõ ràng
         String key = String.format(
                 "grammar:page:q=%s:level=%s:p=%d:s=%d:sort=%s",
-                keyword,
-                level,
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                sort
-        );
+                keyword, level, pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         // Thử lấy từ cache trước
         Page<GrammarResponse> cachedPage = grammarCacheService.getPage(key);
@@ -191,10 +184,7 @@ public class GrammarServiceImpl implements GrammarService {
         }
 
         // Không có cache → truy DB
-        Specification<Grammar> spec = GrammarSpecification.buildSpecification(
-                request.getKeyword(),
-                request.getLevel()
-        );
+        Specification<Grammar> spec = GrammarSpecification.buildSpecification(request.getKeyword(), request.getLevel());
 
         Page<Grammar> grammarPage = grammarRepository.findAll(spec, pageable);
         Page<GrammarResponse> responsePage = grammarPage.map(grammarMapper::toGrammarResponse);
@@ -226,5 +216,4 @@ public class GrammarServiceImpl implements GrammarService {
                 .map(order -> order.getProperty() + ":" + order.getDirection().name())
                 .collect(Collectors.joining(","));
     }
-
 }

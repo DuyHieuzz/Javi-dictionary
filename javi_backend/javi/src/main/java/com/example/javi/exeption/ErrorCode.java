@@ -7,12 +7,10 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
+    // spotless:off
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
-    UNAUTHENTICATED(
-            1006,
-            "Chưa đăng nhập hoặc token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...",
-            HttpStatus.UNAUTHORIZED),
+    UNAUTHENTICATED(1006, "Chưa đăng nhập hoặc token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "Bạn không có quyền để dùng chức năng này", HttpStatus.FORBIDDEN),
     INVALID_PREMIUM_TYPE(1072, "Thời gian premium không hợp lệ hoặc không truyền xuống", HttpStatus.BAD_REQUEST),
 
@@ -21,10 +19,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(1005, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
     USER_HAS_BEEN_BLOCK(1043, "Tài khoản của bạn đã bị chặn, vui lòng liên hệ admin", HttpStatus.FORBIDDEN),
     NO_PERMISSION_TO_UPDATE_USER(1055, "Bạn không có quyền cập nhật người dùng này", HttpStatus.FORBIDDEN),
-    NO_TRIAL_LEFT(
-            1071,
-            "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.",
-            HttpStatus.FORBIDDEN),
+    NO_TRIAL_LEFT(1071, "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.", HttpStatus.FORBIDDEN),
     FREE_USER_QUOTA_EXCEEDED(1073, "Bạn đã dùng hết lượt dịch ảnh miễn phí hôm nay.", HttpStatus.FORBIDDEN),
     IMAGE_TOO_LARGE(1074, "Dung lượng ảnh không được quá 4MB", HttpStatus.BAD_REQUEST),
 
@@ -69,8 +64,7 @@ public enum ErrorCode {
     NOT_SINGLE_KANJI(1064, "Bạn chỉ có thể xóa 1 kanji, không phải 1 cụm nhiều kanji", HttpStatus.BAD_REQUEST),
     KANJI_NOT_FOUND(1026, "Không có dữ liệu về chữ Kanji bạn cần tìm, mời nhập lại hán tự", HttpStatus.NOT_FOUND),
     KANJI_HAS_NO_MEANING(1027, "Kanji đang không có nghĩa", HttpStatus.BAD_REQUEST), // có dùng ở kanjiRequest mục valid
-    KANJI_STILL_IN_USE(
-            1028, "Không thể xóa Kanji. Kanji vẫn đang được sử dụng bởi từ vựng khác", HttpStatus.BAD_REQUEST),
+    KANJI_STILL_IN_USE(1028, "Không thể xóa Kanji. Kanji vẫn đang được sử dụng bởi từ vựng khác", HttpStatus.BAD_REQUEST),
 
     // GRAMMAR
     GRAMMAR_HAS_NO_ID(1040, "Id ngữ pháp không được để trống", HttpStatus.BAD_REQUEST),
@@ -118,7 +112,9 @@ public enum ErrorCode {
     COMMENT_HAS_NO_CONTENT(1059, "Bình luận phải có nội dung", HttpStatus.BAD_REQUEST),
     COMMENT_NOT_FOUND(1060, "Không tìm thấy comment tương ứng", HttpStatus.NOT_FOUND),
     NO_PERMISSION_TO_DELETE_COMMENT(1062, "Bạn không có quyền xóa bình luận này", HttpStatus.FORBIDDEN),
+    NO_PERMISSION_TO_UPDATE_COMMENT(1081, "Bạn không có quyền cập nhật bình luận này", HttpStatus.FORBIDDEN),
     INVALID_REACTION(1063, "Phản ứng không đúng yêu cầu", HttpStatus.BAD_REQUEST),
+    DUPLICATE_COMMENT(1082, "Bạn chỉ có thể bình luận 1 lần với mỗi một từ vựng, kanji, ngữ pháp cụ thể", HttpStatus.BAD_REQUEST),
 
     // TRANSLATION
     ERROR_TRANSLATION(1068, "Có lỗi xảy ra khi dịch", HttpStatus.BAD_REQUEST),
@@ -130,7 +126,7 @@ public enum ErrorCode {
     REQUIRE_PREMIUM(1077, "Bạn cần nâng cấp tài khoản lên premium để thực hiện chức năng này", HttpStatus.FORBIDDEN),
     INVALID_ENGINE(1078, "Engin bạn truyền xuống không đúng", HttpStatus.BAD_REQUEST),
     ;
-
+    // spotless:on
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;

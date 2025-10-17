@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.CreateCommentRequest;
+import com.example.javi.dto.request.UpdateCommentRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.CommentResponse;
 import com.example.javi.entity.EntityType;
@@ -27,11 +28,21 @@ import lombok.experimental.FieldDefaults;
 public class CommentController {
     CommentService commentService;
 
-    @PostMapping
+    @PostMapping("")
     public ApiResponse<CommentResponse> create(@RequestBody @Valid CreateCommentRequest req) {
         return ApiResponse.<CommentResponse>builder()
                 .result(commentService.createComment(req))
                 .message("Bình luận thành công")
+                .build();
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<CommentResponse> update(
+            @PathVariable Long id, @Valid @RequestBody UpdateCommentRequest request) {
+        CommentResponse commentResponse = commentService.updateComment(id, request);
+        return ApiResponse.<CommentResponse>builder()
+                .message("Cập nhật bình luận thành công")
+                .result(commentResponse)
                 .build();
     }
 

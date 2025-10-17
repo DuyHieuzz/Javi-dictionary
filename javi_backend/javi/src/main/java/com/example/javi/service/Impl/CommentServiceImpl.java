@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.dto.request.CreateCommentRequest;
+import com.example.javi.dto.request.UpdateCommentRequest;
 import com.example.javi.dto.response.CommentResponse;
 import com.example.javi.entity.*;
 import com.example.javi.exeption.AppException;
@@ -19,6 +20,7 @@ import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.CommentMapper;
 import com.example.javi.repository.*;
 import com.example.javi.service.CommentService;
+import com.example.javi.service.cache.CommentCacheService;
 import com.example.javi.utils.SecurityUtil;
 
 import lombok.AccessLevel;
@@ -39,6 +41,7 @@ public class CommentServiceImpl implements CommentService {
     GrammarRepository grammarRepository;
     SecurityUtil securityUtil;
     CommentMapper commentMapper;
+    CommentCacheService commentCacheService;
 
     @Override
     @Transactional
@@ -62,8 +65,44 @@ public class CommentServiceImpl implements CommentService {
                 .entityId(request.getEntityId())
                 .content(request.getContent())
                 .build();
+        boolean exists = commentRepository.existsByEntityTypeAndEntityIdAndUser(
+                request.getEntityType(), request.getEntityId(), currentUser);
+        if (exists) {
+            throw new AppException(ErrorCode.DUPLICATE_COMMENT);
+        }
+
         commentRepository.save(comment);
-        return commentMapper.toCommentResponse(comment);
+        CommentResponse commentResponse = commentMapper.toCommentResponse(comment);
+
+        // Clear cache cho entity
+        commentCacheService.clearEntityPages(request.getEntityType().name(), request.getEntityId());
+        log.info("[CACHE CLEAR] Xóa cache cho entity {} có id: {}", request.getEntityType(), request.getEntityId());
+        return commentResponse;
+    }
+
+    @Override
+    @Transactional
+    public CommentResponse updateComment(Long id, UpdateCommentRequest request) {
+        Users currentUser = securityUtil.getCurrentUser();
+        Comment comment =
+                commentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+
+        boolean isOwner = comment.getUser().getId().equals(currentUser.getId());
+        boolean hasManagePermission = securityUtil.hasPermission("MANAGE_USER_COMMENT");
+
+        // Chỉ chủ sở hữu hoặc người có quyền quản lý mới được sửa
+        if (!isOwner && !hasManagePermission) {
+            throw new AppException(ErrorCode.NO_PERMISSION_TO_UPDATE_COMMENT);
+        }
+
+        comment.setContent(request.getContent().trim());
+        commentRepository.save(comment);
+        CommentResponse commentResponse = commentMapper.toCommentResponse(comment);
+
+        // Clear cache comment pages cho entity
+        commentCacheService.clearEntityPages(comment.getEntityType().name(), comment.getEntityId());
+        log.info("[CACHE CLEAR] Xóa comment id={} cho {}:{}", id, comment.getEntityType(), comment.getEntityId());
+        return commentResponse;
     }
 
     // Nếu user từng bình luận trong 1 entity cụ thể thì khi tra sẽ ưu tiên hiển thị bình luận lên đầu mặc cho không có
@@ -72,25 +111,50 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public Page<CommentResponse> getCommentsByEntity(EntityType entityType, Long entityId, Pageable pageable) {
-        // Lấy danh sách comment theo likeCount, createdAt
+        Long currentUserId = securityUtil.getCurrentUserId();
+        boolean isAnonymous = (currentUserId == null);
+
+        log.info(
+                "[CACHE DECISION] userId={} => {}",
+                currentUserId != null ? currentUserId : "anonymous",
+                isAnonymous ? "USE CACHE" : "SKIP CACHE");
+
+        // Chỉ dùng cache nếu là user ẩn danh
+        if (isAnonymous) {
+            Page<CommentResponse> cached = commentCacheService.getCommentsPage(
+                    entityType.name(), entityId, pageable.getPageNumber(), pageable.getPageSize());
+            if (cached != null) {
+                log.info(
+                        "[CACHE HIT] Lấy cache comment page {} cho {}:{} (anonymous user)",
+                        pageable.getPageNumber(),
+                        entityType,
+                        entityId);
+                return cached;
+            }
+        }
+
+        log.info(
+                "[CACHE MISS or LOGIN USER] Truy vấn DB comment page {} cho {}:{}",
+                pageable.getPageNumber(),
+                entityType,
+                entityId);
+
         Page<Comment> commentsPage = commentRepository.findByEntityTypeAndEntityId(entityType, entityId, pageable);
         List<Comment> comments = new ArrayList<>(commentsPage.getContent());
 
-        // Lấy user hiện tại (nếu đã đăng nhập)
+        // Lấy user hiện tại nếu có
         Users currentUser = null;
-        try {
-            currentUser = securityUtil.getCurrentUser();
-        } catch (Exception ignored) {
+        if (!isAnonymous) {
+            currentUser = usersRepository.findById(currentUserId).orElse(null);
         }
 
-        // Nếu là trang đầu và có user đăng nhập
+        // Nếu là trang đầu và có user đăng nhập thì đẩy comment của họ lên đầu
         if (pageable.getPageNumber() == 0 && currentUser != null) {
             Optional<Comment> myCommentOpt =
                     commentRepository.findByEntityTypeAndEntityIdAndUser(entityType, entityId, currentUser);
             if (myCommentOpt.isPresent()) {
                 Comment myComment = myCommentOpt.get();
 
-                // Nếu comment của mình chưa nằm trong danh sách → thêm vào đầu
                 boolean alreadyInPage =
                         comments.stream().anyMatch(c -> c.getId().equals(myComment.getId()));
 
@@ -100,7 +164,6 @@ public class CommentServiceImpl implements CommentService {
                         comments = comments.subList(0, pageable.getPageSize());
                     }
                 } else {
-                    // Nếu đã có trong trang, di chuyển nó lên đầu
                     comments.removeIf(c -> c.getId().equals(myComment.getId()));
                     comments.add(0, myComment);
                 }
@@ -121,7 +184,22 @@ public class CommentServiceImpl implements CommentService {
                 })
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(responses, pageable, commentsPage.getTotalElements());
+        Page<CommentResponse> resultPage = new PageImpl<>(responses, pageable, commentsPage.getTotalElements());
+
+        // Chỉ lưu cache nếu user ẩn danh
+        if (isAnonymous) {
+            commentCacheService.saveCommentsPage(
+                    entityType.name(), entityId, pageable.getPageNumber(), pageable.getPageSize(), resultPage);
+            log.info(
+                    "[CACHE SAVE] Lưu cache comment page {} cho {}:{} (anonymous user)",
+                    pageable.getPageNumber(),
+                    entityType,
+                    entityId);
+        } else {
+            log.info("[CACHE SKIP] Bỏ qua cache vì user đăng nhập id={}", currentUserId);
+        }
+
+        return resultPage;
     }
 
     @Override
@@ -160,6 +238,12 @@ public class CommentServiceImpl implements CommentService {
             throw new AppException(ErrorCode.NO_PERMISSION_TO_DELETE_COMMENT);
         }
         commentRepository.delete(comment);
+        commentCacheService.clearEntityPages(comment.getEntityType().name(), comment.getEntityId());
+        log.info(
+                "[CACHE CLEAR] Sau khi xóa comment id={} cho {}:{}",
+                id,
+                comment.getEntityType(),
+                comment.getEntityId());
     }
 
     // Nhấn liên tục like, dislike sẽ sinh ra nhiều câu sql hơn, hiệu năng thấp hơn method ở dưới
@@ -264,5 +348,7 @@ public class CommentServiceImpl implements CommentService {
 
         // Lưu lại comment (đã cập nhật count)
         commentRepository.save(comment);
+        // Xóa cache
+        commentCacheService.clearEntityPages(comment.getEntityType().name(), comment.getEntityId());
     }
 }

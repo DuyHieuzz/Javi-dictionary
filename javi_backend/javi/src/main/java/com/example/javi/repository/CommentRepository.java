@@ -21,4 +21,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, JpaSpec
     Optional<Comment> findByEntityTypeAndEntityIdAndUser(EntityType entityType, Long entityId, Users user);
 
     Page<Comment> findByUserOrderByCreatedAtDesc(Users user, Pageable pageable);
+
+    boolean existsByEntityTypeAndEntityIdAndUser(EntityType entityType, Long entityId, Users user);
 }

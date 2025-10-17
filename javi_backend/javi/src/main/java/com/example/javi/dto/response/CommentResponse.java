@@ -22,6 +22,6 @@ public class CommentResponse {
     String content;
     int likeCount;
     int dislikeCount;
-    private Boolean isMyComment; // đúng thì cho thêm thùng rác bên cạnh trên FE để xóa
+    Boolean isMyComment; // đúng thì cho thêm thùng rác bên cạnh trên FE để xóa, cho phép cập nhật
     LocalDate createdAt;
 }
