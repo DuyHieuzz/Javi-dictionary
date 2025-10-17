@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.javi.dto.request.KanjiRequest;
@@ -23,6 +24,7 @@ import com.example.javi.mapper.KanjiMapper;
 import com.example.javi.repository.KanjiRepository;
 import com.example.javi.repository.VocabulariesRepository;
 import com.example.javi.service.KanjiService;
+import com.example.javi.service.cache.KanjiCacheService;
 import com.example.javi.utils.ValidationUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,6 +43,7 @@ public class KanjiServiceImpl implements KanjiService {
     KanjiRepository kanjiRepository;
     KanjiMapper kanjiMapper;
     VocabulariesRepository vocabulariesRepository;
+    KanjiCacheService kanjiCacheService;
     ObjectMapper objectMapper;
     RestTemplate restTemplate = new RestTemplate();
     static String BASE_URL_KANJI_ALIVE = "https://app.kanjialive.com/api/kanji/";
@@ -50,31 +53,45 @@ public class KanjiServiceImpl implements KanjiService {
     @Transactional
     public KanjiResponse createOrUpdateKanji(KanjiRequest kanjiRequest) {
         String character = kanjiRequest.getCharacterName();
-        // Đã dùng @valid rồi nên hơi thừa :v
         if (character == null || character.trim().isEmpty()) {
             throw new AppException(ErrorCode.EMPTY_KANJI);
         }
 
-        Optional<Kanji> existingKanji = kanjiRepository.findByCharacterName(kanjiRequest.getCharacterName());
+        Optional<Kanji> existingKanji = kanjiRepository.findByCharacterName(character);
+
+        // Chuẩn hoá Hán Việt
         if (kanjiRequest.getSinoViName() != null
                 && !kanjiRequest.getSinoViName().isBlank()) {
             String s = Normalizer.normalize(kanjiRequest.getSinoViName().trim(), Normalizer.Form.NFC)
                     .toUpperCase(Locale.forLanguageTag("vi"));
             kanjiRequest.setSinoViName(s);
         }
+
+        Kanji savedKanji;
         if (existingKanji.isPresent()) {
             // Cập nhật nếu đã tồn tại
             Kanji kanji = existingKanji.get();
             kanjiMapper.updateKanjiFromDTO(kanjiRequest, kanji);
-            kanji = kanjiRepository.save(kanji);
-            return kanjiMapper.toKanjiResponse(kanji);
-
+            savedKanji = kanjiRepository.save(kanji);
+            log.info("[KANJI UPDATE] {}", character);
         } else {
             // Tạo mới nếu chưa tồn tại
             Kanji newKanji = kanjiMapper.toKanji(kanjiRequest);
-            newKanji = kanjiRepository.save(newKanji);
-            return kanjiMapper.toKanjiResponse(newKanji);
+            savedKanji = kanjiRepository.save(newKanji);
+            log.info("[KANJI CREATE] {}", character);
         }
+
+        // Đồng bộ cache sau khi tạo hoặc cập nhật
+        try {
+            kanjiCacheService.deleteKanjiDetail(character);
+            kanjiCacheService.clearAllPages();
+            kanjiCacheService.clearAllKeywordCache();
+            log.info("[REDIS CLEAR] Đã xóa cache sau khi tạo/cập nhật Kanji {}", character);
+        } catch (Exception e) {
+            log.error("[REDIS ERROR] Đã xóa cache sau khi lưu tạo/cập nhật thất bại với kanji {}", e.getMessage());
+        }
+
+        return kanjiMapper.toKanjiResponse(savedKanji);
     }
 
     @Override
@@ -93,6 +110,10 @@ public class KanjiServiceImpl implements KanjiService {
             throw new AppException(ErrorCode.KANJI_STILL_IN_USE);
         }
         kanjiRepository.deleteKanjiByCharacterName(characterName);
+        // logic xóa cache
+        kanjiCacheService.clearAllPages();
+        kanjiCacheService.clearAllKeywordCache();
+        kanjiCacheService.deleteKanjiDetail(characterName);
     }
 
     @Override
@@ -100,6 +121,15 @@ public class KanjiServiceImpl implements KanjiService {
         if (kanjiChar == null || kanjiChar.trim().isEmpty()) {
             throw new AppException(ErrorCode.EMPTY_KANJI);
         }
+
+        // Check cache
+        KanjiDetailResponse cached = kanjiCacheService.getKanjiDetail(kanjiChar);
+        if (cached != null) {
+            log.info("[CACHE HIT] Kanji detail {}", kanjiChar);
+            return cached;
+        }
+        log.info("[CACHE MISS] Vào DB tìm kanji: {}", kanjiChar);
+
         Kanji existingKanji = kanjiRepository
                 .findByCharacterName(kanjiChar)
                 .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
@@ -131,6 +161,10 @@ public class KanjiServiceImpl implements KanjiService {
         } catch (Exception e) {
             log.error("Error fetching kanji data from external API", e);
         }
+        // Lưu cache
+        kanjiCacheService.saveKanjiDetail(kanjiChar, kanjiDetailResponse);
+        log.info("[CACHE SAVE] Kanji detail:{}", kanjiChar);
+
         return kanjiDetailResponse;
     }
 
@@ -143,16 +177,29 @@ public class KanjiServiceImpl implements KanjiService {
         String q = keyword.trim();
         List<KanjiResponse> results = new ArrayList<>();
 
-        // Một chữ Kanji duy nhất
+        // Kiểm tra cache trước
+        List<KanjiResponse> cached = kanjiCacheService.getKanjiByKeyword(q);
+        if (cached != null && !cached.isEmpty()) {
+            log.info("[CACHE HIT] Kanji keyword '{}'", q);
+            return cached;
+        }
+
+        log.info("[CACHE MISS] Kanji keyword '{}'", q);
+
+        // Một chữ Kanji duy nhất (ví dụ: 学)
         if (ValidationUtils.isSingleKanji(q)) {
             kanjiRepository
                     .findByCharacterName(q)
                     .map(kanjiMapper::toKanjiResponse)
                     .ifPresent(results::add);
+
+            if (!results.isEmpty()) {
+                kanjiCacheService.saveKanjiByKeyword(q, results);
+            }
             return results;
         }
 
-        // Chuỗi toàn Kanji (ví dụ 勉強)
+        // Chuỗi toàn Kanji (ví dụ: 勉強)
         if (ValidationUtils.isAllKanji(q)) {
             for (String ch : ValidationUtils.extractKanjiChars(q)) {
                 kanjiRepository
@@ -160,34 +207,68 @@ public class KanjiServiceImpl implements KanjiService {
                         .map(kanjiMapper::toKanjiResponse)
                         .ifPresent(results::add);
             }
-            if (!results.isEmpty()) return results;
+            if (!results.isEmpty()) {
+                kanjiCacheService.saveKanjiByKeyword(q, results);
+                return results;
+            }
         }
 
-        // Chuỗi chứa Kana (食べるの見る, 勉強する, v.v.)
+        // Chuỗi chứa Kana (ví dụ: 食べる, 勉強する)
         if (ValidationUtils.containsKana(q)) {
             vocabulariesRepository.findByWord(q).ifPresent(vocab -> vocab.getKanjis()
                     .forEach(k -> results.add(kanjiMapper.toKanjiResponse(k))));
 
-            if (!results.isEmpty()) return results;
+            if (!results.isEmpty()) {
+                kanjiCacheService.saveKanjiByKeyword(q, results);
+                return results;
+            }
 
+            // Fallback: tách ra từng ký tự kanji trong chuỗi
             for (String ch : ValidationUtils.extractKanjiChars(q)) {
                 kanjiRepository
                         .findByCharacterName(ch)
                         .map(kanjiMapper::toKanjiResponse)
                         .ifPresent(results::add);
             }
-            if (!results.isEmpty()) return results;
+            if (!results.isEmpty()) {
+                kanjiCacheService.saveKanjiByKeyword(q, results);
+                return results;
+            }
         }
 
-        // Fallback: Hán Việt
+        // Fallback cuối cùng: tìm theo Hán Việt (Sino-Vi)
         results.addAll(kanjiRepository.findBySinoViName(q).stream()
                 .map(kanjiMapper::toKanjiResponse)
                 .toList());
+
+        // Lưu cache nếu có kết quả
+        if (!results.isEmpty()) {
+            kanjiCacheService.saveKanjiByKeyword(q, results);
+        }
         return results;
     }
 
     @Override
-    public Page<Kanji> getAllKanjiByFilter(Specification<Kanji> spec, Pageable pageable) {
-        return kanjiRepository.findAll(spec, pageable);
+    public Page<KanjiResponse> getAllKanjiByFilter(Specification<Kanji> spec, Pageable pageable, String filter) {
+        String filterKey = (filter != null && !filter.isBlank()) ? filter.trim() : "no-filter";
+
+        // Hash đúng chuỗi filter gốc, không dựa vào spec.toString()
+        String filterHash = DigestUtils.md5DigestAsHex(filterKey.getBytes());
+
+        String cacheKey =
+                String.format("kanji:page:%s:%d:%d", filterHash, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<KanjiResponse> cached = kanjiCacheService.getPage(cacheKey);
+        if (cached != null) {
+            log.info("[CACHE HIT] key={} (filter='{}')", cacheKey, filterKey);
+            return cached;
+        }
+
+        Page<Kanji> page = kanjiRepository.findAll(spec, pageable);
+        Page<KanjiResponse> responsePage = page.map(kanjiMapper::toKanjiResponse);
+
+        kanjiCacheService.savePage(cacheKey, responsePage);
+        log.info("[CACHE SAVE] key={} (filter='{}')", cacheKey, filterKey);
+        return responsePage;
     }
 }

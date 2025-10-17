@@ -3,6 +3,7 @@ package com.example.javi.controller;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
@@ -35,9 +36,9 @@ public class GrammarController {
     SecurityUtil securityUtil;
 
     @PostMapping("")
-    public ApiResponse createGrammar(@RequestBody CreateGrammarRequest request) {
+    public ApiResponse<GrammarResponse> createGrammar(@RequestBody CreateGrammarRequest request) {
         GrammarResponse grammarResponse = grammarService.createGrammar(request);
-        return ApiResponse.builder()
+        return ApiResponse.<GrammarResponse>builder()
                 .result(grammarResponse)
                 .message("Tạo ngữ pháp thành công")
                 .build();
@@ -54,20 +55,20 @@ public class GrammarController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse deleteGrammar(@PathVariable Long id) {
+    public ApiResponse<Void> deleteGrammar(@PathVariable Long id) {
         grammarService.deleteGrammar(id);
-        return ApiResponse.builder().message("Xóa ngữ pháp thành công").build();
+        return ApiResponse.<Void>builder().message("Xóa ngữ pháp thành công").build();
     }
 
     @GetMapping("/{id}")
-    public ApiResponse getDetailGrammarById(@PathVariable Long id, Authentication authentication) {
+    public ApiResponse<GrammarResponse> getDetailGrammarById(@PathVariable Long id, Authentication authentication) {
         GrammarResponse grammarResponse = grammarService.getGrammarById(id);
         if (authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByEntity(
                     user, grammarResponse.getId(), EntityType.GRAMMAR, grammarResponse.getPattern());
         }
-        return ApiResponse.builder()
+        return ApiResponse.<GrammarResponse>builder()
                 .result(grammarResponse)
                 .message("Lấy ngữ pháp thành công")
                 .build();
@@ -78,7 +79,11 @@ public class GrammarController {
             @ModelAttribute GrammarSearchRequest request,
             @PageableDefault(size = 5, sort = "grammarId") Pageable pageable,
             Authentication authentication) {
-        Page<GrammarResponse> responsePage = grammarService.searchGrammars(request, pageable);
+        int page = pageable.getPageNumber();
+        if (page <= 0) page = 1;
+        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
+        Page<GrammarResponse> responsePage = grammarService.searchGrammars(request, oneIndexPageable);
         if (authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, request.getKeyword(), EntityType.GRAMMAR);

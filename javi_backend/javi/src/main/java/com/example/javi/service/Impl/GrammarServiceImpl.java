@@ -1,10 +1,13 @@
 package com.example.javi.service.Impl;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import com.example.javi.mapper.GrammarMapper;
 import com.example.javi.repository.GrammarExampleRepository;
 import com.example.javi.repository.GrammarRepository;
 import com.example.javi.service.GrammarService;
+import com.example.javi.service.cache.GrammarCacheService;
 import com.example.javi.specification.GrammarSpecification;
 
 import lombok.AccessLevel;
@@ -39,6 +43,7 @@ public class GrammarServiceImpl implements GrammarService {
     GrammarMapper grammarMapper;
     GrammarExampleMapper grammarExampleMapper;
     GrammarExampleRepository grammarExampleRepository;
+    GrammarCacheService grammarCacheService;
 
     @Override
     @Transactional
@@ -62,8 +67,12 @@ public class GrammarServiceImpl implements GrammarService {
         grammar.setExamples(examples);
 
         grammar = grammarRepository.save(grammar);
-
-        return grammarMapper.toGrammarResponse(grammar);
+        GrammarResponse grammarResponse = grammarMapper.toGrammarResponse(grammar);
+        grammarCacheService.saveGrammar(grammar.getGrammarId(), grammarResponse);
+        log.info("[GRAMMAR SAVE] Lưu grammar có id {}", grammar.getGrammarId());
+        grammarCacheService.clearAllPages();
+        log.info("[GRAMMAR CLEAR] Xóa tất cả cache page do có thêm grammar mới");
+        return grammarResponse;
     }
 
     @Override
@@ -113,31 +122,109 @@ public class GrammarServiceImpl implements GrammarService {
                 .collect(Collectors.toCollection(ArrayList::new));
         existingGrammar.setExamples(examplesToSaveOrUpdate);
         Grammar updatedGrammar = grammarRepository.save(existingGrammar);
-        return grammarMapper.toGrammarResponse(updatedGrammar);
+        GrammarResponse grammarResponse = grammarMapper.toGrammarResponse(updatedGrammar);
+
+        grammarCacheService.deleteGrammar(updatedGrammar.getGrammarId());
+        log.info("[CACHE DELETE] Xóa cache grammar có id: {}", id);
+        grammarCacheService.clearAllPages();
+        log.info("[CACHE CLEAR] Xóa tất cả cache page");
+        grammarCacheService.saveGrammar(updatedGrammar.getGrammarId(), grammarResponse);
+        log.info("[CACHE SAVE] Lưu cache grammar mới cập nhật có id: {}", id);
+        return grammarResponse;
     }
 
     @Override
+    @Transactional
     public void deleteGrammar(Long id) {
         if (!grammarRepository.existsById(id)) {
             throw new AppException(ErrorCode.GRAMMAR_NOT_FOUND);
         }
         grammarRepository.deleteById(id);
+        grammarCacheService.clearAllPages();
+        grammarCacheService.deleteGrammar(id);
+        log.info("[CACHE CLEAR] Xóa tất cả cache page");
     }
 
     @Override
     public GrammarResponse getGrammarById(Long id) {
+        GrammarResponse cached = grammarCacheService.getGrammar(id);
+        if (cached != null) {
+            log.info("[CACHE HIT] Lấy cache grammar với id: {}", id);
+            return cached;
+        }
+        log.info("[CACHE MISS] Vào DB tìm grammar có id: {}", id);
         Optional<Grammar> grammar = grammarRepository.findById(id);
         if (grammar.isEmpty()) {
             throw new AppException(ErrorCode.GRAMMAR_NOT_FOUND);
         }
-        return grammarMapper.toGrammarResponse(grammar.get());
+        GrammarResponse grammarResponse = grammarMapper.toGrammarResponse(grammar.get());
+        grammarCacheService.saveGrammar(grammar.get().getGrammarId(), grammarResponse);
+        log.info("[CACHE SAVE] Lưu cache grammar có id: {}", id);
+        return grammarResponse;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<GrammarResponse> searchGrammars(GrammarSearchRequest request, Pageable pageable) {
-        Specification<Grammar> spec = GrammarSpecification.buildSpecification(request.getKeyword(), request.getLevel());
+        // Chuẩn hóa input
+        String keyword = normalizeKeyword(request.getKeyword());
+        String level = Optional.ofNullable(request.getLevel())
+                .map(Enum::name)
+                .orElse("_");
+        String sort = canonicalSort(pageable.getSort());
+
+        // Tạo cache key an toàn, ngắn gọn, rõ ràng
+        String key = String.format(
+                "grammar:page:q=%s:level=%s:p=%d:s=%d:sort=%s",
+                keyword,
+                level,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                sort
+        );
+
+        // Thử lấy từ cache trước
+        Page<GrammarResponse> cachedPage = grammarCacheService.getPage(key);
+        if (cachedPage != null) {
+            log.info("[CACHE HIT] Lấy cache page grammar với key: {}", key);
+            return cachedPage;
+        }
+
+        // Không có cache → truy DB
+        Specification<Grammar> spec = GrammarSpecification.buildSpecification(
+                request.getKeyword(),
+                request.getLevel()
+        );
+
         Page<Grammar> grammarPage = grammarRepository.findAll(spec, pageable);
-        return grammarPage.map(grammarMapper::toGrammarResponse);
+        Page<GrammarResponse> responsePage = grammarPage.map(grammarMapper::toGrammarResponse);
+
+        // Lưu cache
+        grammarCacheService.savePage(key, responsePage);
+        log.info("[CACHE SAVE] Lưu cache page grammar với key {}", key);
+
+        return responsePage;
     }
+
+    /**
+     * Chuẩn hóa keyword để tránh ký tự đặc biệt phá key Redis.
+     * Ví dụ: "N3 bài 1" -> "n3+bài+1"
+     */
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) return "_";
+        // Trim + lowercase + URL encode (để tránh dấu ':' hay khoảng trắng)
+        return URLEncoder.encode(keyword.trim().toLowerCase(), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Chuẩn hóa sort để key không bị fragment khi nhiều field hoặc format khác nhau.
+     * Ví dụ: Sort.by("grammarId", "asc") -> "grammarId:ASC"
+     */
+    private String canonicalSort(Sort sort) {
+        if (sort == null || sort.isEmpty()) return "_";
+        return sort.stream()
+                .map(order -> order.getProperty() + ":" + order.getDirection().name())
+                .collect(Collectors.joining(","));
+    }
+
 }

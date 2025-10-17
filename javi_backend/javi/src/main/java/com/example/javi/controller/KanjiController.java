@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -42,42 +43,43 @@ public class KanjiController {
     SecurityUtil securityUtil;
 
     @PostMapping("")
-    public ApiResponse createOrUpdateKanji(@Valid @RequestBody KanjiRequest request) {
+    public ApiResponse<KanjiResponse> createOrUpdateKanji(@Valid @RequestBody KanjiRequest request) {
         if (!ValidationUtils.isKanji(request.getCharacterName())) {
             throw new AppException(ErrorCode.NOT_KANJI);
         }
-        return ApiResponse.builder()
+        return ApiResponse.<KanjiResponse>builder()
                 .message("Thành công")
                 .result(kanjiService.createOrUpdateKanji(request))
                 .build();
     }
 
     @DeleteMapping("")
-    public ApiResponse deleteKanjiByCharacterName(@RequestParam String characterName) {
+    public ApiResponse<Void> deleteKanjiByCharacterName(@RequestParam String characterName) {
         if (!ValidationUtils.isSingleKanji(characterName.trim())) {
             throw new AppException(ErrorCode.NOT_SINGLE_KANJI);
         }
         kanjiService.deleteKanjiByCharacterName(characterName);
-        return ApiResponse.builder()
+        return ApiResponse.<Void>builder()
                 .message("Xóa kanji" + characterName + " thành công")
                 .build();
     }
 
     @GetMapping("/search")
-    public ApiResponse searchKanji(@RequestParam String keyword, Authentication authentication) {
+    public ApiResponse<List<KanjiResponse>> searchKanji(@RequestParam String keyword, Authentication authentication) {
         List<KanjiResponse> response = kanjiService.getKanjiByKeyWord(keyword.toUpperCase());
         if (authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, keyword, EntityType.KANJI);
         }
-        return ApiResponse.builder()
+        return ApiResponse.<List<KanjiResponse>>builder()
                 .result(response)
                 .message("Lấy Kanji thành công")
                 .build();
     }
 
     @GetMapping("/search/get-mean")
-    public ApiResponse searchDetailKanji(@RequestParam String characterName, Authentication authentication) {
+    public ApiResponse<KanjiDetailResponse> searchDetailKanji(
+            @RequestParam String characterName, Authentication authentication) {
         if (!ValidationUtils.isKanji(characterName.trim())) {
             throw new AppException(ErrorCode.NOT_KANJI);
         }
@@ -87,23 +89,23 @@ public class KanjiController {
             historySearchService.saveHistoryByEntity(
                     user, kanjiDetailResponse.getId(), EntityType.KANJI, kanjiDetailResponse.getCharacterName());
         }
-        return ApiResponse.builder()
+        return ApiResponse.<KanjiDetailResponse>builder()
                 .result(kanjiDetailResponse)
                 .message("Lấy chi tiết kanji thành công")
                 .build();
     }
 
     @GetMapping("")
-    public ApiResponse findKanjiByFilter(
-            @Filter Specification<Kanji> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
+    public ApiResponse<Page<KanjiResponse>> findKanjiByFilter(
+            @Filter Specification<Kanji> spec,
+            @RequestParam(required = false) String filter,
+            @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();
-        if (page > 0) {
-            page = page - 1;
-        }
-        Pageable oneIndexedPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
-        return ApiResponse.builder()
+        if (page <= 0) page = 1;
+        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+        return ApiResponse.<Page<KanjiResponse>>builder()
                 .message("Lấy danh sách kanji thành công")
-                .result(kanjiService.getAllKanjiByFilter(spec, oneIndexedPageable))
+                .result(kanjiService.getAllKanjiByFilter(spec, oneIndexedPageable, filter))
                 .build();
     }
 }

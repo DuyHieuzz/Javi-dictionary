@@ -20,5 +20,5 @@ public interface KanjiService {
 
     List<KanjiResponse> getKanjiByKeyWord(String keyword);
 
-    Page<Kanji> getAllKanjiByFilter(Specification<Kanji> spec, Pageable pageable);
+    Page<KanjiResponse> getAllKanjiByFilter(Specification<Kanji> spec, Pageable pageable, String filter);
 }

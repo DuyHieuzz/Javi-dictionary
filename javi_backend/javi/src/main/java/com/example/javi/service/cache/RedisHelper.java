@@ -67,6 +67,20 @@ public class RedisHelper {
         }
     }
 
+    // FIND LIST
+    public <T> java.util.List<T> findList(String key, Class<T> clazz) {
+        try {
+            String json = redisTemplate.opsForValue().get(key);
+            if (json == null) return null;
+
+            return objectMapper.readValue(
+                    json, objectMapper.getTypeFactory().constructCollectionType(java.util.List.class, clazz));
+        } catch (Exception e) {
+            log.error("[REDIS ERROR] Deserialize list key={} failed: {}", key, e.getMessage());
+            return null;
+        }
+    }
+
     // DELETE KEY
     public void delete(String key) {
         redisTemplate.delete(key);
