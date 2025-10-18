@@ -174,7 +174,6 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-
     </dependencies>
     <dependencyManagement>
         <dependencies>

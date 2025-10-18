@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.RoleRequest;
@@ -29,6 +30,7 @@ public class RoleController {
     RoleService roleService;
 
     @PostMapping("")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MANAGE_ROLE')")
     public ApiResponse<Role> createRole(@Valid @RequestBody RoleRequest request) {
         Role role = roleService.createRole(request);
         return ApiResponse.<Role>builder()
@@ -38,6 +40,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MANAGE_ROLE')")
     public ApiResponse<Role> updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
         Role role = roleService.updateRole(id, request);
         return ApiResponse.<Role>builder()
@@ -47,12 +50,14 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MANAGE_ROLE')")
     public ApiResponse<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return ApiResponse.<Void>builder().message("Xóa role thành công").build();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Role> getRoleById(@PathVariable Long id) {
         Role role = roleService.getRoleById(id);
         return ApiResponse.<Role>builder()
@@ -62,6 +67,7 @@ public class RoleController {
     }
 
     @GetMapping("")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<?> getAllRoles(
             @Filter Specification<Role> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();

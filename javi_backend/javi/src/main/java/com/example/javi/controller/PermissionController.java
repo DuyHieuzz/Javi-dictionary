@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.PermissionRequest;
@@ -31,6 +32,7 @@ public class PermissionController {
     PermissionService permissionService;
 
     @PostMapping("")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MANAGE_PERMISSION')")
     public ApiResponse<Permission> createPermission(@Valid @RequestBody PermissionRequest request) {
         Permission permission = permissionService.createPermission(request);
         return ApiResponse.<Permission>builder()
@@ -40,6 +42,7 @@ public class PermissionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MANAGE_PERMISSION')")
     public ApiResponse<Permission> updatePermission(
             @PathVariable Long id, @Valid @RequestBody PermissionRequest request) {
         Permission permission = permissionService.updatePermission(id, request);
@@ -50,12 +53,14 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MANAGE_PERMISSION')")
     public ApiResponse<Void> deletePermission(@PathVariable Long id) {
         permissionService.deletePermission(id);
         return ApiResponse.<Void>builder().message("Xóa quyền thành công").build();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Permission> getPermission(@PathVariable Long id) {
         Permission permission = permissionService.getPermission(id);
         return ApiResponse.<Permission>builder()
@@ -65,6 +70,7 @@ public class PermissionController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<Permission>> getAllPermissions() {
         List<Permission> permissions = permissionService.getAllPermissions();
         return ApiResponse.<List<Permission>>builder()
@@ -74,6 +80,7 @@ public class PermissionController {
     }
 
     @GetMapping("")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<?> getPermissionsByFilter(
             @Filter Specification<Permission> spec, @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         int page = pageable.getPageNumber();

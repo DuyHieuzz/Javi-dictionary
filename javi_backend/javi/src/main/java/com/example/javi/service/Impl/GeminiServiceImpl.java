@@ -1,11 +1,16 @@
 package com.example.javi.service.Impl;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.javi.dto.request.GrammarCheckSourceText;
 import com.example.javi.dto.request.TranslateRequest;
+import com.example.javi.dto.response.GrammarCheckResult;
 import com.example.javi.dto.response.TranslateResponse;
 import com.example.javi.entity.AccountType;
 import com.example.javi.entity.EngineType;
@@ -106,8 +111,7 @@ public class GeminiServiceImpl implements GeminiService {
         translation.setEngine(EngineType.AI);
         translationRepository.save(translation);
 
-        TranslateResponse translateResponse = translationMapper.translationToTranslateResponse(translation);
-        return translateResponse;
+        return translationMapper.translationToTranslateResponse(translation);
     }
 
     @Override
@@ -159,5 +163,34 @@ public class GeminiServiceImpl implements GeminiService {
 
         log.info("AI explanation for {}: {}", word, result);
         return result;
+    }
+
+    @Override
+    public GrammarCheckResult checkGrammar(GrammarCheckSourceText request) {
+        Users currentUser = securityUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        if (currentUser.getAccountType() != AccountType.PREMIUM) {
+            throw new AppException(ErrorCode.REQUIRE_PREMIUM);
+        }
+
+        String prompt = String.format(
+                """
+				Bạn là chuyên gia ngữ pháp tiếng Nhật.
+				Hãy kiểm tra và sửa ngữ pháp của đoạn văn sau, sau đó giải thích các lỗi một cách dễ hiểu vì sao phải sửa.
+				Yêu cầu quan trọng:
+				1. Nếu có lỗi, giải thích (explanation) nên trình bày rõ ràng theo từng câu
+				hoặc cấu trúc ngữ pháp, nêu rõ và chi tiết vì sao phải sửa — không liệt kê từng chữ,
+				không giải thích bằng ngôn ngữ đoạn văn cần kiểm tra ngữ pháp.
+				2. Các phần (explanation, mean) phải được viết bằng ngôn ngữ %s.
+				""",
+                request.getTargetLang());
+
+        SystemMessage system = new SystemMessage(prompt);
+        UserMessage user = new UserMessage(request.getSourceText());
+        Prompt grammarPrompt = new Prompt(system, user);
+
+        return chatClient.prompt(grammarPrompt).call().entity(GrammarCheckResult.class);
     }
 }

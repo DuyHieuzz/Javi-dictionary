@@ -2,7 +2,9 @@ package com.example.javi.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.javi.dto.request.GrammarCheckSourceText;
 import com.example.javi.dto.request.TranslateRequest;
+import com.example.javi.dto.response.GrammarCheckResult;
 import com.example.javi.dto.response.TranslateResponse;
 
 public interface GeminiService {
@@ -11,4 +13,6 @@ public interface GeminiService {
     TranslateResponse translateImage(MultipartFile file, String targetLang, String sourceLang);
 
     String explainWord(String word);
+
+    GrammarCheckResult checkGrammar(GrammarCheckSourceText request);
 }

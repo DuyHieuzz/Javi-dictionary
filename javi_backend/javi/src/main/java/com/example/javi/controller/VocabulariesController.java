@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +45,7 @@ public class VocabulariesController {
     SecurityUtil securityUtil;
 
     @PostMapping("")
+    @PreAuthorize("hasAuthority('CREATE_VOCABULARY')")
     public ApiResponse<VocabResponse> createVocabulary(@Valid @RequestBody VocabRequest request) {
         boolean isJapanese = ValidationUtils.isJapanese(request.getWord());
         if (!isJapanese) {
@@ -57,6 +59,7 @@ public class VocabulariesController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('UPDATE_VOCABULARY')")
     public ApiResponse<VocabResponse> updateVocabulary(
             @PathVariable Long id, @Valid @RequestBody VocabUpdateDTO request) {
         boolean isJapanese = ValidationUtils.isJapanese(request.getWord());
@@ -125,12 +128,14 @@ public class VocabulariesController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DELETE_VOCABULARY')")
     public ApiResponse<Void> deleteVocabulary(@PathVariable Long id) {
         vocabulariesService.deleteVocabularyById(id);
         return ApiResponse.<Void>builder().message("Xóa từ vựng thành công").build();
     }
 
     @PostMapping("/explain/{word}")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<String> explainVocabulary(@PathVariable String word) {
         String response = vocabulariesService.explainVocabulary(word);
         return ApiResponse.<String>builder()

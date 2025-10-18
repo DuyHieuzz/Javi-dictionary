@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,6 +58,7 @@ public class TranslateController {
     }
 
     @PostMapping("/image")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<TranslateResponse> translateImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam(defaultValue = "vi") String targetLang,
@@ -83,6 +85,7 @@ public class TranslateController {
     }
 
     @GetMapping("/history")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<TranslateResponse>> translateHistory(
             @PageableDefault(
                             size = 10,

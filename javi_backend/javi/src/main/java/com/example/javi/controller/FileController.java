@@ -1,30 +1,33 @@
 package com.example.javi.controller;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
+import com.example.javi.service.FileService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.javi.service.FileService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 @RestController
 @RequestMapping("${api.prefix}/files")
 @RequiredArgsConstructor
-// @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class FileController {
+    @NonFinal
     @Value("${javi.upload-file.base-uri}")
     String baseURI;
 
-    private final FileService fileService;
+    FileService fileService;
 
     @PostMapping("/upload-avatar")
     public String upload(

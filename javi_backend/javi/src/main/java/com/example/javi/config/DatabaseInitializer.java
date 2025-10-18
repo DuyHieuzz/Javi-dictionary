@@ -50,12 +50,15 @@ public class DatabaseInitializer implements ApplicationRunner {
             arr.add(new Permission("DELETE_KANJI", "Cho phép xóa kanji", true));
             arr.add(new Permission("USE_EXPLAIN_VOCABULARY", "Cho phép sử dụng Ai giải thích từ vựng", true));
             arr.add(new Permission("CREATE_COMMENT", "Cho phép bình luận", true));
+            arr.add(new Permission("UPDATE_COMMENT", "Cho phép cập nhật bình luận", true));
             arr.add(new Permission("DELETE_COMMENT", "Cho phép xóa bình luận", true));
             arr.add(new Permission("MANAGE_USER_COMMENT", "Cho phép xóa bình luận của người dùng", true));
             arr.add(new Permission("BLOCK_USER", "Cho phép chặn người dùng", true));
             arr.add(new Permission(
                     "MANAGE_USER", "Cho phép quản lý tạo, cập nhật người dùng (không cập nhật role)", true));
             arr.add(new Permission("CREATE_USER", "Cho phép tạo người dùng và gán role", true));
+            arr.add(new Permission("MANAGE_PERMISSION", "Cho phép quản lý permission", true));
+            arr.add(new Permission("MANAGE_ROLE", "Cho phép quản lý role", true));
             permissionRepository.saveAll(arr);
         }
 

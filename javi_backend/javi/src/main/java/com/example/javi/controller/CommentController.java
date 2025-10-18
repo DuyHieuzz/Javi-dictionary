@@ -29,6 +29,7 @@ public class CommentController {
     CommentService commentService;
 
     @PostMapping("")
+    @PreAuthorize("hasAuthority('CREATE_COMMENT')")
     public ApiResponse<CommentResponse> create(@RequestBody @Valid CreateCommentRequest req) {
         return ApiResponse.<CommentResponse>builder()
                 .result(commentService.createComment(req))
@@ -37,6 +38,7 @@ public class CommentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('UPDATE_COMMENT', 'MANAGE_USER_COMMENT')")
     public ApiResponse<CommentResponse> update(
             @PathVariable Long id, @Valid @RequestBody UpdateCommentRequest request) {
         CommentResponse commentResponse = commentService.updateComment(id, request);
@@ -80,7 +82,8 @@ public class CommentController {
     }
 
     @GetMapping("/my-comment")
-    public ApiResponse<Page<CommentResponse>> getMyComments( // lấy bình luận của mình
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Page<CommentResponse>> getMyComments( // lấy bình luận của mình, giờ nhận ra nó giống ở trên :v
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         int page = pageable.getPageNumber();
         if (page <= 0) page = 1;
@@ -97,6 +100,7 @@ public class CommentController {
     }
 
     @PostMapping("/{commentId}/react")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> react(@PathVariable Long commentId, @RequestParam String type) { // LIKE hoặc DISLIKE
         commentService.reactToComment(commentId, type);
         return ApiResponse.<Void>builder().message("Cập nhật phản ứng").build();

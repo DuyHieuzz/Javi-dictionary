@@ -6,16 +6,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.javi.dto.request.CreateGrammarRequest;
+import com.example.javi.dto.request.GrammarCheckSourceText;
 import com.example.javi.dto.request.GrammarSearchRequest;
 import com.example.javi.dto.request.UpdateGrammarRequest;
 import com.example.javi.dto.response.ApiResponse;
+import com.example.javi.dto.response.GrammarCheckResult;
 import com.example.javi.dto.response.GrammarResponse;
 import com.example.javi.entity.EntityType;
 import com.example.javi.entity.Users;
+import com.example.javi.service.GeminiService;
 import com.example.javi.service.GrammarService;
 import com.example.javi.service.HistorySearchService;
 import com.example.javi.utils.SecurityUtil;
@@ -34,8 +38,10 @@ public class GrammarController {
     GrammarService grammarService;
     HistorySearchService historySearchService;
     SecurityUtil securityUtil;
+    GeminiService geminiService;
 
     @PostMapping("")
+    @PreAuthorize("hasAuthority('CREATE_GRAMMAR')")
     public ApiResponse<GrammarResponse> createGrammar(@RequestBody CreateGrammarRequest request) {
         GrammarResponse grammarResponse = grammarService.createGrammar(request);
         return ApiResponse.<GrammarResponse>builder()
@@ -45,6 +51,7 @@ public class GrammarController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('UPDATE_GRAMMAR')")
     public ApiResponse<GrammarResponse> updateGrammar(
             @PathVariable Long id, @RequestBody @Valid UpdateGrammarRequest request) {
         GrammarResponse response = grammarService.updateGrammar(id, request);
@@ -55,6 +62,7 @@ public class GrammarController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DELETE_GRAMMAR')")
     public ApiResponse<Void> deleteGrammar(@PathVariable Long id) {
         grammarService.deleteGrammar(id);
         return ApiResponse.<Void>builder().message("Xóa ngữ pháp thành công").build();
@@ -91,6 +99,16 @@ public class GrammarController {
         return ApiResponse.<Page<GrammarResponse>>builder()
                 .message("Tìm kiếm mẫu ngữ pháp thành công.")
                 .result(responsePage)
+                .build();
+    }
+
+    @PostMapping("/check")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<GrammarCheckResult> checkGrammar(@Valid @RequestBody GrammarCheckSourceText request) {
+        GrammarCheckResult response = geminiService.checkGrammar(request);
+        return ApiResponse.<GrammarCheckResult>builder()
+                .message("Kiểm tra ngữ pháp thành công")
+                .result(response)
                 .build();
     }
 }

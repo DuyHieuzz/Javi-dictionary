@@ -55,6 +55,7 @@ public class UsersController {
     }
 
     @GetMapping("/my-info")
+    @PreAuthorize("isAuthenticated()")
     ApiResponse<UserResponse> getMyInfo() {
         return ApiResponse.<UserResponse>builder()
                 .result(usersService.getMyInfo())
@@ -94,6 +95,7 @@ public class UsersController {
     }
 
     @PutMapping("/{id}/avatar")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<String> updateAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file)
             throws IOException, URISyntaxException {
         String folder = "avatar"; // cố định folder
@@ -112,6 +114,7 @@ public class UsersController {
     }
 
     @PutMapping("/change-password/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<UserResponse> changePassword(
             @PathVariable Long id, @Valid @RequestBody ChangePassRequest changePassRequest) {
         return ApiResponse.<UserResponse>builder()
@@ -121,6 +124,7 @@ public class UsersController {
     }
 
     @PutMapping("/block/{id}")
+    @PreAuthorize("hasAuthority('MANAGE_USER')")
     public ApiResponse<Void> block(@PathVariable Long id) {
         usersService.blockUser(id);
         return ApiResponse.<Void>builder()
@@ -129,6 +133,7 @@ public class UsersController {
     }
 
     @PutMapping("/unblock/{id}")
+    @PreAuthorize("hasAuthority('MANAGE_USER')")
     public ApiResponse<Void> unblock(@PathVariable Long id) {
         usersService.unblockUser(id);
         return ApiResponse.<Void>builder()
