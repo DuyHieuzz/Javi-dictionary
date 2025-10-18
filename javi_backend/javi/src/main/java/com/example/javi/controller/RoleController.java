@@ -29,44 +29,45 @@ public class RoleController {
     RoleService roleService;
 
     @PostMapping("")
-    public ApiResponse createRole(@Valid @RequestBody RoleRequest request) {
+    public ApiResponse<Role> createRole(@Valid @RequestBody RoleRequest request) {
         Role role = roleService.createRole(request);
-        return ApiResponse.builder().message("Tạo role thành công").result(role).build();
+        return ApiResponse.<Role>builder()
+                .message("Tạo role thành công")
+                .result(role)
+                .build();
     }
 
     @PutMapping("/{id}")
-    public ApiResponse updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
+    public ApiResponse<Role> updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
         Role role = roleService.updateRole(id, request);
-        return ApiResponse.builder()
+        return ApiResponse.<Role>builder()
                 .message("Cập nhật role thành công")
                 .result(role)
                 .build();
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse deleteRole(@PathVariable Long id) {
-
+    public ApiResponse<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
-        return ApiResponse.builder().message("Xóa role thành công").build();
+        return ApiResponse.<Void>builder().message("Xóa role thành công").build();
     }
 
     @GetMapping("/{id}")
-    public ApiResponse getRoleById(@PathVariable Long id) {
+    public ApiResponse<Role> getRoleById(@PathVariable Long id) {
         Role role = roleService.getRoleById(id);
-        return ApiResponse.builder()
+        return ApiResponse.<Role>builder()
                 .message("Lấy thông tin role thành công")
                 .result(role)
                 .build();
     }
 
     @GetMapping("")
-    public ApiResponse getAllRoles(
+    public ApiResponse<?> getAllRoles(
             @Filter Specification<Role> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();
-        if (page > 0) {
-            page = page - 1;
-        }
-        Pageable oneIndexedPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
+        if (page <= 0) page = 1;
+        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
         Page<Role> rolePage = roleService.getAllRolesByFilter(spec, oneIndexedPageable);
         return ApiResponse.builder()
                 .message("Lấy thông tin role thành công")

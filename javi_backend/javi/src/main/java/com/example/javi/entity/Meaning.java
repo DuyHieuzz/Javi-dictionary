@@ -29,7 +29,7 @@ public class Meaning extends BaseEntity {
     Vocabularies vocabularies;
 
     @Column(nullable = false)
-    String meaningVn; // nghĩa tiengsr việt
+    String meaningVn; // nghĩa tiếng việt
 
     @Column(columnDefinition = "TEXT")
     String description; // mô tả thêm cho nghĩa tiếng việt, (nếu có)

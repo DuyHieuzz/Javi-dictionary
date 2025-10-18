@@ -43,5 +43,4 @@ public class CommentCacheService {
         redisHelper.deleteByPattern(pattern);
         log.info("[CACHE CLEAR] Xóa comment pages cho {}:{}", entityType, entityId);
     }
-
 }

@@ -36,7 +36,7 @@ public class DatabaseInitializer implements ApplicationRunner {
     static final String USER_EMAIL = "user@gmail.com";
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args) {
         if (permissionRepository.count() == 0) {
             ArrayList<Permission> arr = new ArrayList<>();
             arr.add(new Permission("CREATE_GRAMMAR", "Cho phép tạo mẫu ngữ pháp mới.", true));
@@ -53,7 +53,9 @@ public class DatabaseInitializer implements ApplicationRunner {
             arr.add(new Permission("DELETE_COMMENT", "Cho phép xóa bình luận", true));
             arr.add(new Permission("MANAGE_USER_COMMENT", "Cho phép xóa bình luận của người dùng", true));
             arr.add(new Permission("BLOCK_USER", "Cho phép chặn người dùng", true));
-            arr.add(new Permission("MANAGE_USER", "Cho phép quản lý tạo, cập nhật người dùng", true));
+            arr.add(new Permission(
+                    "MANAGE_USER", "Cho phép quản lý tạo, cập nhật người dùng (không cập nhật role)", true));
+            arr.add(new Permission("CREATE_USER", "Cho phép tạo người dùng và gán role", true));
             permissionRepository.saveAll(arr);
         }
 

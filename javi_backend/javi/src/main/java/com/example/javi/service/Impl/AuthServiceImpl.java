@@ -1,0 +1,173 @@
+package com.example.javi.service.Impl;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Optional;
+
+import jakarta.mail.MessagingException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.javi.dto.request.CreateUserRequest;
+import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.response.LoginResponse;
+import com.example.javi.dto.response.UserResponse;
+import com.example.javi.entity.*;
+import com.example.javi.exeption.AppException;
+import com.example.javi.exeption.ErrorCode;
+import com.example.javi.mapper.UsersMapper;
+import com.example.javi.repository.RoleRepository;
+import com.example.javi.repository.UsersRepository;
+import com.example.javi.service.AuthService;
+import com.example.javi.service.TokenService;
+import com.example.javi.service.VerificationTokenService;
+import com.example.javi.utils.SecurityUtil;
+import com.example.javi.utils.ValidationUtils;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+public class AuthServiceImpl implements AuthService {
+    AuthenticationManagerBuilder authenticationManagerBuilder;
+    UsersRepository usersRepository;
+    UsersMapper usersMapper;
+    PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
+    VerificationTokenService verificationTokenService;
+    SecurityUtil securityUtil;
+    TokenService tokenService;
+
+    private boolean isMobileDevice(String userAgent) {
+        // Kiểm tra User-Agent header để xác định thiết bị di động
+        // đơn giản
+        return userAgent.toLowerCase().contains("mobile");
+    }
+
+    @Override
+    @Transactional
+    public UserResponse register(CreateUserRequest request) throws MessagingException, UnsupportedEncodingException {
+
+        if (!ValidationUtils.isValidEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.INVALID_EMAIL);
+        }
+
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new AppException(ErrorCode.MISMATCH_PASSWORD);
+        }
+
+        if (usersRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.EXIST_USERNAME);
+        }
+
+        Optional<Users> existingUserOpt = usersRepository.findByEmail(request.getEmail());
+        if (existingUserOpt.isPresent()) {
+            Users existingUser = existingUserOpt.get();
+            if (existingUser.isVerified()) {
+                throw new AppException(ErrorCode.EXIST_EMAIL);
+            } else {
+                verificationTokenService.resendVerification(existingUser.getEmail(), TokenType.EMAIL_VERIFICATION);
+                throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
+            }
+        }
+
+        Users newUser = usersMapper.toUsers(request);
+        Role roleUser = roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        newUser.setRole(roleUser);
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setVerified(false);
+        usersRepository.save(newUser);
+
+        VerificationToken token =
+                verificationTokenService.createVerificationTokenForUser(newUser, TokenType.EMAIL_VERIFICATION);
+        verificationTokenService.sendVerificationEmail(newUser, token);
+
+        return usersMapper.toCreateUserResponse(newUser);
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse login(LoginRequest request, String userAgent) {
+        // Xác thực người dùng
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authToken);
+
+        // set thông tin người dùng đăng nhập vào context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Lấy user từ DB
+        Users user = usersRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Kiểm tra email đã xác minh chưa. Nếu chưa thì hiện popup để người dùng nhấn chọn gửi lại email để xác thực
+        if (!user.isVerified()) {
+            throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+        UserResponse usersResponse = usersMapper.toUserResponse(user);
+        // Sinh access token JWT
+        String accessToken = securityUtil.generateToken(user);
+
+        // Tạo refresh token và lưu vào DB, có truyền device type
+        boolean isMobile = isMobileDevice(userAgent);
+        Token jwtToken = tokenService.addToken(user, accessToken, isMobile);
+        String tokenType = jwtToken.getTokenType();
+        String refreshTokenValue = jwtToken.getRefreshToken();
+
+        return new LoginResponse(accessToken, refreshTokenValue, tokenType, usersResponse);
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse refreshToken(String refreshToken) {
+
+        // Kiểm tra refresh token có tồn tại không
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new AppException(ErrorCode.TOKEN_CANNOT_EMPTY);
+        }
+
+        // Gọi logic gốc trong TokenService để xác thực và sinh token mới
+        Token newToken = tokenService.refreshTokenUnified(refreshToken);
+
+        Users user = newToken.getUser();
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        String accessToken = newToken.getToken();
+        String NewRefreshToken = newToken.getRefreshToken();
+        String tokenType = newToken.getTokenType();
+        UserResponse userResponse = usersMapper.toUserResponse(user);
+
+        return new LoginResponse(accessToken, NewRefreshToken, tokenType, userResponse);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            log.info("[LOGOUT] Không có refresh token trong cookie, bỏ qua revoke");
+            return;
+        }
+
+        try {
+            tokenService.revokeRefreshToken(refreshToken);
+            log.info("[LOGOUT] Token {} đã bị revoke thành công", refreshToken);
+        } catch (Exception e) {
+            log.warn("[LOGOUT] Lỗi khi revoke refresh token: {}", e.getMessage());
+            // vẫn cho phép tiếp tục logout, tránh crash API
+        }
+    }
+}

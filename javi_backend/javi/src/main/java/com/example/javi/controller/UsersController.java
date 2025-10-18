@@ -1,13 +1,12 @@
 package com.example.javi.controller;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,11 +22,8 @@ import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
-import com.example.javi.exeption.AppException;
-import com.example.javi.exeption.ErrorCode;
 import com.example.javi.service.FileService;
 import com.example.javi.service.UsersService;
-import com.example.javi.utils.ValidationUtils;
 import com.turkraft.springfilter.boot.Filter;
 
 import lombok.AccessLevel;
@@ -49,19 +45,12 @@ public class UsersController {
     UsersService usersService;
     FileService fileService;
 
-    @PostMapping("/register")
-    public ApiResponse createUser(@Valid @RequestBody CreateUserRequest user)
-            throws MessagingException, UnsupportedEncodingException {
-
-        if (!ValidationUtils.isValidEmail(user.getEmail())) {
-            throw new AppException(ErrorCode.INVALID_EMAIL);
-        }
-
-        UserResponse userResponse = usersService.createUser(user);
-
-        return ApiResponse.builder()
-                .message("Đăng ký thành công")
-                .result(userResponse)
+    @PostMapping
+    @PreAuthorize("hasAuthority('CREATE_USER')")
+    public ApiResponse<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .message("Tạo người dùng thành công")
+                .result(usersService.createUser(request))
                 .build();
     }
 
@@ -74,39 +63,38 @@ public class UsersController {
 
     @PutMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.claims['userId'] or hasAuthority('MANAGE_USER')")
-    public ApiResponse updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest user) {
+    public ApiResponse<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest user) {
         UserResponse userResponse = usersService.updateUser(id, user);
-        return ApiResponse.builder()
+        return ApiResponse.<UserResponse>builder()
                 .message("Cập nhật thành công")
                 .result(userResponse)
                 .build();
     }
 
     @GetMapping("/{id}")
-    ApiResponse getUserById(@PathVariable Long id) {
+    ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
         UserResponse userResponse = usersService.getUserById(id);
-        return ApiResponse.builder()
+        return ApiResponse.<UserResponse>builder()
                 .message("Lấy user thành công")
                 .result(userResponse)
                 .build();
     }
 
     @GetMapping("")
-    ApiResponse getAllUsersByFilter(
+    ApiResponse<Page<UserResponse>> getAllUsersByFilter(
             @Filter Specification<Users> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();
-        if (page > 0) {
-            page = page - 1;
-        }
-        Pageable oneIndexedPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
-        return ApiResponse.builder()
+        if (page <= 0) page = 1;
+        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
+        return ApiResponse.<Page<UserResponse>>builder()
                 .message("Lấy danh sách người dùng thành công")
                 .result(usersService.getAllUsersByFilter(spec, oneIndexedPageable))
                 .build();
     }
 
     @PutMapping("/{id}/avatar")
-    public ApiResponse updateAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file)
+    public ApiResponse<String> updateAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file)
             throws IOException, URISyntaxException {
         String folder = "avatar"; // cố định folder
 
@@ -117,40 +105,44 @@ public class UsersController {
         String fileName = fileService.store(file, folder);
 
         // cập nhật avatar cho user
-        return ApiResponse.builder()
+        return ApiResponse.<String>builder()
                 .message("Cập nhật avatar thành công")
                 .result(usersService.updateAvatar(id, fileName))
                 .build();
     }
 
     @PutMapping("/change-password/{id}")
-    public ApiResponse changePassword(@PathVariable Long id, @Valid @RequestBody ChangePassRequest changePassRequest) {
-        return ApiResponse.builder()
+    public ApiResponse<UserResponse> changePassword(
+            @PathVariable Long id, @Valid @RequestBody ChangePassRequest changePassRequest) {
+        return ApiResponse.<UserResponse>builder()
                 .message("Đổi mật khẩu thành công")
                 .result(usersService.changePassword(id, changePassRequest))
                 .build();
     }
 
     @PutMapping("/block/{id}")
-    public ApiResponse block(@PathVariable Long id) {
+    public ApiResponse<Void> block(@PathVariable Long id) {
         usersService.blockUser(id);
-        return ApiResponse.builder()
+        return ApiResponse.<Void>builder()
                 .message("Khóa tài khoản người dùng thành công")
                 .build();
     }
 
     @PutMapping("/unblock/{id}")
-    public ApiResponse unblock(@PathVariable Long id) {
+    public ApiResponse<Void> unblock(@PathVariable Long id) {
         usersService.unblockUser(id);
-        return ApiResponse.builder()
+        return ApiResponse.<Void>builder()
                 .message("Mở khóa tài khoản người dùng thành công")
                 .build();
     }
 
     @PreAuthorize("hasAuthority('MANAGE_USER')")
     @PutMapping("/{id}/upgrade-premium")
-    public ApiResponse upgrade(@PathVariable Long id, @RequestParam PremiumType type) {
-        String message = usersService.setPremiumManually(id, type);
-        return ApiResponse.builder().message(message).build();
+    public ApiResponse<UserResponse> upgrade(@PathVariable Long id, @RequestParam PremiumType type) {
+        UserResponse userResponse = usersService.setPremiumManually(id, type);
+        return ApiResponse.<UserResponse>builder()
+                .message("Thành công")
+                .result(userResponse)
+                .build();
     }
 }

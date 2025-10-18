@@ -9,7 +9,7 @@ import com.example.javi.entity.Comment;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.fullName", target = "userName")
+    @Mapping(source = "user.username", target = "userName")
     @Mapping(source = "user.avatarUrl", target = "avatarUrl")
     @Mapping(target = "isMyComment", ignore = true)
     CommentResponse toCommentResponse(Comment comment);

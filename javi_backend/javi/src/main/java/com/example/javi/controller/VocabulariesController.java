@@ -117,6 +117,7 @@ public class VocabulariesController {
         // Nếu người dùng gửi page=0, page ở đây là 0 (hoặc lỗi), giữ nguyên 0.
         if (page <= 0) page = 1;
         Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
         return ApiResponse.<Page<VocabResponse>>builder()
                 .message("Lấy từ vựng thành công")
                 .result(vocabulariesService.getAllVocabulariesByFilter(spec, oneIndexPageable, filter))

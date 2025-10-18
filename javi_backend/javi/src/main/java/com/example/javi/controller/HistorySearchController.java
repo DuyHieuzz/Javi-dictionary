@@ -30,16 +30,15 @@ public class HistorySearchController {
     SecurityUtil securityUtil;
 
     @GetMapping("")
-    public ApiResponse searchHistory(
+    public ApiResponse<?> searchHistory(
             @PageableDefault(size = 15, sort = "searchedAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Users user = securityUtil.getCurrentUser();
         int page = pageable.getPageNumber();
-        if (page > 0) {
-            page = page - 1;
-        }
-        Pageable oneIndexedPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
-        Page<HistorySearch> response = historySearchService.getHistorySearch(user, oneIndexedPageable);
+        if (page <= 0) page = 1;
+        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
+        Page<HistorySearch> response = historySearchService.getHistorySearch(user, oneIndexPageable);
         return ApiResponse.builder()
                 .message("Lấy lịch sử người dùng thành công")
                 .result(response)

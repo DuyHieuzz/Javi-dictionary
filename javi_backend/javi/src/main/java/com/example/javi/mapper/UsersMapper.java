@@ -9,14 +9,21 @@ import com.example.javi.entity.Users;
 
 @Mapper(componentModel = "spring")
 public interface UsersMapper {
+    @Mapping(target = "role", ignore = true)
     Users toUsers(CreateUserRequest users);
 
+    @Mapping(target = "accountType", source = "accountType")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "premiumExpiredAt", source = "premiumExpiredAt")
     UserResponse toCreateUserResponse(Users users);
 
     // Cập nhật (chỉ map các trường không null)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateUserFromDto(UpdateUserRequest dto, @MappingTarget Users entity);
 
+    @Mapping(target = "accountType", source = "accountType")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "premiumExpiredAt", source = "premiumExpiredAt")
     UserResponse toUserResponse(Users users);
 
     // Xử lý hậu mapping

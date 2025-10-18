@@ -28,4 +28,6 @@ public class UpdateUserRequest {
     JlptLevel jlptLevel;
 
     String selfIntroduction;
+
+    Long roleId;
 }

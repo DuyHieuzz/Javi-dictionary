@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 
 import com.example.javi.entity.AccountType;
 import com.example.javi.entity.JlptLevel;
-import com.example.javi.entity.Role;
 import com.example.javi.entity.Status;
 
 import lombok.*;
@@ -43,7 +42,7 @@ public class CreateUserRequest {
 
     String avatarUrl;
 
-    Role role;
+    Long roleId;
 
     Status status = Status.ACTIVE;
 

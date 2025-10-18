@@ -1,12 +1,9 @@
 package com.example.javi.service.Impl;
 
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
-
-import jakarta.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -28,11 +25,8 @@ import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.UsersMapper;
 import com.example.javi.repository.RoleRepository;
 import com.example.javi.repository.UsersRepository;
-import com.example.javi.repository.VerificationTokenRepository;
 import com.example.javi.service.UsersService;
-import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
-import com.example.javi.utils.ValidationUtils;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jwt.SignedJWT;
@@ -53,8 +47,6 @@ public class UsersServiceImpl implements UsersService {
     PasswordEncoder passwordEncoder;
     SecurityUtil securityUtil;
     RoleRepository roleRepository;
-    VerificationTokenService verificationTokenService;
-    VerificationTokenRepository verificationTokenRepository;
 
     @NonFinal
     @Value("${app.time-zone}")
@@ -69,8 +61,9 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public Page<Users> getAllUsersByFilter(Specification<Users> spec, Pageable pageable) {
-        return usersRepository.findAll(spec, pageable);
+    public Page<UserResponse> getAllUsersByFilter(Specification<Users> spec, Pageable pageable) {
+        Page<Users> usersPage = usersRepository.findAll(spec, pageable);
+        return usersPage.map(usersMapper::toUserResponse);
     }
 
     @Override
@@ -81,52 +74,30 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional
-    public UserResponse createUser(CreateUserRequest user) throws MessagingException, UnsupportedEncodingException {
-        // Validate email & password
-        if (!ValidationUtils.isValidEmail(user.getEmail())) {
-            throw new AppException(ErrorCode.INVALID_EMAIL);
-        }
-        if (!user.getPassword().equals(user.getConfirmPassword())) {
-            throw new AppException(ErrorCode.MISMATCH_PASSWORD);
-        }
+    public UserResponse createUser(CreateUserRequest request) {
+        // Chỉ người có quyền CREATE_USER mới được phép
+        securityUtil.requirePermission("CREATE_USER");
 
-        // Kiểm tra username đã tồn tại chưa
-        if (usersRepository.existsByUsername(user.getUsername())) {
+        if (usersRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.EXIST_USERNAME);
         }
 
-        // Kiểm tra email tồn tại
-        Optional<Users> existingUserOpt = usersRepository.findByEmail(user.getEmail());
-        if (existingUserOpt.isPresent()) {
-            Users existingUser = existingUserOpt.get();
-            if (existingUser.isVerified()) {
-                // Đã xác thực rồi → chặn
-                throw new AppException(ErrorCode.EXIST_EMAIL);
-            } else {
-                // Chưa xác thực → gửi lại email xác thực
-                verificationTokenService.resendVerification(existingUser.getEmail(), TokenType.EMAIL_VERIFICATION);
-                throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
-            }
+        if (usersRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EXIST_EMAIL);
         }
 
-        // Tạo user mới
-        Users newUser = usersMapper.toUsers(user);
-
-        Role defaultRole = (user.getRole() == null)
+        Users newUser = usersMapper.toUsers(request);
+        Role role = (request.getRoleId() == null)
                 ? roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND))
-                : user.getRole();
+                : roleRepository
+                        .findById(request.getRoleId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        newUser.setRole(defaultRole);
-        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        newUser.setVerified(false); // chưa kích hoạt
+        newUser.setRole(role);
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setVerified(true); // Admin đã tạo tức là đúng email không cần xác thực
         usersRepository.save(newUser);
 
-        // Tạo token xác minh và gửi mail
-        VerificationToken token =
-                verificationTokenService.createVerificationTokenForUser(newUser, TokenType.EMAIL_VERIFICATION);
-        verificationTokenService.sendVerificationEmail(newUser, token);
-
-        // Trả kết quả
         return usersMapper.toCreateUserResponse(newUser);
     }
 
@@ -151,7 +122,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional
-    public String changePassword(Long userId, ChangePassRequest changePassRequest) {
+    public UserResponse changePassword(Long userId, ChangePassRequest changePassRequest) {
         Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(changePassRequest.getOldPassword(), user.getPassword())) {
@@ -165,7 +136,7 @@ public class UsersServiceImpl implements UsersService {
         user.setPassword(passwordEncoder.encode(changePassRequest.getNewPassword()));
         usersRepository.save(user);
 
-        return "Đổi mật khẩu thành công";
+        return usersMapper.toUserResponse(user);
     }
 
     @Override
@@ -208,31 +179,47 @@ public class UsersServiceImpl implements UsersService {
 
         Users currentUser = securityUtil.getCurrentUser();
 
-        // Nếu không phải admin, người có quyền hạn và không phải chính mình → cấm không cho cập nhật
-        boolean isAdmin = currentUser.getRole() != null
-                && currentUser.getRole().getPermissions().stream()
-                        .anyMatch(p -> p.getName().equals("MANAGE_USER"));
         boolean isSelf = currentUser.getId().equals(userId);
+        boolean canManageUser = currentUser.getRole() != null
+                && currentUser.getRole().getPermissions().stream()
+                        .anyMatch(p -> p.getName().equalsIgnoreCase("MANAGE_USER"));
+        boolean isAdmin =
+                currentUser.getRole() != null && currentUser.getRole().getName().equalsIgnoreCase("ADMIN");
 
-        if (!isSelf && !isAdmin) {
+        // Nếu không phải bản thân hoặc người có MANAGE_USER → chặn
+        if (!isSelf && !canManageUser && !isAdmin) {
             throw new AppException(ErrorCode.NO_PERMISSION_TO_UPDATE_USER);
         }
+
+        // Validate username nếu có
         if (updateUserRequest.getUsername() != null) {
             String newUsername = updateUserRequest.getUsername().trim();
-            Optional<Users> existingUser = usersRepository.findByUsername(newUsername);
-
-            if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
-                throw new AppException(ErrorCode.EXIST_USERNAME);
-            }
             if (newUsername.isEmpty()) {
                 throw new AppException(ErrorCode.USERNAME_CANNOT_BLANK);
             }
+            usersRepository
+                    .findByUsername(newUsername)
+                    .filter(u -> !u.getId().equals(userId))
+                    .ifPresent(u -> {
+                        throw new AppException(ErrorCode.EXIST_USERNAME);
+                    });
             updateUserRequest.setUsername(newUsername);
         }
 
-        // Thực hiện update
+        // Chỉ ADMIN được phép đổi role
+        if (updateUserRequest.getRoleId() != null) {
+            if (!isAdmin) throw new AppException(ErrorCode.NO_PERMISSION_TO_UPDATE_ROLE);
+
+            Role newRole = roleRepository
+                    .findById(updateUserRequest.getRoleId())
+                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+            user.setRole(newRole);
+        }
+
+        // Update các field khác
         usersMapper.updateUserFromDto(updateUserRequest, user);
         usersRepository.save(user);
+
         return usersMapper.toUserResponse(user);
     }
 
@@ -264,7 +251,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public String setPremiumManually(Long userId, PremiumType premiumType) {
+    public UserResponse setPremiumManually(Long userId, PremiumType premiumType) {
         if (premiumType == null) {
             throw new AppException(ErrorCode.INVALID_PREMIUM_TYPE);
         }
@@ -285,12 +272,9 @@ public class UsersServiceImpl implements UsersService {
         user.setAccountType(AccountType.PREMIUM);
         user.setPremiumType(premiumType);
         user.setPremiumExpiredAt(expiredAt);
-
         usersRepository.save(user);
-        return "Đã cấp premium cho người dùng có email là: " + user.getEmail() + ", hiệu lực đến "
-                + (user.getPremiumExpiredAt() == null
-                        ? "trọn đời"
-                        : user.getPremiumExpiredAt().toString());
+
+        return usersMapper.toUserResponse(user);
     }
 
     @Override

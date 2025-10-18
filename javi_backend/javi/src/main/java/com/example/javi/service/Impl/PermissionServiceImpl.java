@@ -1,5 +1,7 @@
 package com.example.javi.service.Impl;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -63,6 +65,11 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission getPermission(Long id) {
         return permissionRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+    }
+
+    @Override
+    public List<Permission> getAllPermissions() {
+        return permissionRepository.findAll();
     }
 
     @Override

@@ -103,6 +103,7 @@ public class KanjiController {
         int page = pageable.getPageNumber();
         if (page <= 0) page = 1;
         Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
         return ApiResponse.<Page<KanjiResponse>>builder()
                 .message("Lấy danh sách kanji thành công")
                 .result(kanjiService.getAllKanjiByFilter(spec, oneIndexedPageable, filter))

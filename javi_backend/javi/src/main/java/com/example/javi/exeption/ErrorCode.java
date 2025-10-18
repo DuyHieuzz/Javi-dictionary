@@ -31,7 +31,7 @@ public enum ErrorCode {
     INVALID_EMAIL(1012, "Email không hợp lệ, mời nhập lại", HttpStatus.BAD_REQUEST),
     EXIST_EMAIL(1013, "Email đã tồn tại, xin mời nhập email khác", HttpStatus.BAD_REQUEST),
     EMAIL_ALREADY_VERIFIED(1014, "Email đã được xác thực", HttpStatus.BAD_REQUEST),
-    EMAIL_NOT_VERIFIED(1080, "Email chưa được xác thực", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED(1080, "Email của bạn chưa được xác minh. Bạn có muốn gửi lại email xác thực không?", HttpStatus.BAD_REQUEST),
     ERROR_SEND_EMAIL(1081, "Có lỗi xa ra khi gửi tin nhắn", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // USERNAME
@@ -89,7 +89,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_REVOKED(1045, "Refresh token bị thu hồi", HttpStatus.BAD_REQUEST),
     TOKEN_HAS_EXPIRED(1043, "Token đã hết hạn", HttpStatus.BAD_REQUEST),
     INVALID_TOKEN(1079, "Token không hợp lệ", HttpStatus.BAD_REQUEST),
-    TOKEN_CANNOT_EMPTY(1080, "Token không được bỏ trống", HttpStatus.BAD_REQUEST),
+    TOKEN_CANNOT_EMPTY(1080, "Token hoặc refresh token không được bỏ trống", HttpStatus.BAD_REQUEST),
 
     // ROLE
     ROLE_HAS_NO_NAME(1046, "Tên của role không được để trống", HttpStatus.BAD_REQUEST),
@@ -98,6 +98,7 @@ public enum ErrorCode {
     SYSTEM_ROLE_CANNOT_DELETE(1052, "Không thể xóa role hệ thống", HttpStatus.BAD_REQUEST),
     SYSTEM_ROLE_CANNOT_RENAME(1053, "Role hệ thống, không thể đổi tên", HttpStatus.BAD_REQUEST),
     ROLE_IN_USE(1054, "Role đang được sử dụng bởi người dùng khác", HttpStatus.BAD_REQUEST),
+    NO_PERMISSION_TO_UPDATE_ROLE(1083, "Bạn không có quyền để update role", HttpStatus.FORBIDDEN),
 
     // PERMISSION
     PERMISSION_HAS_NO_NAME(1049, "Tên của quyền không được để trống", HttpStatus.BAD_REQUEST),
@@ -105,6 +106,7 @@ public enum ErrorCode {
     PERMISSION_NAME_ALREADY_EXISTING(1051, "Tên quyền đã tồn tại", HttpStatus.BAD_REQUEST),
     SYSTEM_PERMISSION_CANNOT_DELETE(1055, "Không thể xóa quyền hệ thống", HttpStatus.BAD_REQUEST),
     SYSTEM_PERMISSION_CANNOT_RENAME(1056, "Không thể đổi tên quyền hệ thống", HttpStatus.BAD_REQUEST),
+    NO_PERMISSION_TO_CREATE_USER(1084, "Bạn không có quyền tạo người dùng", HttpStatus.FORBIDDEN),
 
     // COMMENT
     COMMENT_HAS_NO_ENTITY_TYPE(1057, "Không được để trống entityType", HttpStatus.BAD_REQUEST),

@@ -69,10 +69,9 @@ public class CommentController {
             @PathVariable String username,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         int page = pageable.getPageNumber();
-        if (page > 0) {
-            page = page - 1;
-        }
-        Pageable oneIndexedPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
+        if (page <= 0) page = 1;
+        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+
         Page<CommentResponse> result = commentService.getCommentsByUsername(username, oneIndexedPageable);
         return ApiResponse.<Page<CommentResponse>>builder()
                 .message("Lấy bình luận thành công")
@@ -84,11 +83,9 @@ public class CommentController {
     public ApiResponse<Page<CommentResponse>> getMyComments( // lấy bình luận của mình
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         int page = pageable.getPageNumber();
-        if (page > 0) {
-            page = page - 1;
-        }
-        Pageable oneIndexedPageable = PageRequest.of(page, pageable.getPageSize(), pageable.getSort());
-        Page<CommentResponse> result = commentService.getMyComments(oneIndexedPageable);
+        if (page <= 0) page = 1;
+        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+        Page<CommentResponse> result = commentService.getMyComments(oneIndexPageable);
         return ApiResponse.<Page<CommentResponse>>builder().result(result).build();
     }
 

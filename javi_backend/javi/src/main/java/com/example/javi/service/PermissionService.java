@@ -1,5 +1,7 @@
 package com.example.javi.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,6 +17,8 @@ public interface PermissionService {
     void deletePermission(Long id);
 
     Permission getPermission(Long id);
+
+    List<Permission> getAllPermissions();
 
     Page<Permission> getAllPermissionByFilter(Specification<Permission> spec, Pageable pageable);
 }
