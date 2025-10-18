@@ -116,8 +116,6 @@ public class VocabulariesController {
             @RequestParam(required = false) String filter,
             @PageableDefault(size = 20, sort = "vocabId") Pageable pageable) {
         int page = pageable.getPageNumber();
-        // Nếu người dùng gửi page=1, page ở đây là 1. trừ đi 1 để nó thành 0 (trang đầu tiên).
-        // Nếu người dùng gửi page=0, page ở đây là 0 (hoặc lỗi), giữ nguyên 0.
         if (page <= 0) page = 1;
         Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
 
@@ -135,7 +133,6 @@ public class VocabulariesController {
     }
 
     @PostMapping("/explain/{word}")
-    @PreAuthorize("isAuthenticated()")
     public ApiResponse<String> explainVocabulary(@PathVariable String word) {
         String response = vocabulariesService.explainVocabulary(word);
         return ApiResponse.<String>builder()

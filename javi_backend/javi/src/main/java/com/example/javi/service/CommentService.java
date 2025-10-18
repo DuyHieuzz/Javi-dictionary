@@ -19,6 +19,8 @@ public interface CommentService {
 
     Page<CommentResponse> getMyComments(Pageable pageable);
 
+    Page<CommentResponse> getAllComment(Pageable pageable);
+
     void deleteComment(Long id);
 
     void reactToComment(Long commentId, String type); // LIKE / DISLIKE

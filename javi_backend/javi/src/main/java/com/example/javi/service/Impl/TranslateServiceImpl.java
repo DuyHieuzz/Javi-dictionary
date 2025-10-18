@@ -1,8 +1,11 @@
 package com.example.javi.service.Impl;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.dto.response.TranslateResponse;
 import com.example.javi.entity.Translation;
@@ -31,5 +34,18 @@ public class TranslateServiceImpl implements TranslateService {
         Users currentUser = securityUtil.getCurrentUser();
         Page<Translation> translations = translationRepository.findAllByUserOrderByCreatedAtDesc(currentUser, pageable);
         return translations.map(translationMapper::translationToTranslateResponse);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllTranslationsByUser(Users user) {
+        translationRepository.deleteByUser(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTranslationsByIds(List<Long> ids, Users user) {
+        if (ids == null || ids.isEmpty()) return;
+        translationRepository.deleteByIdInAndUser(ids, user);
     }
 }

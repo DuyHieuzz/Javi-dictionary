@@ -190,11 +190,12 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
      * - Tách retry vào method không-async giống pattern phía trên.
      */
     @Override
+    @Transactional
     public void sendPasswordResetEmail(String email) {
         Users user = usersRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getStatus() == Status.BLOCKED) {
-            throw new AppException(ErrorCode.USER_HAS_BEEN_BLOCK);
+            throw new AppException(ErrorCode.YOUR_ACCOUNT_HAS_BEEN_BLOCK);
         }
 
         verificationTokenRepository.deleteByUserAndTokenType(user, TokenType.RESET_PASSWORD);

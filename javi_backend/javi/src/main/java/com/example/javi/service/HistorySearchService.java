@@ -1,5 +1,7 @@
 package com.example.javi.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,4 +16,8 @@ public interface HistorySearchService {
     HistorySearchResponse saveHistoryByEntity(Users user, Long entityId, EntityType type, String keyword);
 
     Page<HistorySearch> getHistorySearch(Users user, Pageable pageable);
+
+    void deleteAllByUser(Users user);
+
+    void deleteByIdsForUser(List<Long> ids, Users user);
 }

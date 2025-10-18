@@ -112,6 +112,9 @@ public class AuthServiceImpl implements AuthService {
                 .findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (user.getStatus().equals(Status.BLOCKED)) {
+            throw new AppException(ErrorCode.YOUR_ACCOUNT_HAS_BEEN_BLOCK);
+        }
         // Kiểm tra email đã xác minh chưa. Nếu chưa thì hiện popup để người dùng nhấn chọn gửi lại email để xác thực
         if (!user.isVerified()) {
             throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);

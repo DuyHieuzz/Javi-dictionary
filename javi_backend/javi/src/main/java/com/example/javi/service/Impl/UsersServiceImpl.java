@@ -18,6 +18,7 @@ import com.example.javi.dto.request.ChangePassRequest;
 import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
+import com.example.javi.dto.response.PublicUserResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.*;
 import com.example.javi.exeption.AppException;
@@ -112,6 +113,19 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    public PublicUserResponse getUserByUsername(String username) {
+        Optional<Users> userOptional = usersRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Users user = userOptional.get();
+        if (user.getStatus().equals(Status.BLOCKED)) {
+            throw new AppException(ErrorCode.USER_HAS_BEEN_BLOCK);
+        }
+        return usersMapper.toPublicUserResponse(user);
+    }
+
+    @Override
     @Transactional
     public String updateAvatar(Long userId, String fileName) {
         Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -166,7 +180,7 @@ public class UsersServiceImpl implements UsersService {
         }
 
         if (users.getStatus().equals(Status.BLOCKED)) {
-            throw new AppException(ErrorCode.USER_HAS_BEEN_BLOCK);
+            throw new AppException(ErrorCode.YOUR_ACCOUNT_HAS_BEEN_BLOCK);
         }
 
         return (securityUtil.generateToken(users));

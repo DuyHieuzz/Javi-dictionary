@@ -1,5 +1,7 @@
 package com.example.javi.service.Impl;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -54,5 +56,16 @@ public class HistorySearchServiceImpl implements HistorySearchService {
     @Override
     public Page<HistorySearch> getHistorySearch(Users user, Pageable pageable) {
         return historySearchRepository.findByUserOrderBySearchedAtDesc(user, pageable);
+    }
+
+    @Override
+    public void deleteAllByUser(Users user) {
+        historySearchRepository.deleteByUser(user);
+    }
+
+    @Override
+    public void deleteByIdsForUser(List<Long> ids, Users user) {
+        if (ids == null || ids.isEmpty()) return;
+        historySearchRepository.deleteByIdInAndUser(ids, user);
     }
 }

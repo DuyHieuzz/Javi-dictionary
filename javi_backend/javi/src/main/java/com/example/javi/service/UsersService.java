@@ -8,6 +8,7 @@ import com.example.javi.dto.request.ChangePassRequest;
 import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
+import com.example.javi.dto.response.PublicUserResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
@@ -20,6 +21,8 @@ public interface UsersService {
     UserResponse createUser(CreateUserRequest user);
 
     UserResponse getMyInfo();
+
+    PublicUserResponse getUserByUsername(String username);
 
     String updateAvatar(Long userId, String fileName);
 

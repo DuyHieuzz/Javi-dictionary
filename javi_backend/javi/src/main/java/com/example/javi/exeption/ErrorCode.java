@@ -17,7 +17,8 @@ public enum ErrorCode {
     // USER
     USER_EXISTED(1002, "Người dùng đã tồn tại", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1005, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
-    USER_HAS_BEEN_BLOCK(1043, "Tài khoản của bạn đã bị chặn, vui lòng liên hệ admin", HttpStatus.FORBIDDEN),
+    YOUR_ACCOUNT_HAS_BEEN_BLOCK(1043, "Tài khoản của bạn đã bị chặn, vui lòng liên hệ admin", HttpStatus.FORBIDDEN),
+    USER_HAS_BEEN_BLOCK(1084, "Người dùng này đã bị chặn", HttpStatus.BAD_REQUEST),
     NO_PERMISSION_TO_UPDATE_USER(1055, "Bạn không có quyền cập nhật người dùng này", HttpStatus.FORBIDDEN),
     NO_TRIAL_LEFT(1071, "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.", HttpStatus.FORBIDDEN),
     FREE_USER_QUOTA_EXCEEDED(1073, "Bạn đã dùng hết lượt dịch ảnh miễn phí hôm nay.", HttpStatus.FORBIDDEN),

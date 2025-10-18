@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.javi.entity.Comment;
@@ -19,6 +21,18 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, JpaSpec
     Page<Comment> findByEntityTypeAndEntityId(EntityType entityType, Long entityId, Pageable pageable);
 
     //    List<Comment> findByEntityTypeAndEntityIdOrderByLikeCountDesc(EntityType entityType, Long entityId);
+
+    // Chỉ lấy comment của user chưa bị block
+    @EntityGraph(attributePaths = {"user"})
+    @Query(
+            "SELECT c FROM Comment c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.user.status <> 'BLOCKED'")
+    Page<Comment> findVisibleByEntityTypeAndEntityId(
+            @Param("entityType") EntityType entityType, @Param("entityId") Long entityId, Pageable pageable);
+
+    // Lấy toàn bộ comment nhưng loại bỏ user bị block
+    @EntityGraph(attributePaths = {"user"})
+    @Query("SELECT c FROM Comment c WHERE c.user.status <> 'BLOCKED'")
+    Page<Comment> findAllVisible(Pageable pageable);
 
     Optional<Comment> findByEntityTypeAndEntityIdAndUser(EntityType entityType, Long entityId, Users user);
 

@@ -4,6 +4,7 @@ import org.mapstruct.*;
 
 import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
+import com.example.javi.dto.response.PublicUserResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.Users;
 
@@ -17,6 +18,8 @@ public interface UsersMapper {
     @Mapping(target = "premiumExpiredAt", source = "premiumExpiredAt")
     UserResponse toCreateUserResponse(Users users);
 
+    PublicUserResponse toPublicUserResponse(Users users);
+
     // Cập nhật (chỉ map các trường không null)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateUserFromDto(UpdateUserRequest dto, @MappingTarget Users entity);
@@ -24,6 +27,7 @@ public interface UsersMapper {
     @Mapping(target = "accountType", source = "accountType")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "premiumExpiredAt", source = "premiumExpiredAt")
+    @Mapping(target = "verified", source = "verified")
     UserResponse toUserResponse(Users users);
 
     // Xử lý hậu mapping

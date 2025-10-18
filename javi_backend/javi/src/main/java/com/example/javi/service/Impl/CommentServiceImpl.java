@@ -139,7 +139,8 @@ public class CommentServiceImpl implements CommentService {
                 entityType,
                 entityId);
 
-        Page<Comment> commentsPage = commentRepository.findByEntityTypeAndEntityId(entityType, entityId, pageable);
+        Page<Comment> commentsPage =
+                commentRepository.findVisibleByEntityTypeAndEntityId(entityType, entityId, pageable);
         List<Comment> comments = new ArrayList<>(commentsPage.getContent());
 
         // Lấy user hiện tại nếu có
@@ -217,6 +218,12 @@ public class CommentServiceImpl implements CommentService {
     public Page<CommentResponse> getMyComments(Pageable pageable) {
         Users currentUser = securityUtil.getCurrentUser();
         Page<Comment> comments = commentRepository.findByUserOrderByCreatedAtDesc(currentUser, pageable);
+        return comments.map(commentMapper::toCommentResponse);
+    }
+
+    @Override
+    public Page<CommentResponse> getAllComment(Pageable pageable) {
+        Page<Comment> comments = commentRepository.findAllVisible(pageable);
         return comments.map(commentMapper::toCommentResponse);
     }
 

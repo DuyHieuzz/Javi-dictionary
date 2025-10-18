@@ -1,33 +1,29 @@
 package com.example.javi.dto.response;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-import com.example.javi.entity.AccountType;
 import com.example.javi.entity.JlptLevel;
-import com.example.javi.entity.Role;
+import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Status;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    long id;
-    String fullName;
+public class PublicUserResponse {
+    Long id;
     String username;
-    String email;
-    LocalDate dateOfBirth;
+    String fullName;
     JlptLevel level;
     String selfIntroduction;
-    String avatarUrl;
-    Role role;
-    AccountType accountType;
-    LocalDateTime premiumExpiredAt;
     Status status;
-    boolean verified;
+    String avatarUrl;
+    PremiumType premiumType;
+    LocalDate dateOfBirth;
+    LocalDate createdAt;
 }

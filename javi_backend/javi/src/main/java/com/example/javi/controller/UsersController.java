@@ -19,6 +19,7 @@ import com.example.javi.dto.request.ChangePassRequest;
 import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.UpdateUserRequest;
 import com.example.javi.dto.response.ApiResponse;
+import com.example.javi.dto.response.PublicUserResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
@@ -45,7 +46,7 @@ public class UsersController {
     UsersService usersService;
     FileService fileService;
 
-    @PostMapping
+    @PostMapping("")
     @PreAuthorize("hasAuthority('CREATE_USER')")
     public ApiResponse<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         return ApiResponse.<UserResponse>builder()
@@ -73,6 +74,7 @@ public class UsersController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
         UserResponse userResponse = usersService.getUserById(id);
         return ApiResponse.<UserResponse>builder()
@@ -81,7 +83,17 @@ public class UsersController {
                 .build();
     }
 
+    @GetMapping("/profile/{username}") // chưa đăng nhập hay người thường thì hạn chế thông tin user cho người khác
+    public ApiResponse<PublicUserResponse> getPublicUserProfile(@PathVariable String username) {
+        PublicUserResponse response = usersService.getUserByUsername(username);
+        return ApiResponse.<PublicUserResponse>builder()
+                .message("Lấy thông tin công khai người dùng thành công")
+                .result(response)
+                .build();
+    }
+
     @GetMapping("")
+    @PreAuthorize("hasAuthority('MANAGE_USER')")
     ApiResponse<Page<UserResponse>> getAllUsersByFilter(
             @Filter Specification<Users> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
         int page = pageable.getPageNumber();

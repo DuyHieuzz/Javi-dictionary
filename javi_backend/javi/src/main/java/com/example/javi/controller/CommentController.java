@@ -48,6 +48,7 @@ public class CommentController {
                 .build();
     }
 
+    // Đã xử lý comment của user bị block sẽ không xuất hiện (trừ khi bị cache redis 6 tiếng)
     @GetMapping
     public ApiResponse<Page<CommentResponse>> getCommentsByEntity(
             @RequestParam EntityType entityType,
@@ -69,7 +70,7 @@ public class CommentController {
     @GetMapping("/user/{username}")
     public ApiResponse<Page<CommentResponse>> getCommentsByUsername( // lấy bình luận của người dùng cụ thể
             @PathVariable String username,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         int page = pageable.getPageNumber();
         if (page <= 0) page = 1;
         Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
@@ -84,12 +85,27 @@ public class CommentController {
     @GetMapping("/my-comment")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<CommentResponse>> getMyComments( // lấy bình luận của mình, giờ nhận ra nó giống ở trên :v
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         int page = pageable.getPageNumber();
         if (page <= 0) page = 1;
         Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
         Page<CommentResponse> result = commentService.getMyComments(oneIndexPageable);
         return ApiResponse.<Page<CommentResponse>>builder().result(result).build();
+    }
+
+    // Đã xử lý comment của user bị block sẽ không xuất hiện (trừ khi bị cache redis 6 tiếng)
+    @GetMapping("/all")
+    public ApiResponse<Page<CommentResponse>> getAllComments(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        int page = pageable.getPageNumber();
+        if (page <= 0) page = 1;
+        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
+        Page<CommentResponse> responses = commentService.getAllComment(oneIndexPageable);
+
+        return ApiResponse.<Page<CommentResponse>>builder()
+                .message("Lấy bình luận thành công")
+                .result(responses)
+                .build();
     }
 
     @DeleteMapping("/{id}")
