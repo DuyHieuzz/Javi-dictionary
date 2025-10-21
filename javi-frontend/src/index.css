@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Áp dụng cho toàn site */
+html, body {
+  @apply font-sans text-gray-800;
+}
+
+/* Đè toàn bộ component antd dùng cùng 1 font */
+:root,
+body,
+.ant-typography,
+.ant-btn,
+.ant-menu,
+.ant-input,
+.ant-select,
+.ant-modal,
+.ant-dropdown,
+.ant-table,
+.ant-card,
+.ant-form,
+.ant-breadcrumb,
+.ant-radio,
+.ant-checkbox,
+.ant-segmented {
+  font-family: "Inter", "Noto Sans JP", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important;
+}
