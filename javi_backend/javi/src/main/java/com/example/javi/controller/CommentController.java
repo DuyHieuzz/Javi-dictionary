@@ -117,8 +117,12 @@ public class CommentController {
 
     @PostMapping("/{commentId}/react")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<Void> react(@PathVariable Long commentId, @RequestParam String type) { // LIKE hoặc DISLIKE
-        commentService.reactToComment(commentId, type);
-        return ApiResponse.<Void>builder().message("Cập nhật phản ứng").build();
+    public ApiResponse<CommentResponse> react(
+            @PathVariable Long commentId, @RequestParam String type) { // LIKE hoặc DISLIKE
+        CommentResponse commentResponse = commentService.reactToComment(commentId, type);
+        return ApiResponse.<CommentResponse>builder()
+                .message("Cập nhật phản ứng")
+                .result(commentResponse)
+                .build();
     }
 }

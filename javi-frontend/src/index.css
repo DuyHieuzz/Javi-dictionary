@@ -1,13 +1,24 @@
+/* --- Tailwind layers --- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Áp dụng cho toàn site */
-html, body {
-  @apply font-sans text-gray-800;
+/* --- Custom global style --- */
+@layer base {
+  html, body {
+    @apply font-sans text-gray-800 bg-white;
+  }
+
+  img, video {
+    @apply block max-w-full h-auto;
+  }
+
+  *, *::before, *::after {
+    @apply box-border;
+  }
 }
 
-/* Đè toàn bộ component antd dùng cùng 1 font */
+/* --- Đè font cho Ant Design --- */
 :root,
 body,
 .ant-typography,

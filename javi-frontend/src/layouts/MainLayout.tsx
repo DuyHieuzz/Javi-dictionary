@@ -8,7 +8,7 @@ export default function MainLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="bg-[#f7f8fa] text-gray-800 font-sans min-h-screen">
+        <div className="bg-[#f7f8fa] font-sans min-h-screen m-0 object-cover">
             {/* Sidebar cố định */}
             <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
@@ -18,8 +18,8 @@ export default function MainLayout() {
                 <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
                 {/* Content */}
-                <main className="flex-1 overflow-y-auto">
-                    <div className="max-w-[1380px] mx-auto px-8 py-8">
+                <main className="flex-1 overflow-y-auto mt-[64px]">
+                    <div className="max-w-[1380px] mx-auto">
                         <Outlet />
                     </div>
                 </main>

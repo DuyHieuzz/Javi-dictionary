@@ -3,6 +3,7 @@ package com.example.javi.dto.response;
 import java.time.LocalDate;
 
 import com.example.javi.entity.EntityType;
+import com.example.javi.entity.ReactionType;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -24,4 +25,5 @@ public class CommentResponse {
     int dislikeCount;
     Boolean isMyComment; // đúng thì cho thêm thùng rác bên cạnh trên FE để xóa, cho phép cập nhật
     LocalDate createdAt;
+    ReactionType myReaction;
 }

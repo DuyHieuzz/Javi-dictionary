@@ -23,5 +23,5 @@ public interface CommentService {
 
     void deleteComment(Long id);
 
-    void reactToComment(Long commentId, String type); // LIKE / DISLIKE
+    CommentResponse reactToComment(Long commentId, String type); // LIKE / DISLIKE
 }

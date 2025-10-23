@@ -1,10 +1,10 @@
 package com.example.javi.service.Impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -59,11 +59,15 @@ public class CommentServiceImpl implements CommentService {
                     .findById(request.getEntityId())
                     .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
         }
+
+        String sanitizedContent =
+                Jsoup.clean(request.getContent(), Safelist.none()).trim();
+
         Comment comment = Comment.builder()
                 .user(currentUser)
                 .entityType(request.getEntityType())
                 .entityId(request.getEntityId())
-                .content(request.getContent())
+                .content(sanitizedContent)
                 .build();
         boolean exists = commentRepository.existsByEntityTypeAndEntityIdAndUser(
                 request.getEntityType(), request.getEntityId(), currentUser);
@@ -95,7 +99,11 @@ public class CommentServiceImpl implements CommentService {
             throw new AppException(ErrorCode.NO_PERMISSION_TO_UPDATE_COMMENT);
         }
 
-        comment.setContent(request.getContent().trim());
+        // Làm sạch nội dung trước khi lưu
+        String sanitizedContent =
+                Jsoup.clean(request.getContent(), Safelist.none()).trim();
+        comment.setContent(sanitizedContent);
+
         commentRepository.save(comment);
         CommentResponse commentResponse = commentMapper.toCommentResponse(comment);
 
@@ -171,16 +179,36 @@ public class CommentServiceImpl implements CommentService {
             }
         }
 
-        // Convert sang CommentResponse + gán isMyComment
+        // Lấy map reaction của currentUser cho các comment trong trang
+        Map<Long, ReactionType> myReactionMap = Collections.emptyMap();
+        if (currentUser != null && !comments.isEmpty()) {
+            List<Long> commentIds = comments.stream().map(Comment::getId).toList();
+            myReactionMap = reactionRepository.findByUserAndCommentIdIn(currentUser, commentIds).stream()
+                    .collect(Collectors.toMap(r -> r.getComment().getId(), CommentReaction::getReactionType));
+        }
+
+        // Convert sang CommentResponse + gán isMyComment + myReaction
         Users finalCurrentUser = currentUser;
+        Map<Long, ReactionType> finalMyReactionMap = myReactionMap;
+
         List<CommentResponse> responses = comments.stream()
                 .map(c -> {
                     CommentResponse resp = commentMapper.toCommentResponse(c);
+
+                    // Giữ logic isMyComment cũ
                     if (finalCurrentUser != null && c.getUser() != null) {
                         resp.setIsMyComment(c.getUser().getId().equals(finalCurrentUser.getId()));
                     } else {
                         resp.setIsMyComment(false);
                     }
+
+                    // NEW: gán myReaction cho user hiện tại
+                    if (finalCurrentUser != null) {
+                        resp.setMyReaction(finalMyReactionMap.get(c.getId())); // có thể null
+                    } else {
+                        resp.setMyReaction(null);
+                    }
+
                     return resp;
                 })
                 .collect(Collectors.toList());
@@ -293,15 +321,11 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void reactToComment(Long commentId, String type) {
-        // Lấy user hiện tại
+    public CommentResponse reactToComment(Long commentId, String type) {
         Users currentUser = securityUtil.getCurrentUser();
-
-        // Tìm comment
         Comment comment =
                 commentRepository.findById(commentId).orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
 
-        // Parse reaction type (LIKE hoặc DISLIKE)
         ReactionType reactionType;
         try {
             reactionType = ReactionType.valueOf(type.toUpperCase());
@@ -309,8 +333,8 @@ public class CommentServiceImpl implements CommentService {
             throw new AppException(ErrorCode.INVALID_REACTION);
         }
 
-        // Kiểm tra xem user đã từng react comment này chưa
         Optional<CommentReaction> existingOpt = reactionRepository.findByUserAndComment(currentUser, comment);
+        ReactionType finalReaction = null;
 
         if (existingOpt.isPresent()) {
             CommentReaction existing = existingOpt.get();
@@ -318,6 +342,7 @@ public class CommentServiceImpl implements CommentService {
             // Nếu bấm lại cùng loại (toggle off)
             if (existing.getReactionType() == reactionType) {
                 reactionRepository.delete(existing);
+                finalReaction = null; // hủy phản ứng
                 if (reactionType == ReactionType.LIKE) {
                     comment.setLikeCount(Math.max(0, comment.getLikeCount() - 1));
                 } else {
@@ -328,6 +353,7 @@ public class CommentServiceImpl implements CommentService {
             else {
                 existing.setReactionType(reactionType);
                 reactionRepository.save(existing);
+                finalReaction = reactionType;
 
                 if (reactionType == ReactionType.LIKE) {
                     comment.setLikeCount(comment.getLikeCount() + 1);
@@ -345,6 +371,7 @@ public class CommentServiceImpl implements CommentService {
                     .comment(comment)
                     .reactionType(reactionType)
                     .build());
+            finalReaction = reactionType;
 
             if (reactionType == ReactionType.LIKE) {
                 comment.setLikeCount(comment.getLikeCount() + 1);
@@ -353,9 +380,13 @@ public class CommentServiceImpl implements CommentService {
             }
         }
 
-        // Lưu lại comment (đã cập nhật count)
         commentRepository.save(comment);
-        // Xóa cache
         commentCacheService.clearEntityPages(comment.getEntityType().name(), comment.getEntityId());
+
+        // trả lại CommentResponse để FE cập nhật tức thì
+        CommentResponse resp = commentMapper.toCommentResponse(comment);
+        resp.setMyReaction(finalReaction); // LIKE, DISLIKE hoặc null
+        resp.setIsMyComment(comment.getUser().getId().equals(currentUser.getId()));
+        return resp;
     }
 }

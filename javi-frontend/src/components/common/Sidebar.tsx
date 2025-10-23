@@ -55,19 +55,21 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
             {/* Sidebar cố định */}
             <aside
-                className={`fixed top-0 left-0 z-40 h-screen w-[214px]
-                bg-gradient-to-b from-[#3e66d4] to-[#2c3f84]
-                text-white flex flex-col transform transition-transform duration-300
-                ${open ? "translate-x-0" : "-translate-x-full"}
-                md:translate-x-0`}
+                className={`fixed top-0 left-0 z-50 h-screen w-[214px]
+                            bg-gradient-to-b from-[#3e66d4] to-[#2c3f84]
+                            text-white flex flex-col transform transition-transform duration-300
+                            ${open ? "translate-x-0" : "-translate-x-full"}
+                            md:translate-x-0 md:z-40`}
             >
-                <div className="flex justify-center items-center mb-4 mt-6">
-                    <img
-                        src={javi}
-                        alt="Javi logo"
-                        className="w-[80px] h-[46px] object-cover"
-                    />
-                </div>
+                <Link to="/">
+                    <div className="flex justify-center items-center my-3">
+                        <img
+                            src={javi}
+                            alt="Javi logo"
+                            className="w-[80px] h-[46px] object-cover"
+                        />
+                    </div>
+                </Link>
 
                 {/* Menu */}
                 <nav className="flex-1 overflow-y-auto">

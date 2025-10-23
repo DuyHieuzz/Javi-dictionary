@@ -1,5 +1,6 @@
 package com.example.javi.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +19,8 @@ public interface CommentReactionRepository extends JpaRepository<CommentReaction
 
     Page<CommentReaction> findByUserAndReactionTypeOrderByIdDesc(
             Users user, ReactionType reactionType, Pageable pageable);
+
+    List<CommentReaction> findByUserAndCommentIdIn(Users user, List<Long> commentIds);
 
     long countByCommentAndReactionType(Comment comment, ReactionType reactionType);
 }

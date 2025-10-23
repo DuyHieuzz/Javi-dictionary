@@ -9,18 +9,23 @@ import line from "../../assets/line.png";
 import safari from "../../assets/safari.png";
 import chrome from "../../assets/chrome.png";
 import firefox from "../../assets/firefox.png";
+import blueJavi from "../../assets/blue-javi.png";
 
 export default function Footer() {
     return (
-        <div className="bg-white text-sm border border-gray-200 rounded-2xl shadow-sm mx-auto px-8 md:px-6 py-6">
+        <div className="bg-white text-sm border border-gray-200 rounded-2xl shadow-sm mx-auto px-3 py-3">
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start text-left">
                 {/* Cột 1: Thông tin */}
                 <div>
                     <div className="flex items-center gap-2 mt-[12px]">
-                        {/* <img src="/logo.svg" alt="Javi" className="w-10 h-10" /> */}
-                        <h2 className="text-xl font-semibold text-gray-800">
+                        <img
+                            src={blueJavi}
+                            alt="Javi"
+                            className="w-[100px] h-[60px] object-cover"
+                        />
+                        {/* <h2 className="text-xl font-semibold text-gray-800">
                             Javi
-                        </h2>
+                        </h2> */}
                     </div>
                     <p className="text-gray-600 my-[12px] mb-3">
                         Javi - giúp bạn học tiếng Nhật hiệu quả hơn mỗi ngày.
@@ -44,9 +49,7 @@ export default function Footer() {
                 <div>
                     <div>
                         {" "}
-                        <h3 className="font-semibold text-base my-[12px]">
-                            Mạng xã hội
-                        </h3>
+                        <h3 className="text-base my-[12px]">Mạng xã hội</h3>
                         <ul className="flex gap-4 mb-4">
                             <li>
                                 <a href="!">
@@ -115,9 +118,7 @@ export default function Footer() {
                     </div>
 
                     <div>
-                        <h3 className="font-semibold text-base my-[12px]">
-                            Tiện ích
-                        </h3>
+                        <h3 className="text-base my-[12px]">Tiện ích</h3>
                         <ul className="flex gap-4 mb-4">
                             <li>
                                 <a href="!">
@@ -152,9 +153,7 @@ export default function Footer() {
 
                 {/* Cột 2: Liên kết nhanh */}
                 <div>
-                    <h3 className=" font-semibold text-base mb-3 my-[12px]">
-                        Chức năng chính
-                    </h3>
+                    <h3 className="text-base my-[12px]">Chức năng chính</h3>
                     <ul className="space-y-2 text-gray-600 text-sm">
                         <li>
                             <a
