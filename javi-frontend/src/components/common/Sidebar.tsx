@@ -12,7 +12,7 @@ import javi from "../../assets/javi-logo.png";
 import { IoCube } from "react-icons/io5";
 
 const links = [
-    { path: "/", label: "Tra cứu", icon: <LiaLanguageSolid /> },
+    { path: "/search/word", label: "Tra cứu", icon: <LiaLanguageSolid /> },
     { path: "/translate", label: "Dịch", icon: <PiTranslateLight /> },
     {
         path: "/jlpt",

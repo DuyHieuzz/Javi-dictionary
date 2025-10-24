@@ -7,7 +7,7 @@ import Comment from "../comment/Comment";
 
 export default function VocabularyDetail() {
     // Giả lập trạng thái đăng nhập
-    const isLoggedIn = true; // đổi sang false để test trạng thái chưa login
+    const isLoggedIn = false; // đổi sang false để test trạng thái chưa login
     const [showExplanation, setShowExplanation] = useState(false);
     const [displayedText, setDisplayedText] = useState("");
     const [typingIndex, setTypingIndex] = useState(0);

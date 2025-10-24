@@ -8,7 +8,7 @@ export default function MainLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="bg-[#f7f8fa] font-sans min-h-screen m-0 object-cover">
+        <div className="bg-[#f7f8fa] font-sans min-h-screen m-0 object-cover overflow-y-overlay">
             {/* Sidebar cố định */}
             <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
@@ -25,7 +25,7 @@ export default function MainLayout() {
                 </main>
 
                 {/* Footer */}
-                <div className="px-4 mt-4 ">
+                <div className="md:px-4 mt-4">
                     <Footer />
                 </div>
             </div>

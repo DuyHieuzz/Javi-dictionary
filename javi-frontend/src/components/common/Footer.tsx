@@ -10,11 +10,12 @@ import safari from "../../assets/safari.png";
 import chrome from "../../assets/chrome.png";
 import firefox from "../../assets/firefox.png";
 import blueJavi from "../../assets/blue-javi.png";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
     return (
         <div className="bg-white text-sm border border-gray-200 rounded-2xl shadow-sm mx-auto px-3 py-3">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start text-left">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start text-left pb-4">
                 {/* Cột 1: Thông tin */}
                 <div>
                     <div className="flex items-center gap-2 mt-[12px]">
@@ -32,15 +33,15 @@ export default function Footer() {
                     </p>
                     <ul className="space-y-2 text-gray-600 text-sm">
                         <li className="flex items-center gap-2">
-                            <MdLocationOn className="text-blue-500 text-base" />
+                            <MdLocationOn className="text-blue-500 text-xl" />
                             <span>Đặng Công Chất - Hà Nội - Việt Nam</span>
                         </li>
                         <li className="flex items-center gap-2">
-                            <MdEmail className="text-blue-500 text-base" />
+                            <MdEmail className="text-blue-500 text-xl" />
                             <span>nguyenhieupton@gmail.com</span>
                         </li>
                         <li className="flex items-center gap-2">
-                            <MdPhone className="text-blue-500 text-base" />
+                            <MdPhone className="text-blue-500 text-xl" />
                             <span>(+84) 123 456 789</span>
                         </li>
                     </ul>
@@ -156,39 +157,44 @@ export default function Footer() {
                     <h3 className="text-base my-[12px]">Chức năng chính</h3>
                     <ul className="space-y-2 text-gray-600 text-sm">
                         <li>
-                            <a
-                                href="/"
+                            <Link
                                 className="hover:text-blue-600 transition"
+                                to="/search"
                             >
                                 Tra cứu
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
-                                href="/translate"
+                            <Link
+                                to="/translate"
                                 className="hover:text-blue-600 transition"
                             >
                                 Dịch
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
-                                href="/jlpt"
+                            <Link
+                                to="/jlpt"
                                 className="hover:text-blue-600 transition"
                             >
                                 Luyện thi JLPT
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
-                                href="/about"
+                            <Link
+                                to="/about"
                                 className="hover:text-blue-600 transition"
                             >
                                 Giới thiệu
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </div>
+            </div>
+            <div className="pt-4 border-t border-gray-200 flex flex-col items-center align-middle space-y-3">
+                <h2>DỰ ÁN CỦA MỘT MÌNH DUY HIẾU</h2>
+                <p>Bắt đầu thực hiện từ ngày 27-09-2025</p>
+                <p>Copyright © 2015</p>
             </div>
         </div>
     );

@@ -13,8 +13,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.request.RegisterRequest;
 import com.example.javi.dto.request.ResetPassRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.LoginResponse;
@@ -43,7 +43,7 @@ public class AuthController {
     int refreshableDuration;
 
     @PostMapping("/register")
-    public ApiResponse<UserResponse> register(@Valid @RequestBody CreateUserRequest request)
+    public ApiResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request)
             throws MessagingException, UnsupportedEncodingException {
 
         return ApiResponse.<UserResponse>builder()

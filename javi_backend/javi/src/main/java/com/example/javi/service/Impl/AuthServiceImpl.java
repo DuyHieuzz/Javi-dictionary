@@ -1,20 +1,7 @@
 package com.example.javi.service.Impl;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Optional;
-
-import jakarta.mail.MessagingException;
-
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.example.javi.dto.request.CreateUserRequest;
 import com.example.javi.dto.request.LoginRequest;
+import com.example.javi.dto.request.RegisterRequest;
 import com.example.javi.dto.response.LoginResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.*;
@@ -28,11 +15,22 @@ import com.example.javi.service.TokenService;
 import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
-
+import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +52,21 @@ public class AuthServiceImpl implements AuthService {
         return userAgent.toLowerCase().contains("mobile");
     }
 
+    private String generateUniqueUsername() {
+        for (int i = 0; i < 5; i++) {
+            // rút gọn UUID: 12 ký tự cho gọn URL
+            String candidate =
+                    "u" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            if (!usersRepository.existsByUsername(candidate)) {
+                return candidate;
+            }
+        }
+        throw new AppException(ErrorCode.USERNAME_GENERATION_FAILED);
+    }
+
     @Override
     @Transactional
-    public UserResponse register(CreateUserRequest request) throws MessagingException, UnsupportedEncodingException {
+    public UserResponse register(RegisterRequest request) throws MessagingException, UnsupportedEncodingException {
 
         if (!ValidationUtils.isValidEmail(request.getEmail())) {
             throw new AppException(ErrorCode.INVALID_EMAIL);
@@ -66,27 +76,33 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.MISMATCH_PASSWORD);
         }
 
-        if (usersRepository.existsByUsername(request.getUsername())) {
-            throw new AppException(ErrorCode.EXIST_USERNAME);
-        }
-
         Optional<Users> existingUserOpt = usersRepository.findByEmail(request.getEmail());
         if (existingUserOpt.isPresent()) {
             Users existingUser = existingUserOpt.get();
             if (existingUser.isVerified()) {
                 throw new AppException(ErrorCode.EXIST_EMAIL);
             } else {
-                verificationTokenService.resendVerification(existingUser.getEmail(), TokenType.EMAIL_VERIFICATION);
+                try {
+                    verificationTokenService.resendVerification(existingUser.getEmail(), TokenType.EMAIL_VERIFICATION);
+                } catch (Exception e) {
+                    log.warn("[REGISTER] Gửi lại email xác minh thất bại: {}", e.getMessage());
+//                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                }
                 throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
             }
         }
 
-        Users newUser = usersMapper.toUsers(request);
-        Role roleUser = roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-
-        newUser.setRole(roleUser);
+        Users newUser = new Users();
+        newUser.setEmail(request.getEmail());
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setVerified(false);
+
+        // Gán role mặc định USER
+        Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        newUser.setRole(userRole);
+
+        newUser.setUsername(generateUniqueUsername());
+
         usersRepository.save(newUser);
 
         VerificationToken token =
@@ -100,10 +116,14 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request, String userAgent) {
         // Xác thực người dùng
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authToken);
-
+        Authentication authentication;
+        try {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
+            authentication = authenticationManagerBuilder.getObject().authenticate(authToken);
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            throw new AppException(ErrorCode.INCORRECT_LOGIN_INFORMATION);
+        }
         // set thông tin người dùng đăng nhập vào context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

@@ -32,13 +32,14 @@ public enum ErrorCode {
     INVALID_EMAIL(1012, "Email không hợp lệ, mời nhập lại", HttpStatus.BAD_REQUEST),
     EXIST_EMAIL(1013, "Email đã tồn tại, xin mời nhập email khác", HttpStatus.BAD_REQUEST),
     EMAIL_ALREADY_VERIFIED(1014, "Email đã được xác thực", HttpStatus.BAD_REQUEST),
-    EMAIL_NOT_VERIFIED(1080, "Email của bạn chưa được xác minh. Bạn có muốn gửi lại email xác thực không?", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED(1080, "Email từng đăng ký nhưng chưa xác minh. Chúng tôi đã gửi lại email xác thực cho bạn, vui lòng kiểm tra hòm thư?", HttpStatus.BAD_REQUEST),
     ERROR_SEND_EMAIL(1081, "Có lỗi xa ra khi gửi tin nhắn", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // USERNAME
     USERNAME_CANNOT_BLANK(1010, "Tên người dùng không được bỏ trống", HttpStatus.BAD_REQUEST),
     EXIST_USERNAME(1014, "Tên người dùng đã tồn tại, mời nhập tên khác", HttpStatus.BAD_REQUEST),
     USERNAME_INVALID(1003, "Tên người dùng phải có ít nhất 4 kí tự", HttpStatus.BAD_REQUEST),
+    USERNAME_GENERATION_FAILED(1087, "Có lỗi trong quá trình tạo username", HttpStatus.BAD_REQUEST),
 
     // PASSWORD
     PASSWORD_CANNOT_BLANK(1011, "Mật khẩu không được bỏ trống", HttpStatus.BAD_REQUEST),

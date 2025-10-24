@@ -1,11 +1,28 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { IUserResponse, ILoginResponse } from "../types/backend";
 
 interface AuthState {
   token: string | null;
-  setToken: (t: string | null) => void;
+  user: IUserResponse | null;
+  setAuth: (res: ILoginResponse) => void;
+  clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
-  setToken: (t) => set({ token: t }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+
+      setAuth: (res) =>
+        set({
+          token: res.token,
+          user: res.user,
+        }),
+
+      clearAuth: () => set({ token: null, user: null }),
+    }),
+    { name: "auth-storage" }
+  )
+);

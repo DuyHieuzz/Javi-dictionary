@@ -15,6 +15,8 @@ import LoginPage from "../pages/auth/LoginPage";
 import SearchLayout from "../layouts/SearchLayout";
 import SearchHome from "../pages/search/SearchHome";
 import VocabularyResult from "../pages/search/VocabularyResult";
+import RegisterPage from "../pages/auth/RegisterPage";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -46,6 +48,8 @@ export default function App() {
                 },
 
                 { path: "login", element: <LoginPage /> },
+                { path: "register", element: <RegisterPage /> },
+                { path: "verify", element: <VerifyEmailPage /> },
                 { path: "*", element: <NotFound /> },
             ],
         },

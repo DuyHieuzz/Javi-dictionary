@@ -25,7 +25,7 @@ export default function CommentList() {
     const [newComment, setNewComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    // 🧩 Load comment từ BE
+    // Load comment từ BE
     const fetchComments = async (page: number) => {
         setLoading(true);
         try {
@@ -51,7 +51,7 @@ export default function CommentList() {
         fetchComments(activePage);
     }, [activePage]);
 
-    // 📝 Gửi bình luận mới
+    // Gửi bình luận mới
     const handleSubmit = async () => {
         if (!newComment.trim()) return;
         setSubmitting(true);
@@ -72,7 +72,7 @@ export default function CommentList() {
         }
     };
 
-    // ❤️ Gửi like/dislike
+    // Gửi like/dislike
     const handleReact = async (id: number, type: "LIKE" | "DISLIKE") => {
         try {
             const res = await axios.post(
