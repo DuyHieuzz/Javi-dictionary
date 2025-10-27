@@ -18,6 +18,7 @@ import VocabularyResult from "../pages/search/VocabularyResult";
 import RegisterPage from "../pages/auth/RegisterPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import UserDetailPage from "@/pages/user/UserDetailPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -55,6 +56,7 @@ export default function App() {
                 { path: "login", element: <LoginPage /> },
                 { path: "register", element: <RegisterPage /> },
                 { path: "verify", element: <VerifyEmailPage /> },
+                { path: "/reset-password", element: <ResetPasswordPage /> },
                 { path: "*", element: <NotFound /> },
             ],
         },

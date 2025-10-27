@@ -50,7 +50,7 @@ public enum ErrorCode {
     // FILE
     EMPTY_FILE(1016, "File rỗng, mời chọn file", HttpStatus.BAD_REQUEST),
     INVALID_FILE_NAME(1017, "Tên file ảnh không hợp lệ hoặc quá dài, mời chọn file mới", HttpStatus.BAD_REQUEST),
-    INVALID_FILE_TYPE(1018, "Loại file không phải file ảnh, vui lòng chọn file khác", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(1018, "Loại file không phải file ảnh, vui lòng chọn file khác (PNG, JPG, JPEG)", HttpStatus.BAD_REQUEST),
     FILE_TOO_LARGE(1017, "File quá lớn, vui lòng chọn file khác", HttpStatus.BAD_REQUEST),
 
     // VOCAB

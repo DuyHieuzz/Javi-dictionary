@@ -1,5 +1,19 @@
 package com.example.javi.service.Impl;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Optional;
+import java.util.UUID;
+
+import jakarta.mail.MessagingException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.javi.dto.request.LoginRequest;
 import com.example.javi.dto.request.RegisterRequest;
 import com.example.javi.dto.response.LoginResponse;
@@ -15,22 +29,11 @@ import com.example.javi.service.TokenService;
 import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
-import jakarta.mail.MessagingException;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.io.UnsupportedEncodingException;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
                     verificationTokenService.resendVerification(existingUser.getEmail(), TokenType.EMAIL_VERIFICATION);
                 } catch (Exception e) {
                     log.warn("[REGISTER] Gửi lại email xác minh thất bại: {}", e.getMessage());
-//                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                    //                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
                 }
                 throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
             }

@@ -40,6 +40,7 @@ javi:
   upload-file:
     base-uri: file:///D:/Javi-dictionary/upload/
   max-size-image-translate: 4194304  #4MB
+  max-avatar-size: 5242880 # 5MB
 
 api:
   prefix: /api/v1
@@ -62,3 +63,11 @@ app:
     reset-password-token-expiration-minutes: 10
   frontend:
     base-url: http://localhost:5173
+cloudflare:
+  r2:
+    account-id: ${R2_ACCOUNT_ID}
+    access-key: ${R2_ACCESS_KEY_ID}
+    secret-key: ${R2_SECRET_KEY}
+    bucket: "javi-avatar"
+    endpoint: ${R2_ENDPOINT}
+    public-base-url: "https://pub-a426002f5fad4ea3b8229f3e7d166a74.r2.dev"

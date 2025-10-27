@@ -28,10 +28,10 @@ export const callChangePassword = (id: number, data: IChangePassRequest) => {
 };
 
 /** Cập nhật avatar người dùng */
-export const callUpdateAvatar = (id: number, file: File) => {
+export const callUpdateAvatar = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-  return axiosClient.put<IBackendRes<string>>(`/users/${id}/avatar`, formData, {
+  return axiosClient.put<IBackendRes<string>>(`/users/avatar`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };

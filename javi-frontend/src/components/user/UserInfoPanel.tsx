@@ -91,91 +91,152 @@ export default function UserInfoPanel({
     };
 
     const handleSubmit = async () => {
+        // Validate form trước, tránh gọi API khi form lỗi
+        let values;
         try {
-            const values = await form.validateFields();
+            values = await form.validateFields();
+        } catch {
+            message.error("Vui lòng kiểm tra lại thông tin nhập vào.");
+            return;
+        }
 
-            const isTargetAdmin = user.role?.name === "ADMIN";
-            const isTryingToBlock =
-                values.status !== undefined && values.status === false;
-            const isRoleChanged = values.role && values.role !== user.role?.id;
-            const isInfoChanged =
-                values.fullName !== user.fullName ||
-                values.level !== user.level ||
-                intro !== user.selfIntroduction;
-            const isPremiumChanged = !!values.premiumType;
+        const isTargetAdmin = user.role?.name === "ADMIN";
+        const isTryingToBlock =
+            values.status !== undefined && values.status === false;
+        const isRoleChanged = values.role && values.role !== user.role?.id;
+        const isInfoChanged =
+            values.fullName !== user.fullName ||
+            values.level !== user.level ||
+            intro !== user.selfIntroduction;
+        const isPremiumChanged = !!values.premiumType;
 
-            if (isTargetAdmin && isTryingToBlock) {
-                message.warning("Không thể khóa tài khoản ADMIN!");
-                return;
-            }
-            if (isTargetAdmin && isRoleChanged) {
-                message.warning("Không thể thay đổi vai trò ADMIN!");
-                return;
-            }
+        if (isTargetAdmin && isTryingToBlock) {
+            message.warning("Không thể khóa tài khoản ADMIN!");
+            return;
+        }
+        if (isTargetAdmin && isRoleChanged) {
+            message.warning("Không thể thay đổi vai trò ADMIN!");
+            return;
+        }
 
-            const formattedDob = values.dateOfBirth
-                ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
-                : null;
+        const formattedDob = values.dateOfBirth
+            ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
+            : null;
 
-            // ✅ Cập nhật thông tin chung
-            if (!isPublic && (isInfoChanged || isRoleChanged)) {
-                const payload = {
-                    username: values.username,
-                    fullName: values.fullName,
-                    dateOfBirth: formattedDob,
-                    level: values.level,
-                    selfIntroduction: intro,
-                    roleId: values.role,
-                };
+        // Cập nhật thông tin chung
+        if (!isPublic && (isInfoChanged || isRoleChanged)) {
+            const payload = {
+                username: values.username,
+                fullName: values.fullName,
+                dateOfBirth: formattedDob,
+                level: values.level,
+                selfIntroduction: intro,
+                roleId: values.role,
+            };
 
+            try {
                 const res = await callUpdateUserById(user.id, payload);
-                if (res.data?.result) {
+
+                if (res.status === 200 || res.data?.statusCode === 1000) {
                     message.success("Cập nhật thông tin thành công!");
                     if (isSelf) {
-                        setAuth({
-                            token: token!,
-                            tokenType: "Bearer",
-                            refresh_token: "",
-                            user: res.data.result,
-                        });
+                        if (res.data?.result) {
+                            setAuth({
+                                token: token!,
+                                tokenType: "Bearer",
+                                refresh_token: "",
+                                user: res.data.result, // đảm bảo chắc chắn không undefined
+                            });
+                        }
                     }
                     onUserUpdated?.(res.data.result);
+                } else {
+                    message.error(res.data?.message || "Cập nhật thất bại!");
                 }
+            } catch (err: any) {
+                const msg =
+                    err?.response?.data?.message ||
+                    err?.message ||
+                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
+                message.error(msg);
             }
+        }
 
-            // ✅ Block / Unblock (chỉ MANAGE_USER)
-            if (!isPublic && canManageUser) {
-                if (isTryingToBlock && user.status !== "BLOCKED") {
-                    await callBlockUser(user.id);
+        // Block user
+        if (
+            !isPublic &&
+            canManageUser &&
+            isTryingToBlock &&
+            user.status !== "BLOCKED"
+        ) {
+            try {
+                const res = await callBlockUser(user.id);
+                if (res.status === 200 || res.data?.statusCode === 1000) {
                     message.success("Tài khoản đã bị khóa");
                     if (isSelf) clearAuth();
                     onUserUpdated?.({ ...user, status: "BLOCKED" });
-                } else if (
-                    values.status === true &&
-                    user.status === "BLOCKED"
-                ) {
-                    await callUnblockUser(user.id);
+                } else {
+                    message.error(
+                        res.data?.message || "Không thể khóa tài khoản"
+                    );
+                }
+            } catch (err: any) {
+                const msg =
+                    err?.response?.data?.message ||
+                    err?.message ||
+                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
+                message.error(msg);
+            }
+        }
+
+        // Unblock user
+        if (
+            !isPublic &&
+            canManageUser &&
+            values.status === true &&
+            user.status === "BLOCKED"
+        ) {
+            try {
+                const res = await callUnblockUser(user.id);
+                if (res.status === 200 || res.data?.statusCode === 1000) {
                     message.success("Tài khoản đã được mở khóa");
                     onUserUpdated?.({ ...user, status: "ACTIVE" });
+                } else {
+                    message.error(
+                        res.data?.message || "Không thể mở khóa tài khoản"
+                    );
                 }
+            } catch (err: any) {
+                const msg =
+                    err?.response?.data?.message ||
+                    err?.message ||
+                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
+                message.error(msg);
             }
+        }
 
-            // ✅ Nâng cấp Premium (chỉ khi chọn gói)
-            if (!isPublic && canManageUser && isPremiumChanged) {
+        // Nâng cấp Premium (chỉ khi chọn gói)
+        if (!isPublic && canManageUser && isPremiumChanged) {
+            try {
                 const res = await callUpgradePremium(
                     user.id,
                     values.premiumType
                 );
-                if (res.data?.result) {
+                if (res.status === 200 || res.data?.statusCode === 1000) {
                     message.success("Nâng cấp Premium thành công!");
                     onUserUpdated?.(res.data.result);
+                } else {
+                    message.error(res.data?.message || "Nâng cấp thất bại!");
                 }
+            } catch (err: any) {
+                const msg =
+                    err?.response?.data?.message ||
+                    "Không thể kết nối tới máy chủ.";
+                message.error(msg);
             }
-
-            setIsModalOpen(false);
-        } catch (err) {
-            message.error("Vui lòng kiểm tra lại thông tin");
         }
+
+        setIsModalOpen(false);
     };
 
     if (activeTab !== "overview") return null;
@@ -360,7 +421,7 @@ export default function UserInfoPanel({
                             </Form.Item>
                         )}
 
-                        {/* ✅ Nâng cấp Premium: dropdown mới */}
+                        {/* Nâng cấp Premium: dropdown*/}
                         {!isPublic && canManageUser && (
                             <Form.Item name="premiumType" label="Gói Premium">
                                 <Select

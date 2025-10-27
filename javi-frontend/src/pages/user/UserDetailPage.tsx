@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import UserSidebar from "@/components/user/UserSidebar";
 import UserInfoPanel from "@/components/user/UserInfoPanel";
+import UserSecurityPanel from "@/components/user/UserSecurityPanel";
 import { callGetMyInfo, callGetPublicUserProfile } from "@/apis/userApi";
 import { Spin } from "antd";
 import { useParams } from "react-router-dom";
@@ -102,6 +103,7 @@ export default function UserDetailPage() {
                     onUserUpdated={setUser}
                     isPublic={isPublic}
                 />
+                {activeTab === "security" && <UserSecurityPanel />}
             </div>
         </div>
     );

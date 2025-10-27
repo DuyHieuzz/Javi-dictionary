@@ -181,6 +181,21 @@
             <version>1.17.2</version>
         </dependency>
 
+        <!-- AWS SDK for S3 (dùng để giao tiếp với Cloudflare R2) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.29.19</version>
+        </dependency>
+
+
+        <!-- Thư viện resize ảnh (nén ảnh trước khi đẩy lên r2 cho nhẹ)-->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.20</version>
+        </dependency>
+
 
     </dependencies>
     <dependencyManagement>

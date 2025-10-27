@@ -29,14 +29,19 @@ export default function UserSidebar({
     const { user: currentUser, setAuth } = useAuthStore();
 
     const beforeUpload: UploadProps["beforeUpload"] = async (file) => {
-        const isImage = file.type.startsWith("image/");
+        const isImage =
+            file.type === "image/jpeg" ||
+            file.type === "image/png" ||
+            file.type === "image/jpg";
         if (!isImage) {
-            message.error("Chỉ được chọn file hình ảnh!");
+            message.error("Chỉ được chọn ảnh định dạng JPG, JPEG hoặc PNG!");
             return Upload.LIST_IGNORE;
         }
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-            message.error("Ảnh phải nhỏ hơn 2MB!");
+
+        // Giới hạn dung lượng 5MB
+        const isLt5M = file.size / 1024 / 1024 < 5;
+        if (!isLt5M) {
+            message.error("Ảnh phải nhỏ hơn 5MB!");
             return Upload.LIST_IGNORE;
         }
 
@@ -48,7 +53,7 @@ export default function UserSidebar({
             reader.readAsDataURL(file);
 
             // upload thật
-            const res = await callUpdateAvatar(user.id, file);
+            const res = await callUpdateAvatar(file);
             if (res.data?.result) {
                 message.success("Cập nhật ảnh đại diện thành công!");
                 if (currentUser?.id === user.id) {
@@ -88,7 +93,7 @@ export default function UserSidebar({
                         name="avatar"
                         showUploadList={false}
                         beforeUpload={beforeUpload}
-                        accept="image/*"
+                        accept=".jpg,.jpeg,.png"
                     >
                         <div className="relative group cursor-pointer">
                             <Avatar
@@ -150,7 +155,11 @@ export default function UserSidebar({
                 {tabs.map((tab) => (
                     <button
                         key={tab.key}
-                        onClick={() => setActiveTab(tab.key as any)}
+                        onClick={() =>
+                            setActiveTab(
+                                tab.key as "overview" | "activity" | "security"
+                            )
+                        }
                         className={`py-2 px-4 rounded-xl text-left mb-1 transition ${
                             activeTab === tab.key
                                 ? "bg-[#3e67d6] text-white"

@@ -7,11 +7,12 @@ import { HiMiniLockClosed } from "react-icons/hi2";
 import { toast } from "react-toastify";
 import { callLogin } from "../../apis/authApi";
 import { useAuthStore } from "../../stores/useAuthStore";
+import ForgotPasswordModal from "@/components/auth/ForgotPasswordModal";
 
 export default function LoginPage() {
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
-
+    const [forgotOpen, setForgotOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -24,7 +25,7 @@ export default function LoginPage() {
         const email = formData.get("email") as string;
         const password = formData.get("password") as string;
 
-        // ✅ Kiểm tra đơn giản
+        // Kiểm tra đơn giản
         const newErrors: typeof errors = {};
         if (!email) newErrors.email = "Bạn chưa nhập địa chỉ email";
         if (!password) newErrors.password = "Cần nhập mật khẩu";
@@ -34,10 +35,10 @@ export default function LoginPage() {
         try {
             setLoading(true);
             const res = await callLogin(email, password);
-            setAuth(res.data); // ✅ Lưu token và user vào Zustand
+            setAuth(res.data); // Lưu token và user vào Zustand
 
             toast.success("Đăng nhập thành công!", { position: "top-right" });
-            navigate("/search"); // ✅ Điều hướng sang /search sau đăng nhập
+            navigate("/search"); // Điều hướng sang /search sau đăng nhập
         } catch (err: any) {
             console.error("Login failed:", err);
 
@@ -79,7 +80,6 @@ export default function LoginPage() {
             <div className="bg-white w-[870px] rounded-2xl shadow-md flex flex-col items-center px-4 py-8">
                 {/* Tiêu đề */}
                 <h2 className="text-xl mb-5">Đăng nhập với</h2>
-
                 {/* Đăng nhập Google */}
                 <button
                     onClick={handleGoogleLogin}
@@ -90,7 +90,6 @@ export default function LoginPage() {
                         Google
                     </span>
                 </button>
-
                 {/* Hoặc */}
                 <div className="relative flex items-center w-full max-w-md mb-8">
                     <div className="flex-grow border-t border-dotted border-gray-300"></div>
@@ -99,7 +98,6 @@ export default function LoginPage() {
                     </span>
                     <div className="flex-grow border-t border-dotted border-gray-300"></div>
                 </div>
-
                 {/* Form */}
                 <form onSubmit={onSubmit} className="w-full max-w-md space-y-3">
                     {/* Email */}
@@ -174,6 +172,15 @@ export default function LoginPage() {
                         </p>
                     </div>
 
+                    <div className="text-right mt-2">
+                        <span
+                            onClick={() => setForgotOpen(true)}
+                            className="text-[#3e67d6] hover:underline text-sm cursor-pointer"
+                        >
+                            Quên mật khẩu?
+                        </span>
+                    </div>
+
                     {/* Nút đăng nhập */}
                     <button
                         type="submit"
@@ -183,7 +190,6 @@ export default function LoginPage() {
                         {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </button>
                 </form>
-
                 {/* Chuyển sang đăng ký */}
                 <p className="text-center text-sm text-gray-500 mt-8">
                     Bạn chưa có tài khoản?{" "}
@@ -194,6 +200,11 @@ export default function LoginPage() {
                         Đăng ký ngay
                     </span>
                 </p>
+                <ForgotPasswordModal
+                    open={forgotOpen}
+                    onClose={() => setForgotOpen(false)}
+                />
+                ;
             </div>
         </div>
     );

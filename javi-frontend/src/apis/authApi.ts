@@ -47,6 +47,5 @@ export const callVerifyResetToken = (token: string) => {
 /** Đặt lại mật khẩu mới */
 export const callResetPassword = (data: IResetPassRequest) => {
   return axiosClient.post<{ message: string }>("/auth/reset-password", data);
-
 };
 

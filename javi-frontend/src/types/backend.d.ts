@@ -112,7 +112,7 @@ export interface ILoginResponse {
 }
 
 export interface IResetPassRequest {
-    token: string;
+    token: string | null;
     newPassword: string;
     confirmPassword: string;
 }

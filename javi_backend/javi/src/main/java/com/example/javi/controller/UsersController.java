@@ -23,8 +23,11 @@ import com.example.javi.dto.response.PublicUserResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
+import com.example.javi.repository.UsersRepository;
+import com.example.javi.service.AvatarStorageService;
 import com.example.javi.service.FileService;
 import com.example.javi.service.UsersService;
+import com.example.javi.utils.SecurityUtil;
 import com.turkraft.springfilter.boot.Filter;
 
 import lombok.AccessLevel;
@@ -45,6 +48,9 @@ public class UsersController {
 
     UsersService usersService;
     FileService fileService;
+    SecurityUtil securityUtil;
+    AvatarStorageService avatarStorageService;
+    UsersRepository usersRepository;
 
     @PostMapping("")
     @PreAuthorize("hasAuthority('CREATE_USER')")
@@ -106,22 +112,36 @@ public class UsersController {
                 .build();
     }
 
-    @PutMapping("/{id}/avatar")
+    @PutMapping("/avatar")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<String> updateAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file)
+    public ApiResponse<String> updateAvatar(@RequestParam("file") MultipartFile file)
             throws IOException, URISyntaxException {
-        String folder = "avatar"; // cố định folder
+        Users user = securityUtil.getCurrentUser();
+        //        String folder = "avatar"; // cố định folder
+        //
+        //        // tạo thư mục nếu chưa có
+        //        fileService.createDirectory(baseURI + folder);
+        //
+        //        // lưu file và lấy tên
+        //        String fileName = fileService.store(file, folder);
 
-        // tạo thư mục nếu chưa có
-        fileService.createDirectory(baseURI + folder);
+        String oldUrl = user.getAvatarUrl();
+        String newUrl;
 
-        // lưu file và lấy tên
-        String fileName = fileService.store(file, folder);
+        // Upload ảnh mới lên Cloudflare R2
+        newUrl = avatarStorageService.uploadAvatar(file);
+        // Cập nhật avatar mới vào DB
+        user.setAvatarUrl(newUrl);
+        usersRepository.save(user);
 
-        // cập nhật avatar cho user
+        // Xóa ảnh cũ (nếu có) sau khi upload mới OK
+        if (oldUrl != null) {
+            avatarStorageService.deleteAvatar(oldUrl);
+        }
+
         return ApiResponse.<String>builder()
                 .message("Cập nhật avatar thành công")
-                .result(usersService.updateAvatar(id, fileName))
+                .result(newUrl)
                 .build();
     }
 
