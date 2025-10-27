@@ -79,9 +79,9 @@ export default function RegisterPage() {
                     "Email từng đăng ký nhưng chưa xác minh. Hệ thống đã gửi lại email xác minh mới!",
                     { position: "top-right" }
                 );
-                // vẫn điều hướng về /search theo yêu cầu (nếu bạn muốn khác, báo mình)
                 navigate("/search");
             } else if (code === "MISMATCH_PASSWORD") {
+                // chưa chỉnh lại mã code be nên sau này đổi sau, để đây cho dễ hiểu
                 setErrors({
                     confirmPassword: "Mật khẩu xác nhận không khớp",
                 });

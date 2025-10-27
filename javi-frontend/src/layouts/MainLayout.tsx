@@ -3,9 +3,18 @@ import Sidebar from "../components/common/Sidebar";
 import AppHeader from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { Outlet } from "react-router-dom";
+import { useGlobalErrorStore } from "@/stores/useGlobalErrorStore";
+import ServerError from "@/components/common/ServerError";
 
 export default function MainLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const { serverDown, setServerDown } = useGlobalErrorStore();
+
+    // Bao giờ server lỗi hoặc không chạy sẽ render ra
+    if (serverDown) {
+        return <ServerError onRetry={() => setServerDown(false)} />;
+    }
 
     return (
         <div className="bg-[#f7f8fa] font-sans min-h-screen m-0 object-cover overflow-y-overlay">

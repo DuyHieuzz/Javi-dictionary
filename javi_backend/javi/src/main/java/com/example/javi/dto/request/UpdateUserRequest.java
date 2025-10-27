@@ -25,7 +25,7 @@ public class UpdateUserRequest {
 
     String fullName;
 
-    JlptLevel jlptLevel;
+    JlptLevel level;
 
     String selfIntroduction;
 
