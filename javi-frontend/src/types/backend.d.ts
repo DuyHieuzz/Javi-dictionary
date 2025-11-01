@@ -116,3 +116,175 @@ export interface IResetPassRequest {
     newPassword: string;
     confirmPassword: string;
 }
+
+// =====================================================
+// TỪ VỰNG VÀ NGHĨA
+// =====================================================
+
+/** Từ vựng */
+/** Ví dụ trong nghĩa */
+export interface IMeaningExample {
+  id?: number;
+  jaSentence: string; // Câu ví dụ tiếng Nhật
+  viSentence: string; // Câu ví dụ tiếng Việt
+}
+
+/** Nghĩa tiếng Việt của từ */
+export interface IMeaning {
+  id?: number;
+  meaningVn: string;         // Nghĩa tiếng Việt
+  description?: string;      // Mô tả thêm (nếu có)
+  examples: IMeaningExample[];
+}
+
+/** Kanji liên quan đến từ vựng */
+export interface IVocabKanji {
+  id: number;
+  characterName: string;     // Ký tự Kanji
+  sinoViName: string;        // Nghĩa Hán Việt
+  meaning: string;           // Nghĩa chính
+  level: string;             // N5 - N1
+  gifUrl: string;            // Link ảnh GIF nét viết
+}
+
+/** Từ vựng (response chính từ BE) */
+export interface IVocabResponse {
+  example: ReactNode;
+  example: any;
+  id: number;
+  word: string;              // Từ tiếng Nhật
+  romaji: string | null;
+  hiragana: string | null;
+  katakana: string | null;
+  wordType: string;          // Danh từ / Động từ / Tính từ...
+  level: string;             // N5 - N1
+  meanings: IMeaning[];      // Danh sách nghĩa tiếng Việt
+  kanjis: IVocabKanji[];     // Các Kanji liên quan
+}
+
+/** Payload tạo từ vựng (Admin) */
+export interface IVocabCreateRequest {
+  word: string;
+  wordType: string;
+  level: string;
+  meanings: IMeaning[];
+}
+
+/** Payload cập nhật từ vựng (Admin) */
+export interface IVocabUpdateRequest {
+  id?: number;
+  word: string;
+  wordType: string;
+  level: string;
+  meanings: IMeaning[];
+}
+
+
+/** Kết quả phân trang khi tìm kiếm từ vựng */
+export interface IVocabularyPage {
+  content: IVocabResponse[];
+  totalElements: number;
+  totalPages: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+// =====================================================
+// KANJI
+// =====================================================
+/** Kanji cơ bản (dùng cho danh sách & search) */
+export interface IKanjiResponse {
+  id: number;
+  characterName: string; // ký tự Kanji
+  sinoViName: string;    // nghĩa Hán Việt
+  meaning: string;       // nghĩa tiếng Việt
+  level: string;         // N5-N1
+  gifUrl: string;        // link ảnh gif nét viết
+}
+
+/** Kanji chi tiết (dùng cho /search/get-mean) */
+export interface IKanjiDetailResponse {
+  id: number;
+  characterName: string;
+  sinoViName: string;
+  kunyomi: string[];     // cách đọc kun
+  onyomi: string[];      // cách đọc on
+  stroke: number;        // số nét
+  videoUrl: string;      // link video
+  gifUrl: string;        // link ảnh gif
+  meaning: string;       // nghĩa
+  level: string;         // N5-N1
+}
+
+/** Node cấu trúc phân tích, phân tách Kanji */
+export interface IKanjiComponentNode {
+    kanji: string;
+    sinoViName: string;
+    explanation: string;
+    components: IKanjiComponentNode[];
+}
+
+/** Kết quả phân tích, phân tách Kanji */
+export interface IKanjiDecompositionResult {
+    kanji: string;
+    sinoViName: string;
+    explanation: string;
+    components: IKanjiComponentNode[];
+}
+
+/** Payload tạo hoặc cập nhật Kanji */
+export interface IKanjiRequest {
+  characterName: string;
+  sinoViName: string;
+  meaning: string;
+  level: string;
+}
+
+// =====================================================
+// COMMENT & REACT
+// =====================================================
+
+// Loại entity mà comment thuộc về
+export type EntityType = "WORD" | "KANJI" | "GRAMMAR";
+
+// Loại phản ứng
+export type ReactionType = "LIKE" | "DISLIKE" | null;
+
+// Comment trả về từ BE
+export interface ICommentResponse {
+  id: number;
+  userId: number;
+  userName: string;
+  avatarUrl?: string | null;
+  entityType: EntityType;
+  entityId: number;
+  content: string;
+  likeCount: number;
+  dislikeCount: number;
+  isMyComment?: boolean;
+  createdAt: string; // ISO date
+  myReaction?: ReactionType;
+}
+
+// Tạo comment
+export interface ICreateCommentRequest {
+  entityType: EntityType;
+  entityId: number;
+  content: string;
+}
+
+// Cập nhật comment
+export interface IUpdateCommentRequest {
+  content: string;
+}
+
+// Kết quả phân trang
+export interface IPage<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}

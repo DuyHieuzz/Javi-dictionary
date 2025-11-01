@@ -1,5 +1,6 @@
 package com.example.javi.service.Impl;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import com.example.javi.repository.UsersRepository;
 import com.example.javi.repository.VocabulariesRepository;
 import com.example.javi.service.GeminiService;
 import com.example.javi.service.VocabulariesService;
+import com.example.javi.service.cache.RedisHelper;
 import com.example.javi.service.cache.VocabulariesCacheService;
 import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
@@ -46,6 +48,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     GeminiService geminiService;
     UsersRepository usersRepository;
     VocabulariesCacheService vocabulariesCacheService;
+    RedisHelper redisHelper;
 
     @Override
     @Transactional
@@ -309,6 +312,14 @@ public class VocabulariesServiceImpl implements VocabulariesService {
     public String explainVocabulary(String word) {
         String cached = vocabulariesCacheService.getExplain(word);
         Users currentUser = securityUtil.getCurrentUser();
+
+        // Chặn spam: mỗi user chỉ gọi explain 1 lần / 5 giây
+        String limitKey = "ai:limit:" + currentUser.getId();
+        if (redisHelper.find(limitKey, String.class) != null) {
+            log.warn("[AI LIMIT] User {} spam yêu cầu giải thích từ '{}'", currentUser.getUsername(), word);
+            throw new AppException(ErrorCode.TOO_MANY_REQUESTS);
+        }
+        redisHelper.save(limitKey, "1", Duration.ofSeconds(5));
 
         // PREMIUM user: dùng cache nếu có, nếu không thì gọi AI và cache lại
         if (currentUser.getAccountType().equals(AccountType.PREMIUM)) {

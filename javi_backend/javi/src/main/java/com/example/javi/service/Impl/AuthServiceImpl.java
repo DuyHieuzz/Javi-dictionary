@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.dto.request.LoginRequest;
 import com.example.javi.dto.request.RegisterRequest;
+import com.example.javi.dto.response.GoogleTokenResponse;
+import com.example.javi.dto.response.GoogleUserInfo;
 import com.example.javi.dto.response.LoginResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.*;
@@ -25,6 +27,7 @@ import com.example.javi.mapper.UsersMapper;
 import com.example.javi.repository.RoleRepository;
 import com.example.javi.repository.UsersRepository;
 import com.example.javi.service.AuthService;
+import com.example.javi.service.GoogleService;
 import com.example.javi.service.TokenService;
 import com.example.javi.service.VerificationTokenService;
 import com.example.javi.utils.SecurityUtil;
@@ -48,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     VerificationTokenService verificationTokenService;
     SecurityUtil securityUtil;
     TokenService tokenService;
+    GoogleService googleService;
 
     private boolean isMobileDevice(String userAgent) {
         // Kiểm tra User-Agent header để xác định thiết bị di động
@@ -153,6 +157,67 @@ public class AuthServiceImpl implements AuthService {
         String refreshTokenValue = jwtToken.getRefreshToken();
 
         return new LoginResponse(accessToken, refreshTokenValue, tokenType, usersResponse);
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse loginWithGoogle(String code, String userAgent) {
+        GoogleTokenResponse tokenResponse = googleService.exchangeCodeForToken(code);
+        String accessToken = tokenResponse.getAccessToken();
+
+        // Lấy thông tin người dùng Google
+        GoogleUserInfo info = googleService.getUserInfo(accessToken);
+
+        if (info == null || info.getEmail() == null) {
+            throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN);
+        }
+
+        // Tìm hoặc liên kết tài khoản
+        Optional<Users> existingGoogleUser = usersRepository.findByGoogleAccountId(info.getSub());
+        Users user;
+
+        if (existingGoogleUser.isPresent()) {
+            user = existingGoogleUser.get(); // đã liên kết Google rồi
+            if (user.getStatus() == Status.BLOCKED) {
+                throw new AppException(ErrorCode.YOUR_ACCOUNT_HAS_BEEN_BLOCK);
+            }
+        } else {
+            Optional<Users> byEmail = usersRepository.findByEmail(info.getEmail());
+            if (byEmail.isPresent()) {
+                // Liên kết tài khoản Google với user có sẵn (theo email)
+                user = byEmail.get();
+                user.setGoogleAccountId(info.getSub());
+                user.setLoginProvider(AuthProvider.GOOGLE);
+                user.setVerified(true);
+                usersRepository.save(user);
+            } else {
+                Role role =
+                        roleRepository.findByName("USER").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+                // Tạo tài khoản mới
+                user = new Users();
+                user.setEmail(info.getEmail());
+                user.setFullName(info.getName());
+                user.setUsername(generateUniqueUsername());
+                user.setAvatarUrl(info.getPicture());
+                user.setGoogleAccountId(info.getSub());
+                user.setLoginProvider(AuthProvider.GOOGLE);
+                user.setVerified(true);
+                user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString())); // random
+                user.setRole(role);
+                usersRepository.save(user);
+            }
+        }
+
+        // Sinh access token JWT
+        String userAccessToken = securityUtil.generateToken(user);
+
+        // Tạo refresh token và lưu vào DB, có truyền device type
+        boolean isMobile = isMobileDevice(userAgent);
+        Token jwtToken = tokenService.addToken(user, userAccessToken, isMobile);
+        String tokenType = jwtToken.getTokenType();
+        String refreshTokenValue = jwtToken.getRefreshToken();
+
+        return new LoginResponse(userAccessToken, refreshTokenValue, tokenType, usersMapper.toUserResponse(user));
     }
 
     @Override

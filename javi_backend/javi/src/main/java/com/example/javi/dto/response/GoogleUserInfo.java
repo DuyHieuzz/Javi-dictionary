@@ -8,11 +8,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class KanjiResponse {
-    Long id;
-    String characterName;
-    String sinoViName;
-    String meaning;
-    String level;
-    String gifUrl;
+public class GoogleUserInfo {
+    String sub; // Google ID
+    String email;
+    Boolean email_verified;
+    String name;
+    String picture;
 }

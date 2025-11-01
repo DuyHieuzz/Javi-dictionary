@@ -22,4 +22,6 @@ public interface UsersRepository extends JpaRepository<Users, Long>, JpaSpecific
     Optional<Users> findByUsername(String userName);
 
     List<Users> findByAccountTypeAndPremiumExpiredAtBefore(AccountType accountType, LocalDateTime time);
+
+    Optional<Users> findByGoogleAccountId(String googleId);
 }

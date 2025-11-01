@@ -34,7 +34,7 @@ const links = [
     },
 ];
 
-// 🟨 Thêm interface cho props
+// Thêm interface cho props
 interface SidebarProps {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -75,12 +75,17 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 <nav className="flex-1 overflow-y-auto">
                     <ul className="space-y-1">
                         {links.map(({ path, label, icon, selectIcon }) => {
-                            const active = location.pathname === path;
+                            // Nếu là "Tra cứu" (path bắt đầu /search) thì active cho tất cả /search/*
+                            const isSearch = path.startsWith("/search");
+                            const active = isSearch
+                                ? location.pathname.startsWith("/search")
+                                : location.pathname === path;
+
                             return (
                                 <li key={path}>
                                     <Link
                                         to={path}
-                                        className={`flex items-center px-[18px] py-[8px] my-[4px] text-[16px] transition-all duration-500 ${
+                                        className={`flex items-center px-[18px] py-[8px] my-[4px] mx-2 text-[16px] transition-all duration-500 ${
                                             active
                                                 ? "bg-[#d0e0f9] text-[#262a34] rounded-2xl"
                                                 : "text-white/90 hover:text-white"

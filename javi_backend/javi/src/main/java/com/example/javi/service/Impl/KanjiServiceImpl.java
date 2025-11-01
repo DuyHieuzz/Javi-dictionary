@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.javi.dto.request.KanjiRequest;
+import com.example.javi.dto.response.KanjiDecompositionResult;
 import com.example.javi.dto.response.KanjiDetailResponse;
 import com.example.javi.dto.response.KanjiResponse;
 import com.example.javi.entity.Kanji;
@@ -23,6 +25,8 @@ import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.KanjiMapper;
 import com.example.javi.repository.KanjiRepository;
 import com.example.javi.repository.VocabulariesRepository;
+import com.example.javi.service.GeminiService;
+import com.example.javi.service.KanjiGifStorageService;
 import com.example.javi.service.KanjiService;
 import com.example.javi.service.cache.KanjiCacheService;
 import com.example.javi.utils.ValidationUtils;
@@ -45,6 +49,8 @@ public class KanjiServiceImpl implements KanjiService {
     VocabulariesRepository vocabulariesRepository;
     KanjiCacheService kanjiCacheService;
     ObjectMapper objectMapper;
+    GeminiService geminiService;
+    KanjiGifStorageService kanjiGifStorageService;
     RestTemplate restTemplate = new RestTemplate();
     static String BASE_URL_KANJI_ALIVE = "https://app.kanjialive.com/api/kanji/";
     static String BASE_URL_KANJI_API = "https://kanjiapi.dev/v1/kanji/";
@@ -109,7 +115,17 @@ public class KanjiServiceImpl implements KanjiService {
                 && !existingKanji.getVocabularies().isEmpty()) {
             throw new AppException(ErrorCode.KANJI_STILL_IN_USE);
         }
+
+        String oldUrl = existingKanji.getGifUrl();
+
         kanjiRepository.deleteKanjiByCharacterName(characterName);
+
+        if (oldUrl != null && !oldUrl.isBlank()) {
+            try {
+                kanjiGifStorageService.deleteKanjiGif(oldUrl);
+            } catch (Exception ignored) {
+            }
+        }
         // logic xóa cache
         kanjiCacheService.clearAllPages();
         kanjiCacheService.clearAllKeywordCache();
@@ -270,5 +286,64 @@ public class KanjiServiceImpl implements KanjiService {
         kanjiCacheService.savePage(cacheKey, responsePage);
         log.info("[CACHE SAVE] key={} (filter='{}')", cacheKey, filterKey);
         return responsePage;
+    }
+
+    @Override
+    @Transactional
+    public KanjiResponse updateKanjiGif(MultipartFile file, String characterName) {
+        if (characterName == null || characterName.trim().isEmpty()) {
+            throw new AppException(ErrorCode.EMPTY_KANJI);
+        }
+
+        Kanji kanji = kanjiRepository
+                .findByCharacterName(characterName.trim())
+                .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
+
+        String oldUrl = kanji.getGifUrl();
+        String newUrl;
+
+        // Upload ảnh mới lên R2
+        newUrl = kanjiGifStorageService.uploadKanjiGif(file);
+
+        try {
+            // Cập nhật DB
+            kanji.setGifUrl(newUrl);
+            kanjiRepository.save(kanji);
+        } catch (RuntimeException ex) {
+            // Nếu DB lưu thất bại → xóa file mới để tránh rác
+            kanjiGifStorageService.deleteKanjiGif(newUrl);
+            throw ex;
+        }
+
+        // Xóa ảnh cũ trên R2 (sau khi lưu DB thành công)
+        if (oldUrl != null && !oldUrl.isBlank()) {
+            kanjiGifStorageService.deleteKanjiGif(oldUrl);
+        }
+
+        // Clear cache Redis (đảm bảo FE nhận ảnh mới)
+        try {
+            kanjiCacheService.deleteKanjiDetail(characterName);
+            kanjiCacheService.clearAllPages();
+            kanjiCacheService.clearAllKeywordCache();
+            log.info("[REDIS CLEAR] Xóa cache sau khi update ảnh mới cho {}", characterName);
+        } catch (Exception e) {
+            log.warn("[REDIS ERROR] Thất bại xóa cache sau khi update Kanji GIF: {}", e.getMessage());
+        }
+        return kanjiMapper.toKanjiResponse(kanji);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public KanjiDecompositionResult analyzeKanji(String character) {
+        KanjiDecompositionResult cached = kanjiCacheService.getKanjiByAi(character);
+        if (cached != null) {
+            log.info("[CACHE HIT] Tìm thấy Kanji decomposition {}", character);
+            return cached;
+        }
+        log.info("[CACHE MISS] Gọi api gemini phân tích kanji: {}", character);
+        KanjiDecompositionResult result = geminiService.analyzeKanjiStructure(character);
+        kanjiCacheService.saveKanjiByAi(character, result);
+        log.info("[CACHE SAVE] Lưu cache decomposition: {}", character);
+        return result;
     }
 }

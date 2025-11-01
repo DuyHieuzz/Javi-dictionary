@@ -81,7 +81,7 @@ export default function UserSidebar({
     const tabs = [
         { key: "overview", label: "Giới thiệu chung" },
         { key: "activity", label: "Hoạt động" },
-        ...(!isPublic ? [{ key: "security", label: "Bảo mật" }] : []),
+        ...(isSelf ? [{ key: "security", label: "Bảo mật" }] : []),
     ];
 
     return (

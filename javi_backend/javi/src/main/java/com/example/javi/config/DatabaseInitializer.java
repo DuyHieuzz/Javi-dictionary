@@ -74,8 +74,9 @@ public class DatabaseInitializer implements ApplicationRunner {
 
         if (roleRepository.findByName("USER").isEmpty()) {
             List<Permission> userPermissions = permissionRepository.findAll().stream()
-                    .filter(p ->
-                            p.getName().equals("CREATE_COMMENT") || p.getName().equals("DELETE_COMMENT"))
+                    .filter(p -> p.getName().equals("CREATE_COMMENT")
+                            || p.getName().equals("UPDATE_COMMENT")
+                            || p.getName().equals("DELETE_COMMENT"))
                     .toList();
 
             Role userRole = new Role();

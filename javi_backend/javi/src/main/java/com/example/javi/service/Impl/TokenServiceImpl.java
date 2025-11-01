@@ -176,37 +176,67 @@ public class TokenServiceImpl implements TokenService {
                 .findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new AppException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
-        if (existingToken.isRevoked()) {
-            throw new AppException(ErrorCode.REFRESH_TOKEN_REVOKED);
+        if (existingToken.isRevoked() || existingToken.isExpired()) {
+            throw new AppException(ErrorCode.REFRESH_TOKEN_REUSED);
         }
 
         if (existingToken.getRefreshExpirationDate().isBefore(LocalDateTime.now())) {
             existingToken.setRevoked(true);
+            existingToken.setExpired(true);
             tokenRepository.save(existingToken);
             throw new AppException(ErrorCode.REFRESH_TOKEN_HAS_EXPIRED);
         }
 
-        Users user = existingToken.getUser();
+        // Revoke cặp cũ (access + refresh)
+        existingToken.setRevoked(true);
+        existingToken.setExpired(true);
+        tokenRepository.save(existingToken);
 
-        // Update token hiện có (không tạo bản ghi mới)
-        String newJwt = securityUtil.generateToken(user);
+        Users user = existingToken.getUser();
         LocalDateTime now = LocalDateTime.now();
 
-        existingToken.setToken(newJwt);
-        existingToken.setExpirationDate(now.plusSeconds(VALID_DURATION));
-        existingToken.setRefreshToken(UUID.randomUUID().toString());
-        existingToken.setRefreshExpirationDate(now.plusSeconds(REFRESHABLE_DURATION));
-        existingToken.setRevoked(false);
-        existingToken.setExpired(false);
+        // Tạo cặp token mới cho thiết bị này
+        String newAccessToken = securityUtil.generateToken(user);
+        String newRefreshToken = UUID.randomUUID().toString();
 
-        return tokenRepository.save(existingToken);
+        Token newToken = Token.builder()
+                .user(user)
+                .token(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .tokenType("Bearer")
+                .expirationDate(now.plusSeconds(VALID_DURATION))
+                .refreshExpirationDate(now.plusSeconds(REFRESHABLE_DURATION))
+                .revoked(false)
+                .expired(false)
+                .isMobile(existingToken.isMobile())
+                .build();
+
+        tokenRepository.save(newToken);
+
+        // Cleanup token rác (revoked + expired)
+        cleanupOldTokens(user);
+        return newToken;
     }
 
     @Override
+    @Transactional
     public void revokeRefreshToken(String refreshToken) {
         tokenRepository.findByRefreshToken(refreshToken).ifPresent(token -> {
             token.setRevoked(true);
+            token.setExpired(true);
             tokenRepository.save(token);
         });
+    }
+
+    @Override
+    @Transactional
+    public void cleanupOldTokens(Users user) {
+        List<Token> oldTokens = tokenRepository.findByUser(user).stream()
+                .filter(t -> t.isRevoked() && t.isExpired())
+                .collect(Collectors.toList());
+
+        if (!oldTokens.isEmpty()) {
+            tokenRepository.deleteAll(oldTokens);
+        }
     }
 }

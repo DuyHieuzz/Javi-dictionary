@@ -13,6 +13,8 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Chưa đăng nhập hoặc token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "Bạn không có quyền để dùng chức năng này", HttpStatus.FORBIDDEN),
     INVALID_PREMIUM_TYPE(1072, "Thời gian premium không hợp lệ hoặc không truyền xuống", HttpStatus.BAD_REQUEST),
+    INVALID_MULTIPART_FILE(1093, "Request phải là multipart/form-data, key 'file' kiểu File", HttpStatus.BAD_REQUEST),
+    INVALID_JSON_FROM_AI(1094, "Có lỗi khi phân tích, mời thử lại", HttpStatus.BAD_REQUEST),
 
     // USER
     USER_EXISTED(1002, "Người dùng đã tồn tại", HttpStatus.BAD_REQUEST),
@@ -23,9 +25,11 @@ public enum ErrorCode {
     NO_TRIAL_LEFT(1071, "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.", HttpStatus.FORBIDDEN),
     FREE_USER_QUOTA_EXCEEDED(1073, "Bạn đã dùng hết lượt dịch ảnh miễn phí hôm nay.", HttpStatus.FORBIDDEN),
     IMAGE_TOO_LARGE(1074, "Dung lượng ảnh không được quá 4MB", HttpStatus.BAD_REQUEST),
+    IMAGE_GIF_TOO_LARGE(1092, "Dung lượng ảnh không được quá 10MB", HttpStatus.BAD_REQUEST),
 
     // LOGIN
     INCORRECT_LOGIN_INFORMATION(1006, "Đăng nhập thất bại. Email hoặc mật khẩu không đúng", HttpStatus.BAD_REQUEST),
+    INVALID_GOOGLE_TOKEN(1090, "Token google không hợp lệ.", HttpStatus.BAD_REQUEST),
 
     // EMAIL
     EMAIL_CANNOT_BLANK(1009, "Email không được bỏ trống", HttpStatus.BAD_REQUEST),
@@ -49,8 +53,9 @@ public enum ErrorCode {
 
     // FILE
     EMPTY_FILE(1016, "File rỗng, mời chọn file", HttpStatus.BAD_REQUEST),
-    INVALID_FILE_NAME(1017, "Tên file ảnh không hợp lệ hoặc quá dài, mời chọn file mới", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_NAME(1017, "Tên file ảnh không hợp lệ hoặc quá dài, hoặc quá ngắn, mời chọn file mới hoặc đổi tên", HttpStatus.BAD_REQUEST),
     INVALID_FILE_TYPE(1018, "Loại file không phải file ảnh, vui lòng chọn file khác (PNG, JPG, JPEG)", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_GIFT(1018, "Vui lòng tải file ảnh gift", HttpStatus.BAD_REQUEST),
     FILE_TOO_LARGE(1017, "File quá lớn, vui lòng chọn file khác", HttpStatus.BAD_REQUEST),
 
     // VOCAB
@@ -59,6 +64,7 @@ public enum ErrorCode {
     EXIST_WORD(1023, "Từ vựng đã tồn tại", HttpStatus.BAD_REQUEST),
     WORD_NOT_FOUND(1024, "Không tìm thấy từ vựng tương ứng", HttpStatus.NOT_FOUND),
     EMPTY_MEANING(1022, "Từ vựng đang không có nghĩa, mời nhập nghĩa", HttpStatus.BAD_REQUEST),
+    TOO_MANY_REQUESTS(1094, "Bạn đang tạo nhiều yêu cầu trong một khoảng thời gian ngắn, vui lòng thử lại sau 5 giây", HttpStatus.BAD_REQUEST),
 
     // KANJI
     EMPTY_KANJI(1025, "Kanji không được để trống, mời nhập lại", HttpStatus.BAD_REQUEST),
@@ -92,6 +98,7 @@ public enum ErrorCode {
     TOKEN_HAS_EXPIRED(1043, "Token đã hết hạn", HttpStatus.BAD_REQUEST),
     INVALID_TOKEN(1079, "Token không hợp lệ", HttpStatus.BAD_REQUEST),
     TOKEN_CANNOT_EMPTY(1080, "Token hoặc refresh token không được bỏ trống", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_REUSED(1991, "Refresh token đã bị thu hồi hoặc hết hạn", HttpStatus.BAD_REQUEST),
 
     // ROLE
     ROLE_HAS_NO_NAME(1046, "Tên của role không được để trống", HttpStatus.BAD_REQUEST),

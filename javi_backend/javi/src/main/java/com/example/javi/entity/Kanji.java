@@ -38,6 +38,9 @@ public class Kanji extends BaseEntity {
     @Enumerated(EnumType.STRING)
     JlptLevel level;
 
+    @Column(name = "gif_url")
+    String gifUrl;
+
     @ManyToMany(mappedBy = "kanjis")
     @JsonIgnore
     List<Vocabularies> vocabularies;

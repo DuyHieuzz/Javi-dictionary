@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.multipart.MultipartException;
 
 import com.example.javi.dto.response.ApiResponse;
 
@@ -100,6 +101,17 @@ public class GlobalExceptionHandler {
 
         apiResponse.setCode(ErrorCode.UNAUTHORIZED.getCode());
         apiResponse.setMessage(ErrorCode.UNAUTHORIZED.getMessage());
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiResponse<?>> handleMultipart(MultipartException ex) {
+        ApiResponse<?> apiResponse = new ApiResponse<>();
+
+        apiResponse.setCode(ErrorCode.INVALID_MULTIPART_FILE.getCode());
+        apiResponse.setMessage(ErrorCode.INVALID_MULTIPART_FILE.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
     }

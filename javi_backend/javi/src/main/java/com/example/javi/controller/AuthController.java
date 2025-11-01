@@ -1,10 +1,12 @@
 package com.example.javi.controller;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +22,10 @@ import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.LoginResponse;
 import com.example.javi.dto.response.UserResponse;
 import com.example.javi.entity.TokenType;
-import com.example.javi.service.*;
+import com.example.javi.service.AuthService;
+import com.example.javi.service.CookieService;
+import com.example.javi.service.GoogleService;
+import com.example.javi.service.VerificationTokenService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,14 +34,16 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("${api.prefix}/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
+// @CrossOrigin("*")
 public class AuthController {
     VerificationTokenService verificationTokenService;
     AuthService authService;
     CookieService cookieService;
+    GoogleService googleService;
 
     @NonFinal
     @Value("${jwt.refreshable-duration}")
@@ -65,16 +72,41 @@ public class AuthController {
                 .body(result);
     }
 
+    @GetMapping("/google")
+    public void redirectToGoogle(HttpServletResponse response) throws IOException {
+        String redirectUri = googleService.buildAuthorizationUrl();
+        response.sendRedirect(redirectUri);
+    }
+
+    @GetMapping("/google/callback")
+    public void handleGoogleCallback(
+            @RequestParam("code") String code, HttpServletResponse response, HttpServletRequest httpRequest)
+            throws IOException {
+        String userAgent = httpRequest.getHeader("User-Agent");
+        LoginResponse loginResponse = authService.loginWithGoogle(code, userAgent);
+
+        // Set cookie refresh token
+        ResponseCookie cookie =
+                cookieService.createRefreshTokenCookie(loginResponse.getRefreshToken(), refreshableDuration);
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        // Redirect FE (sau khi login xong)
+        response.sendRedirect(
+                "http://localhost:5173/oauth2/callback/google?refreshToken=" + loginResponse.getRefreshToken());
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refreshToken(
-            @CookieValue(value = "refresh_token", required = false) String refreshToken) {
+            HttpServletResponse response, @CookieValue(value = "refresh_token", required = false) String refreshToken) {
+        log.info(">>> refresh_token cookie: {}", refreshToken);
         LoginResponse result = authService.refreshToken(refreshToken);
 
         ResponseCookie cookie = cookieService.createRefreshTokenCookie(result.getRefreshToken(), refreshableDuration);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(result);
+        // Ghi đè cookie cũ bằng header trực tiếp
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/logout")

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import com.example.javi.dto.response.KanjiDecompositionResult;
 import com.example.javi.dto.response.KanjiDetailResponse;
 import com.example.javi.dto.response.KanjiResponse;
 import com.example.javi.dto.response.PageWrapper;
@@ -23,6 +24,7 @@ public class KanjiCacheService {
     RedisHelper redisHelper;
     String PREFIX = "kanji:";
     Duration TTL = Duration.ofHours(6);
+    Duration AI_TTL = Duration.ofHours(48);
 
     // Cache kanjiDetailResponse
     public KanjiDetailResponse getKanjiDetail(String characterName) {
@@ -72,5 +74,18 @@ public class KanjiCacheService {
 
     public void clearAllKeywordCache() {
         redisHelper.deleteByPattern(PREFIX + "keyword:*");
+    }
+
+    // Cache kết quả phân tích kanji
+    public KanjiDecompositionResult getKanjiByAi(String keyword) {
+        return redisHelper.find(PREFIX + "ai:" + keyword.toUpperCase(), KanjiDecompositionResult.class);
+    }
+
+    public void saveKanjiByAi(String keyword, KanjiDecompositionResult data) {
+        redisHelper.save(PREFIX + "ai:" + keyword.toUpperCase(), data, AI_TTL);
+    }
+
+    public void deleteKanjiByAi(String keyword) {
+        redisHelper.delete(PREFIX + "ai:" + keyword.toUpperCase());
     }
 }

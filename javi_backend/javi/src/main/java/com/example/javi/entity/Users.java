@@ -75,6 +75,13 @@ public class Users extends BaseEntity {
     @Enumerated(EnumType.STRING)
     JlptLevel level;
 
+    @Column(unique = true, name = "google_account_id")
+    private String googleAccountId;
+
+    @Column(name = "login_provider")
+    @Enumerated(EnumType.STRING)
+    private AuthProvider loginProvider = AuthProvider.LOCAL;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     List<Comment> comments;
 

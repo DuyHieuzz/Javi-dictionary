@@ -53,6 +53,9 @@ public class SecurityConfig {
 
         String[] whiteList = {
             "/",
+            "/auth/google",
+            "/auth/google/callback",
+            "oauth2/callback/google",
             "/api/v1/auth/login",
             "/api/v1/auth/refresh",
             "/api/v1/users/register",

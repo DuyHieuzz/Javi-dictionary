@@ -4,6 +4,10 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.retry.NonTransientAiException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.javi.dto.request.GrammarCheckSourceText;
 import com.example.javi.dto.request.TranslateRequest;
 import com.example.javi.dto.response.GrammarCheckResult;
+import com.example.javi.dto.response.KanjiDecompositionResult;
 import com.example.javi.dto.response.TranslateResponse;
 import com.example.javi.entity.AccountType;
 import com.example.javi.entity.EngineType;
@@ -24,6 +29,7 @@ import com.example.javi.service.GeminiService;
 import com.example.javi.service.OcrService;
 import com.example.javi.service.UsersService;
 import com.example.javi.utils.SecurityUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
@@ -42,6 +48,7 @@ public class GeminiServiceImpl implements GeminiService {
     TranslationRepository translationRepository;
     OcrService ocrService;
     UsersService usersService;
+    ObjectMapper objectMapper;
 
     public GeminiServiceImpl(
             ChatClient.Builder builder,
@@ -49,13 +56,15 @@ public class GeminiServiceImpl implements GeminiService {
             TranslationMapper translationMapper,
             TranslationRepository translationRepository,
             OcrService ocrService,
-            UsersService usersService) {
+            UsersService usersService,
+            ObjectMapper objectMapper) {
         this.chatClient = builder.build();
         this.securityUtil = securityUtil;
         this.translationMapper = translationMapper;
         this.translationRepository = translationRepository;
         this.ocrService = ocrService;
         this.usersService = usersService;
+        this.objectMapper = objectMapper;
     }
 
     LanguageDetector detector = LanguageDetectorBuilder.fromLanguages(
@@ -136,6 +145,11 @@ public class GeminiServiceImpl implements GeminiService {
         return translateText(translateRequest);
     }
 
+    @Retryable(
+            value = {org.springframework.ai.retry.NonTransientAiException.class},
+            maxAttempts = 3, // tổng cộng 3 lần thử
+            backoff = @Backoff(delay = 2000, multiplier = 2) // delay tăng dần 2s, 4s
+            )
     @Override
     public String explainWord(String word) {
         String prompt = String.format(
@@ -165,6 +179,16 @@ public class GeminiServiceImpl implements GeminiService {
         return result;
     }
 
+    /**
+     * Khi retry 3 lần vẫn lỗi → Spring tự động gọi hàm này.
+     * Phải đúng loại exception như trong @Retryable.
+     */
+    @Recover
+    public String recoverFromGeminiError(NonTransientAiException ex, String word) {
+        log.error("[GEMINI FAIL] Không thể giải thích từ '{}': {}", word, ex.getMessage());
+        return "Hệ thống đang quá tải. Vui lòng thử lại sau ít phút.";
+    }
+
     @Override
     public GrammarCheckResult checkGrammar(GrammarCheckSourceText request) {
         Users currentUser = securityUtil.getCurrentUser();
@@ -177,14 +201,14 @@ public class GeminiServiceImpl implements GeminiService {
 
         String prompt = String.format(
                 """
-				Bạn là chuyên gia ngữ pháp tiếng Nhật.
-				Hãy kiểm tra và sửa ngữ pháp của đoạn văn sau, sau đó giải thích các lỗi một cách dễ hiểu vì sao phải sửa.
-				Yêu cầu quan trọng:
-				1. Nếu có lỗi, giải thích (explanation) nên trình bày rõ ràng theo từng câu
-				hoặc cấu trúc ngữ pháp, nêu rõ và chi tiết vì sao phải sửa — không liệt kê từng chữ,
-				không giải thích bằng ngôn ngữ đoạn văn cần kiểm tra ngữ pháp.
-				2. Các phần (explanation, mean) phải được viết bằng ngôn ngữ %s.
-				""",
+						Bạn là chuyên gia ngữ pháp tiếng Nhật.
+						Hãy kiểm tra và sửa ngữ pháp của đoạn văn sau, sau đó giải thích các lỗi một cách dễ hiểu vì sao phải sửa.
+						Yêu cầu quan trọng:
+						1. Nếu có lỗi, giải thích (explanation) nên trình bày rõ ràng theo từng câu
+						hoặc cấu trúc ngữ pháp, nêu rõ và chi tiết vì sao phải sửa — không liệt kê từng chữ,
+						không giải thích bằng ngôn ngữ đoạn văn cần kiểm tra ngữ pháp.
+						2. Các phần (explanation, mean) phải được viết bằng ngôn ngữ %s.
+						""",
                 request.getTargetLang());
 
         SystemMessage system = new SystemMessage(prompt);
@@ -192,5 +216,95 @@ public class GeminiServiceImpl implements GeminiService {
         Prompt grammarPrompt = new Prompt(system, user);
 
         return chatClient.prompt(grammarPrompt).call().entity(GrammarCheckResult.class);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public KanjiDecompositionResult analyzeKanjiStructure(String kanji) {
+        Users user = securityUtil.getCurrentUser();
+
+        if (user.getAccountType() != AccountType.PREMIUM) {
+            throw new AppException(ErrorCode.REQUIRE_PREMIUM);
+        }
+
+        String prompt =
+                """
+		Bạn là chuyên gia Hán tự. Hãy PHÂN TÍCH CẤU TẠO chữ: %s
+		YÊU CẦU:
+		- Trả JSON HỢP LỆ, không kèm chữ nào ngoài JSON.
+		- Đi theo cây phân rã từ chữ gốc xuống các bộ cấu thành chữ đó.
+		- Không được để "components": null → luôn là mảng [].
+		- Mỗi node bắt buộc có:
+		kanji: string
+		sinoViName: string (Cách đọc hán tự của Việt Nam)
+		explanation: string  (phải mô tả chi tiết và giàu hình ảnh, Vai trò bộ này trong cấu tạo, Ý nghĩa gốc và nghĩa mở rộng hiện đại. Gợi ý nhớ, ví dụ liên hệ (nếu có))
+		components: ComponentNode[]
+
+		ĐỘ SÂU:
+		- Tách tối thiểu 2 cấp, tối đa 3 cấp (hoặc cho đến khi gặp bộ cơ bản).
+		- Luôn bọc các giá trị chuỗi trong dấu ngoặc kép ("...").
+		- Không sinh markdown hoặc ```json.
+
+		MẪU JSON:
+		{
+		"kanji": "例",
+		"sinoViName": "LỆ",
+		"explanation": "Chữ 例 gồm 亻 (người) + 列 (liệt: xếp hàng), chỉ người được chọn làm mẫu.",
+		"components": [
+			{ "kanji": "亻", "sinoViName": "NHÂN", "explanation": "", "components": [] },
+			{
+			"kanji": "列", "sinoViName": "LIỆT", "explanation": "",
+			"components": [
+				{ "kanji": "刂", "sinoViName": "ĐAO", "explanation": "", "components": [] },
+				{
+				"kanji": "歹", "sinoViName": "NGẠT, ĐÃI", "explanation": "",
+				"components": [
+					{ "kanji": "一", "sinoViName": "NHẤT", "explanation": "", "components": [] },
+					{ "kanji": "夕", "sinoViName": "TỊCH", "explanation": "", "components": [] }
+				]
+				}
+			]
+			}
+		]
+		}
+
+		Chỉ trả về JSON hợp lệ theo đúng schema trên cho chữ: %s
+		"""
+                        .formatted(kanji, kanji);
+
+        try {
+            // Bổ sung SystemMessage + UserMessage để Gemini hiểu
+            SystemMessage systemMsg = new SystemMessage("Bạn là chuyên gia Hán tự, luôn trả về JSON hợp lệ.");
+            UserMessage userMsg = new UserMessage(prompt);
+            Prompt fullPrompt = new Prompt(systemMsg, userMsg);
+
+            String rawResponse = chatClient.prompt(fullPrompt).call().content();
+
+            // Sửa lỗi cú pháp JSON (Gemini hay quên ngoặc kép quanh ký tự Hán)
+            String fixedJson = sanitizeJson(rawResponse);
+
+            return objectMapper.readValue(fixedJson, KanjiDecompositionResult.class);
+
+        } catch (Exception e) {
+            log.error("Lỗi parse JSON Gemini ({}): {}", kanji, e.getMessage());
+            throw new AppException(ErrorCode.INVALID_JSON_FROM_AI);
+        }
+    }
+
+    /**
+     * Làm sạch JSON trả về từ Gemini — thêm ngoặc kép quanh ký tự Hán bị bỏ sót
+     * và loại bỏ phần markdown như ```json
+     */
+    private String sanitizeJson(String raw) {
+        if (raw == null) return "";
+
+        // Bỏ phần ```json hoặc ``` nếu có
+        String fixed = raw.replaceAll("(?s)```(json)?", "").trim();
+
+        // Thêm ngoặc kép quanh ký tự Hán nếu bị bỏ sót: "kanji": 豆 -> "kanji": "豆"
+        fixed = fixed.replaceAll("\"kanji\"\\s*:\\s*([^\\s\"{}\\[\\],])", "\"kanji\": \"$1\"");
+
+        // Đảm bảo JSON sạch gọn
+        return fixed.trim();
     }
 }

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { IoSearchOutline } from "react-icons/io5";
-import * as wanakana from "wanakana"; // ✅ thêm thư viện
+import * as wanakana from "wanakana";
 
 interface SearchBarProps {
     onSubmit?: (keyword: string) => void;
@@ -11,7 +12,15 @@ export default function SearchBar({
     onSubmit,
     activeTab = "word",
 }: SearchBarProps) {
-    const [keyword, setKeyword] = useState("");
+    const { keyword: paramKeyword } = useParams<{ keyword?: string }>();
+    const [keyword, setKeyword] = useState(paramKeyword || "");
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // 🧠 Đồng bộ input khi URL thay đổi
+    useEffect(() => {
+        if (paramKeyword !== undefined) setKeyword(paramKeyword);
+    }, [paramKeyword]);
 
     const placeholderMap = {
         word: "日本, nihon, Nhật Bản",
@@ -19,21 +28,18 @@ export default function SearchBar({
         grammar: "Cấu trúc ngữ pháp",
     };
 
-    // 🧠 Logic convert Romaji → Hiragana / Katakana
+    // 🧠 Chuyển Romaji → Kana
     const convertInput = (value: string): string => {
         const trimmed = value.trim();
         if (!trimmed) return "";
 
         if (wanakana.isRomaji(trimmed)) {
-            // Nếu toàn chữ in hoa (Romaji) → Katakana
             if (/^[A-Z\s]+$/.test(trimmed)) {
                 return wanakana.toKatakana(trimmed.toLowerCase());
             }
-            // Còn lại → Hiragana
             return wanakana.toHiragana(trimmed);
         }
 
-        // Không phải romaji (đã là kana hoặc tiếng Việt)
         return trimmed;
     };
 
@@ -43,12 +49,25 @@ export default function SearchBar({
         const converted = convertInput(keyword);
         setKeyword(converted);
 
-        if (converted.trim() && onSubmit) onSubmit(converted.trim());
+        if (!converted.trim()) return;
+
+        // ✅ gọi onSubmit nếu có (để logic ngoài vẫn hoạt động)
+        if (onSubmit) onSubmit(converted.trim());
+
+        // ✅ ép Router cập nhật URL kể cả khi giống path cũ
+        const newPath = `/search/${activeTab}/${encodeURIComponent(
+            converted.trim()
+        )}`;
+        if (location.pathname === newPath) {
+            // nếu trùng path → thêm timestamp param để ép reload
+            navigate(`${newPath}?t=${Date.now()}`, { replace: true });
+        } else {
+            navigate(newPath);
+        }
     };
 
     return (
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
-            {/* Wrapper chung để đồng bộ chiều cao */}
             <div className="flex flex-nowrap items-center w-full gap-2 h-[52px] md:h-[56px]">
                 {/* Select ngôn ngữ */}
                 <select className="md:hidden flex-shrink-0 bg-[#3f67d6] text-white text-sm font-medium px-3 md:px-4 h-full rounded-xl outline-none hover:bg-[#365cc9] transition appearance-none">
@@ -63,7 +82,7 @@ export default function SearchBar({
 
                 {/* Ô tìm kiếm */}
                 <div className="relative flex-1 h-full">
-                    {/* 🔍 Icon tìm kiếm */}
+                    {/* Icon tìm kiếm */}
                     <button
                         type="submit"
                         className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-600 p-2 transition"
@@ -76,7 +95,7 @@ export default function SearchBar({
                         value={keyword}
                         onChange={(e) => setKeyword(e.target.value)}
                         placeholder={placeholderMap[activeTab]}
-                        className="w-full h-full border border-blue-400 rounded-xl pl-10 pr-3 md:pr-[96px] text-[15px] md:text-base text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-400 transition"
+                        className="w-full h-full border border-blue-400 rounded-xl pl-10 pr-3 md:pr-[96px] text-[15px] md:text-base text-gray-800 placeholder-gray-400 outline-none focus:ring-0 focus:outline-none transition"
                     />
 
                     {/* Nút tìm kiếm bên phải */}

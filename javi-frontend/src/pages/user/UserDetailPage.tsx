@@ -82,7 +82,9 @@ export default function UserDetailPage() {
     if (!user) return null;
 
     const isPublic = Boolean(username);
-    const isSelf = !isPublic && currentUser?.id === user?.id;
+    const isSelf =
+        (isPublic && username === currentUser?.username) ||
+        (!isPublic && currentUser?.id === user?.id);
 
     return (
         <div className="flex flex-col lg:flex-row gap-4">

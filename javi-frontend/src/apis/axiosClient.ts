@@ -1,7 +1,7 @@
-// src/apis/axiosClient.ts
 import axios from "axios";
 import { message } from "antd";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { callRefreshToken } from "./authApi";
 import { useGlobalErrorStore } from "@/stores/useGlobalErrorStore";
 
 const axiosClient = axios.create({
@@ -39,23 +39,34 @@ axiosClient.interceptors.response.use(
 
     // REFRESH TOKEN LOGIC (chuẩn theo ILoginResponse)
     if (status === 401) {
-      try {
-        const { callRefreshToken } = await import("@/apis/authApi");
-        const { setAuth, clearAuth } = useAuthStore.getState();
+      const originalRequest = error.config;
 
-        // BE trả trực tiếp ILoginResponse
+      // Nếu request chính là /auth/refresh hoặc đã retry rồi thì không thử lại nữa
+      if (originalRequest._retry || originalRequest.url?.includes("/auth/refresh")) {
+        const { clearAuth } = useAuthStore.getState();
+        clearAuth();
+        message.warning("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        // Gọi API refresh token — BE trả trực tiếp ILoginResponse
         const res = await callRefreshToken();
 
         if (res?.data?.token && res?.data?.user) {
+          // Lấy lại hàm setAuth trực tiếp từ store mỗi lần gọi
+          const { setAuth } = useAuthStore.getState();
+
           // Cập nhật lại auth store bằng ILoginResponse thật
           setAuth(res.data);
 
           // Gọi lại request cũ với token mới
-          const originalRequest = error.config;
           originalRequest.headers["Authorization"] = `Bearer ${res.data.token}`;
           return axiosClient(originalRequest);
         }
-      } catch {
+      } catch (e) {
         // Refresh thất bại → xóa auth
         const { clearAuth } = useAuthStore.getState();
         clearAuth();

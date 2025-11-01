@@ -13,4 +13,6 @@ public interface TokenService {
     Token refreshTokenUnified(String refreshToken);
 
     void revokeRefreshToken(String refreshToken);
+
+    void cleanupOldTokens(Users user);
 }

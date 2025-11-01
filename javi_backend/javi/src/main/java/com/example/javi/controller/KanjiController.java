@@ -12,11 +12,14 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.javi.dto.request.KanjiRequest;
 import com.example.javi.dto.response.ApiResponse;
+import com.example.javi.dto.response.KanjiDecompositionResult;
 import com.example.javi.dto.response.KanjiDetailResponse;
 import com.example.javi.dto.response.KanjiResponse;
+import com.example.javi.entity.AccountType;
 import com.example.javi.entity.EntityType;
 import com.example.javi.entity.Kanji;
 import com.example.javi.entity.Users;
@@ -64,6 +67,48 @@ public class KanjiController {
         kanjiService.deleteKanjiByCharacterName(characterName);
         return ApiResponse.<Void>builder()
                 .message("Xóa kanji" + characterName + " thành công")
+                .build();
+    }
+
+    @PutMapping("/{character}/gif")
+    @PreAuthorize("hasAnyAuthority('CREATE_KANJI','UPDATE_KANJI')")
+    public ApiResponse<KanjiResponse> uploadKanjiGif(
+            @PathVariable String character, @RequestParam("file") MultipartFile file) {
+        if (!ValidationUtils.isKanji(character)) {
+            throw new AppException(ErrorCode.NOT_KANJI);
+        }
+        if (!ValidationUtils.isSingleKanji(character)) {
+            throw new AppException(ErrorCode.NOT_SINGLE_KANJI);
+        }
+
+        KanjiResponse kanjiResponse = kanjiService.updateKanjiGif(file, character);
+        return ApiResponse.<KanjiResponse>builder()
+                .message("Cập nhật GIF cho kanji '" + character + "' thành công")
+                .result(kanjiResponse)
+                .build();
+    }
+
+    @GetMapping("/analyze/{character}")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<KanjiDecompositionResult> analyzeKanji(@PathVariable String character) {
+        if (!ValidationUtils.isKanji(character)) {
+            throw new AppException(ErrorCode.NOT_KANJI);
+        }
+        if (!ValidationUtils.isSingleKanji(character)) {
+            throw new AppException(ErrorCode.NOT_SINGLE_KANJI);
+        }
+        Users user = securityUtil.getCurrentUser();
+        if (user == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        if (user.getAccountType() != AccountType.PREMIUM) {
+            throw new AppException(ErrorCode.REQUIRE_PREMIUM);
+        }
+
+        KanjiDecompositionResult result = kanjiService.analyzeKanji(character);
+        return ApiResponse.<KanjiDecompositionResult>builder()
+                .message("Phân tích cấu trúc Kanji thành công")
+                .result(result)
                 .build();
     }
 

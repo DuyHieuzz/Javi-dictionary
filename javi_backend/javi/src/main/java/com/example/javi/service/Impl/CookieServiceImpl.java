@@ -21,7 +21,7 @@ public class CookieServiceImpl implements CookieService {
     String PATH = "/";
     boolean SECURE = true;
     boolean HTTP_ONLY = true;
-    String SAME_SITE = "Strict";
+    String SAME_SITE = "None";
 
     @Override
     @Transactional

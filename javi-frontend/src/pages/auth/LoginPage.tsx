@@ -82,7 +82,19 @@ export default function LoginPage() {
                 <h2 className="text-xl mb-5">Đăng nhập với</h2>
                 {/* Đăng nhập Google */}
                 <button
-                    onClick={handleGoogleLogin}
+                    // onClick={handleGoogleLogin}
+                    // onClick={() => {
+                    //     const redirectUri =
+                    //         "http://localhost:5173/oauth2/callback/google";
+                    //     window.location.href = `${
+                    //         import.meta.env.VITE_API_URL
+                    //     }/auth/google?redirect_uri=${redirectUri}`;
+                    // }}
+                    onClick={() => {
+                        window.location.href = `${
+                            import.meta.env.VITE_API_URL
+                        }/auth/google`;
+                    }}
                     className="w-full max-w-md flex items-center justify-center border border-gray-300 rounded-lg py-3 mb-8 hover:bg-gray-50 transition"
                 >
                     <FcGoogle className="text-3xl mr-2" />

@@ -18,6 +18,7 @@ public class KanjiDetailResponse {
     List<String> onyomi;
     Integer stroke;
     String videoUrl;
+    String gifUrl;
     String meaning;
     String level;
 }

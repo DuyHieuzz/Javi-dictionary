@@ -21,7 +21,11 @@ export const useAuthStore = create<AuthState>()(
           user: res.user,
         }),
 
-      clearAuth: () => set({ token: null, user: null }),
+      clearAuth: () => {
+        set({ token: null, user: null });
+        document.cookie =
+          "refresh_token=; Max-Age=0; path=/; secure; samesite=None";
+      },
     }),
     { name: "auth-storage" }
   )

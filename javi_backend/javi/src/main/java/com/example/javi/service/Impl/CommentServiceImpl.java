@@ -3,8 +3,7 @@ package com.example.javi.service.Impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -60,8 +59,8 @@ public class CommentServiceImpl implements CommentService {
                     .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
         }
 
-        String sanitizedContent =
-                Jsoup.clean(request.getContent(), Safelist.none()).trim();
+        String rawContent = request.getContent().replace("\r\n", "\n");
+        String sanitizedContent = StringEscapeUtils.escapeHtml4(rawContent);
 
         Comment comment = Comment.builder()
                 .user(currentUser)
@@ -100,8 +99,8 @@ public class CommentServiceImpl implements CommentService {
         }
 
         // Làm sạch nội dung trước khi lưu
-        String sanitizedContent =
-                Jsoup.clean(request.getContent(), Safelist.none()).trim();
+        String rawContent = request.getContent().replace("\r\n", "\n");
+        String sanitizedContent = StringEscapeUtils.escapeHtml4(rawContent);
         comment.setContent(sanitizedContent);
 
         commentRepository.save(comment);

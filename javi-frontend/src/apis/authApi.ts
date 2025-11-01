@@ -15,10 +15,22 @@ export const callLogin = (email: string, password: string) => {
   return axiosClient.post<ILoginResponse>("/auth/login", { email, password });
 };
 
+export const callLoginWithGoogle = (code: string) => {
+  return axiosClient.post<ILoginResponse>(`/auth/google`,{ code }  // mã code từ Google redirect
+  );
+};
+
 /** Refresh access token */
+
 export const callRefreshToken = () => {
   return axiosClient.post<ILoginResponse>("/auth/refresh", {});
 };
+
+
+// export const callRefreshToken = (refreshToken : string | null) => {
+//   return axiosClient.post<ILoginResponse>("/auth/refresh/" + refreshToken, {});
+// };
+
 
 /** Đăng xuất */
 export const callLogout = () => {
