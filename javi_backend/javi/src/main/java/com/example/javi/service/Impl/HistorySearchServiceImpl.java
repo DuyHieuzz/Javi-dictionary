@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.dto.response.HistorySearchResponse;
 import com.example.javi.entity.EntityType;
@@ -27,29 +28,45 @@ public class HistorySearchServiceImpl implements HistorySearchService {
     HistorySearchRepository historySearchRepository;
     HistorySearchMapper historySearchMapper;
 
+    int MAX_HISTORY_PER_USER = 300;
+
+    private String normalize(String keyword) {
+        if (keyword == null) return null;
+        return keyword.trim().replaceAll("\\s+", " ");
+    }
+
     @Override
+    @Transactional
     public HistorySearchResponse saveHistoryByKeyword(Users user, String keyword, EntityType type) {
+        if (user == null) return null;
+        String normalized = normalize(keyword);
+        if (normalized == null || normalized.isEmpty()) return null;
         HistorySearch history = HistorySearch.builder()
                 .user(user)
-                .keyword(keyword)
+                .keyword(normalized)
                 .entityType(type)
                 .build();
 
         historySearchRepository.save(history);
+        historySearchRepository.trimOldHistory(user.getId(), MAX_HISTORY_PER_USER);
         return historySearchMapper.toHistorySearchResponse(history);
     }
 
     @Override
+    @Transactional
     public HistorySearchResponse saveHistoryByEntity(Users user, Long entityId, EntityType type, String keyword) {
+        String normalized = normalize(keyword);
+        if (entityId == null) return null;
+
         HistorySearch history = HistorySearch.builder()
                 .user(user)
                 .entityId(entityId)
                 .entityType(type)
-                .keyword(keyword)
+                .keyword(normalized)
                 .build();
 
         historySearchRepository.save(history);
-
+        historySearchRepository.trimOldHistory(user.getId(), MAX_HISTORY_PER_USER);
         return historySearchMapper.toHistorySearchResponse(history);
     }
 

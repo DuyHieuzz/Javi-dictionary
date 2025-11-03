@@ -1,6 +1,5 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
-import SearchHomeContent from "../../components/search/SearchHomeContent";
 import RecentComments from "../../components/comment/RecentComments";
 import SearchSection from "@/components/search/SearchSection";
 
@@ -30,7 +29,7 @@ export default function SearchHome() {
                 <SearchSection onSubmit={handleSearch} activeTab={activeTab} />
 
                 <div className="flex flex-col gap-6">
-                    <SearchHomeContent />
+                    <Outlet />
                 </div>
             </div>
 

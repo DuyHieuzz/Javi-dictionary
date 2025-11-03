@@ -172,7 +172,7 @@ export default function Comment({ entityType, entityId }: Props) {
             </h3>
 
             {/* Danh sách comment */}
-            <div className="flex flex-col divide-y divide-gray-200 min-h-[120px]">
+            <div className="flex flex-col divide-y divide-gray-200 min-h-[60px]">
                 {loading ? (
                     <div className="flex justify-center py-6">
                         <Spin />

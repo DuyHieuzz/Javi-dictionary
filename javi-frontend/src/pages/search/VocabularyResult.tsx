@@ -38,13 +38,25 @@ export default function VocabularyResult() {
         setKanjiDetails([]);
         setLoadingList(true);
 
-        callSearchVocabulary(keyword)
+        callSearchVocabulary(keyword, { saveHistory: true })
             .then((res: AxiosResponse<IBackendRes<IVocabResponse[]>>) => {
                 const list = res.data?.result || [];
                 setVocabList(list);
                 if (list.length > 0) {
-                    // tự động chọn từ đầu tiên
-                    setSelectedVocab(list[0].word);
+                    // Tự động chọn từ đầu tiên sau khi tra → lưu lịch sử chi tiết đầu tiên
+                    const firstWord = list[0].word;
+                    setSelectedVocab(firstWord);
+
+                    callGetVocabularyByWord(firstWord, { saveHistory: true })
+                        .then((detailRes) => {
+                            setVocabDetail(detailRes.data?.result || null);
+                        })
+                        .catch((err) => {
+                            console.error(
+                                "Lỗi khi lấy chi tiết từ đầu tiên:",
+                                err
+                            );
+                        });
                 }
             })
             .catch((err) => {
@@ -64,7 +76,7 @@ export default function VocabularyResult() {
         setKanjiDetails([]);
         setLoadingDetail(true);
 
-        callGetVocabularyByWord(selectedVocab)
+        callGetVocabularyByWord(selectedVocab, { saveHistory: true })
             .then((res: AxiosResponse<IBackendRes<IVocabResponse>>) => {
                 const data = res.data?.result;
                 setVocabDetail(data || null);

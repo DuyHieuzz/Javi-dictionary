@@ -131,6 +131,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         vocabulariesCacheService.clearAllPages();
         log.info("[CACHE CLEAR] Xóa toàn bộ cache page sau khi thêm từ mới");
         vocabulariesCacheService.save(vocabResponse.getWord(), vocabResponse);
+        vocabulariesCacheService.clearAllSearches();
         return vocabResponse;
     }
 
@@ -210,6 +211,7 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         log.info("[CACHE CLEAR] Xóa toàn bộ cache page sau khi cập nhật từ: {}", vocabResponse.getWord());
         vocabulariesCacheService.deleteExplain(vocabResponse.getWord());
         log.info("[CACHE DELETE] Xóa cache explain của từ '{}'", vocabResponse.getWord());
+        vocabulariesCacheService.clearAllSearches();
 
         return vocabResponse;
     }
@@ -219,30 +221,58 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return List.of();
         }
+
+        String normalized = keyword.trim();
+
+        List<VocabResponse> cached = vocabulariesCacheService.getSearch(normalized);
+        if (cached != null) {
+            log.info("[CACHE HIT] vocab keyword: {}", normalized);
+            return cached;
+        }
+        log.info("[CACHE MISS] Vào DB tìm keyword: {}", normalized);
+
+        List<VocabResponse> resultList;
         //  Nếu chứa kanji sẽ tìm chính xác trong word trước
-        if (ValidationUtils.containsKanji(keyword.trim())) {
+        if (ValidationUtils.containsKanji(normalized)) {
             // Tìm kiếm chính xác (EQUAL) - chỉ trả về một kết quả nếu khớp 100%
-            Optional<Vocabularies> exactResult = vocabulariesRepository.findByWord(keyword.trim());
+            Optional<Vocabularies> exactResult = vocabulariesRepository.findByWord(normalized);
             if (exactResult.isPresent()) {
-                return List.of(vocabulariesMapper.toDto(exactResult.get()));
+                resultList = List.of(vocabulariesMapper.toDto(exactResult.get()));
+
+                // [CACHE SAVE] lưu lại cache cho kết quả exact match
+                vocabulariesCacheService.saveSearch(normalized, resultList);
+                log.info("[CACHE SAVE] vocab keyword:{}", normalized);
+                return resultList;
             }
 
             // Không có chính xác sẽ tìm kiếm like bởi có thể user điền thiếu từ
-            List<Vocabularies> likeResult = vocabulariesRepository.findByWordContainingIgnoreCase(keyword.trim());
+            List<Vocabularies> likeResult = vocabulariesRepository.findByWordContainingIgnoreCase(normalized);
             if (!likeResult.isEmpty()) {
-                return likeResult.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());
+                resultList = likeResult.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());
+
+                // [CACHE SAVE] lưu lại cache cho kết quả LIKE
+                vocabulariesCacheService.saveSearch(normalized, resultList);
+                log.info("[CACHE SAVE] vocab keyword:{}", normalized);
+                return resultList;
             }
+
             throw new AppException(ErrorCode.WORD_NOT_FOUND);
         }
 
         // Không có Kanji (là Hiragana/Tiếng Việt), tìm kiếm MỜ
         // Chạy truy vấn like trên Hiragana và MeaningVn
-        List<Vocabularies> fuzzyResults = vocabulariesRepository.findFuzzySearch(keyword.trim());
+        List<Vocabularies> fuzzyResults = vocabulariesRepository.findFuzzySearch(normalized);
 
         if (fuzzyResults.isEmpty()) {
             throw new AppException(ErrorCode.WORD_NOT_FOUND);
         }
-        return fuzzyResults.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());
+
+        resultList = fuzzyResults.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());
+
+        // [CACHE SAVE] lưu lại cache cho kết quả fuzzy search
+        vocabulariesCacheService.saveSearch(normalized, resultList);
+        log.info("[CACHE SAVE] vocab keyword:{}", normalized);
+        return resultList;
     }
 
     @Override
@@ -371,5 +401,6 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         log.info("[CACHE DELETE] Đã xóa cache từ '{}' và toàn bộ cache page", vocabularies.getWord());
         vocabulariesCacheService.deleteExplain(vocabularies.getWord());
         log.info("[CACHE DELETE] Đã xóa cache explain của từ: {}", vocabularies.getWord());
+        vocabulariesCacheService.clearAllSearches();
     }
 }

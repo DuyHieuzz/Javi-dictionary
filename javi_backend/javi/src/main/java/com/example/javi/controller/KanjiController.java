@@ -113,9 +113,12 @@ public class KanjiController {
     }
 
     @GetMapping("/search")
-    public ApiResponse<List<KanjiResponse>> searchKanji(@RequestParam String keyword, Authentication authentication) {
+    public ApiResponse<List<KanjiResponse>> searchKanji(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
+            Authentication authentication) {
         List<KanjiResponse> response = kanjiService.getKanjiByKeyWord(keyword.toUpperCase());
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, keyword, EntityType.KANJI);
         }
@@ -127,12 +130,14 @@ public class KanjiController {
 
     @GetMapping("/search/get-mean")
     public ApiResponse<KanjiDetailResponse> searchDetailKanji(
-            @RequestParam String characterName, Authentication authentication) {
+            @RequestParam String characterName,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
+            Authentication authentication) {
         if (!ValidationUtils.isKanji(characterName.trim())) {
             throw new AppException(ErrorCode.NOT_KANJI);
         }
         KanjiDetailResponse kanjiDetailResponse = kanjiService.getKanjiDetailByCharacterName(characterName);
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByEntity(
                     user, kanjiDetailResponse.getId(), EntityType.KANJI, kanjiDetailResponse.getCharacterName());

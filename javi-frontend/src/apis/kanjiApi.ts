@@ -19,18 +19,17 @@ export const callDeleteKanji = (characterName: string) => {
 };
 
 /** Tìm kiếm Kanji theo keyword (dùng cho thanh search chính) */
-export const callSearchKanji = (keyword: string) => {
+export const callSearchKanji = (keyword: string, opts?: { saveHistory?: boolean }) => {
   return axiosClient.get<IBackendRes<IKanjiResponse[]>>(`/kanji/search`, {
-    params: { keyword },
+    params: { keyword, saveHistory: opts?.saveHistory ?? false },
   });
 };
 
 /** Lấy chi tiết Kanji theo characterName */
-export const callGetKanjiDetail = (characterName: string) => {
-  return axiosClient.get<IBackendRes<IKanjiDetailResponse>>(
-    `/kanji/search/get-mean`,
-    { params: { characterName } }
-  );
+export const callGetKanjiDetail = (characterName: string, opts?: { saveHistory?: boolean }) => {
+  return axiosClient.get<IBackendRes<IKanjiDetailResponse>>(`/kanji/search/get-mean`, {
+    params: { characterName, saveHistory: opts?.saveHistory ?? false },
+  });
 };
 
 /** Phân tích Kanji */

@@ -26,13 +26,25 @@ export default function KanjiResult() {
         setSelectedKanji(null);
         setLoadingList(true);
 
-        callSearchKanji(keyword)
+        callSearchKanji(keyword, { saveHistory: true })
             .then((res) => {
                 const list = res.data?.result || [];
                 setKanjiList(list);
                 if (list.length > 0) {
-                    // tự động chọn kanji đầu tiên
-                    setSelectedKanji(list[0].characterName);
+                    // Tự động chọn kanji đầu tiên sau khi tra → lưu lịch sử chi tiết đầu tiên
+                    const firstKanji = list[0].characterName;
+                    setSelectedKanji(firstKanji);
+
+                    callGetKanjiDetail(firstKanji, { saveHistory: true })
+                        .then((detailRes) => {
+                            setKanjiDetail(detailRes.data?.result || null);
+                        })
+                        .catch((err) => {
+                            console.error(
+                                "Lỗi khi lấy chi tiết Kanji đầu tiên:",
+                                err
+                            );
+                        });
                 }
             })
             .catch((err) => {
@@ -51,7 +63,8 @@ export default function KanjiResult() {
         setKanjiDetail(null);
         setLoadingDetail(true);
 
-        callGetKanjiDetail(selectedKanji)
+        // User click Kanji cụ thể → lưu lịch sử
+        callGetKanjiDetail(selectedKanji, { saveHistory: true })
             .then((res) => {
                 setKanjiDetail(res.data?.result || null);
             })
@@ -67,7 +80,7 @@ export default function KanjiResult() {
 
     return (
         <div className="flex flex-col gap-6">
-            {/* 🔍 Giữ nguyên thanh tìm kiếm */}
+            {/* Giữ nguyên thanh tìm kiếm */}
             <SearchSection activeTab="kanji" />
 
             <div className="flex flex-col md:flex-row gap-6">

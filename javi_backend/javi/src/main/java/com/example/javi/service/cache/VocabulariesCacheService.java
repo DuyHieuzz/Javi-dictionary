@@ -1,6 +1,7 @@
 package com.example.javi.service.cache;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,19 @@ public class VocabulariesCacheService {
     Duration TTL = Duration.ofHours(6);
     String EXPLAIN_PREFIX = "vocab:explain:";
     Duration EXPLAIN_TTL = Duration.ofHours(24);
+
+    // CACHE SEARCH KEYWORD
+    public List<VocabResponse> getSearch(String keyword) {
+        return redisHelper.findList(PREFIX + "keyword:" + keyword, VocabResponse.class);
+    }
+
+    public void saveSearch(String keyword, List<VocabResponse> data) {
+        redisHelper.save(PREFIX + "keyword:" + keyword, data, TTL);
+    }
+
+    public void clearAllSearches() {
+        redisHelper.deleteByPattern(PREFIX + "keyword:*");
+    }
 
     // CACHE TỪ VỰNG ĐƠN
 

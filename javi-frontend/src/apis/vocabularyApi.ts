@@ -12,18 +12,23 @@ export const callUpdateVocabulary = (id: number, body: IVocabUpdateRequest) => {
 };
 
 /** Tìm kiếm từ vựng theo keyword */
-export const callSearchVocabulary = (keyword: string) => {
-  return axiosClient.get<IBackendRes<IVocabResponse[]>>(`/vocab/search/${keyword}`);
+export const callSearchVocabulary = (keyword: string, opts?: { saveHistory?: boolean }) => {
+  return axiosClient.get<IBackendRes<IVocabResponse[]>>(`/vocab/search/${encodeURIComponent(keyword)}`, {
+    params: { saveHistory: opts?.saveHistory ?? false },
+  });
 };
 
 /** Lấy chi tiết từ vựng theo từ (word) */
-export const callGetVocabularyByWord = (word: string) => {
-  return axiosClient.get<IBackendRes<IVocabResponse>>(`/vocab/search/word/${word}`);
+export const callGetVocabularyByWord = (word: string, opts?: { saveHistory?: boolean }) => {
+  return axiosClient.get<IBackendRes<IVocabResponse>>(`/vocab/search/word/${encodeURIComponent(word)}`, {
+    params: { saveHistory: opts?.saveHistory ?? false },
+  });
 };
-
 /** Lấy chi tiết từ vựng theo ID */
-export const callGetVocabularyById = (id: number) => {
-  return axiosClient.get<IBackendRes<IVocabResponse>>(`/vocab/id/${id}`);
+export const callGetVocabularyById = (id: number, opts?: { saveHistory?: boolean }) => {
+  return axiosClient.get<IBackendRes<IVocabResponse>>(`/vocab/id/${id}`, {
+    params: { saveHistory: opts?.saveHistory ?? false },
+  });
 };
 
 /** Lấy danh sách từ vựng (phân trang / filter - admin) */

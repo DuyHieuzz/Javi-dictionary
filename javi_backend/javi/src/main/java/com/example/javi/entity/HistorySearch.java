@@ -1,6 +1,6 @@
 package com.example.javi.entity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
@@ -23,7 +23,7 @@ public class HistorySearch {
     Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_id")
     @JsonIgnore
     Users user;
 
@@ -36,11 +36,11 @@ public class HistorySearch {
 
     String keyword; // tra từ, kanji, ngữ pháp
 
-    @Column(name = "searched_at")
-    LocalDate searchedAt;
+    @Column(name = "searched_at", nullable = false)
+    LocalDateTime searchedAt;
 
     @PrePersist
     protected void onSearch() {
-        searchedAt = LocalDate.now();
+        searchedAt = LocalDateTime.now();
     }
 }

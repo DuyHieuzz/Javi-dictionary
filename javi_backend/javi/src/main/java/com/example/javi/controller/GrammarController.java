@@ -69,9 +69,12 @@ public class GrammarController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<GrammarResponse> getDetailGrammarById(@PathVariable Long id, Authentication authentication) {
+    public ApiResponse<GrammarResponse> getDetailGrammarById(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
+            Authentication authentication) {
         GrammarResponse grammarResponse = grammarService.getGrammarById(id);
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByEntity(
                     user, grammarResponse.getId(), EntityType.GRAMMAR, grammarResponse.getPattern());
@@ -86,13 +89,14 @@ public class GrammarController {
     public ApiResponse<Page<GrammarResponse>> searchGrammars(
             @ModelAttribute GrammarSearchRequest request,
             @PageableDefault(size = 5, sort = "grammarId") Pageable pageable,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
             Authentication authentication) {
         int page = pageable.getPageNumber();
         if (page <= 0) page = 1;
         Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
 
         Page<GrammarResponse> responsePage = grammarService.searchGrammars(request, oneIndexPageable);
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, request.getKeyword(), EntityType.GRAMMAR);
         }

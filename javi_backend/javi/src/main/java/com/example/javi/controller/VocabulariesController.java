@@ -75,9 +75,11 @@ public class VocabulariesController {
 
     @GetMapping("/search/{keyword}")
     public ApiResponse<List<VocabResponse>> searchVocabularies(
-            @PathVariable String keyword, Authentication authentication) {
+            @PathVariable String keyword,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
+            Authentication authentication) {
         List<VocabResponse> results = vocabulariesService.searchVocabularies(keyword);
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, keyword, EntityType.WORD);
         }
@@ -88,9 +90,12 @@ public class VocabulariesController {
     }
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<VocabResponse> getVocabularyById(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<VocabResponse> getVocabularyById(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
+            Authentication authentication) {
         VocabResponse vocab = vocabulariesService.getVocabularyById(id);
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByEntity(user, id, EntityType.WORD, vocab.getWord());
         }
@@ -98,9 +103,12 @@ public class VocabulariesController {
     }
 
     @GetMapping("/search/word/{word}")
-    public ApiResponse<VocabResponse> getVocabularyByWord(@PathVariable String word, Authentication authentication) {
+    public ApiResponse<VocabResponse> getVocabularyByWord(
+            @PathVariable String word,
+            @RequestParam(defaultValue = "true") boolean saveHistory,
+            Authentication authentication) {
         VocabResponse vocab = vocabulariesService.getVocabularyByWord(word);
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByEntity(user, vocab.getId(), EntityType.WORD, vocab.getWord());
         }

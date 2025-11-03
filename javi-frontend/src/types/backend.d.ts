@@ -288,3 +288,78 @@ export interface IPage<T> {
   first: boolean;
   last: boolean;
 }
+
+// ==========================
+// GRAMMAR TYPES
+// ==========================
+
+export interface IGrammarExample {
+    id?: number;
+    jaSentence: string;       // câu ví dụ tiếng Nhật
+    transcription: string;    // câu đọc thuần (hiragana)
+    viSentence: string;       // câu tiếng Việt
+}
+
+export interface IGrammarResponse {
+    id: number;
+    pattern: string;          // mẫu câu
+    meaning: string;          // nghĩa
+    structure: string;        // cách chia ngữ pháp
+    usageNote: string;        // phạm vi sử dụng
+    level: "N5" | "N4" | "N3" | "N2" | "N1";
+    examples: IGrammarExample[];
+}
+
+export interface IPageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface ICreateGrammarRequest {
+    pattern: string;
+    meaning: string;
+    structure: string;
+    usageNote: string;
+    level: "N5" | "N4" | "N3" | "N2" | "N1";
+    examples?: IGrammarExample[];
+}
+
+export interface IUpdateGrammarRequest extends ICreateGrammarRequest {
+    id: number;
+}
+
+export interface IGrammarSearchRequest {
+    keyword?: string;
+    level?: "N5" | "N4" | "N3" | "N2" | "N1";
+    page?: number;
+    size?: number;
+    sort?: string;
+}
+
+// Grammar check (AI) types
+export interface IGrammarSuggest {
+    original: string;
+    corrected: string;
+    explanation: string;
+}
+
+export interface IGrammarCheckResult {
+    sourceText: string;
+    sourceLang: string;
+    score: number;
+    isValidGrammar: boolean;
+    suggest: IGrammarSuggest[];
+    result: string;
+    mean: string;
+}
+
+export interface IGrammarCheckSourceText {
+    sourceText: string;
+    sourceLang?: string;
+    targetLang: string;
+}

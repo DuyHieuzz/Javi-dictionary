@@ -1,6 +1,6 @@
 package com.example.javi.dto.response;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.example.javi.entity.EntityType;
 
@@ -18,5 +18,5 @@ public class HistorySearchResponse {
     Long entityId;
     EntityType entityType;
     String keyword;
-    LocalDate searchedAt;
+    LocalDateTime searchedAt;
 }

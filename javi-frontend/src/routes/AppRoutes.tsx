@@ -17,6 +17,9 @@ import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import { useAuthStore } from "@/stores/useAuthStore";
 import OAuthCallbackPage from "@/pages/auth/OAuthCallbackPage";
 import KanjiResult from "@/pages/search/KanjiResult";
+import GrammarSearchHome from "@/components/grammar/GrammarSearchHome";
+import GrammarResult from "@/pages/search/GrammarResult";
+import SearchHomeContent from "@/components/search/SearchHomeContent";
 
 export default function App() {
     const setAuth = useAuthStore((state) => state.setAuth);
@@ -30,25 +33,38 @@ export default function App() {
 
                 {
                     path: "search",
-                    element: <SearchLayout />, // Layout giữ chỗ cho <Outlet />
+                    element: <SearchLayout />, // Layout ngoài (padding + outlet)
                     children: [
-                        // Trang ban đầu
                         {
-                            index: true,
-                            element: <Navigate to="word" replace />,
+                            path: "",
+                            element: <SearchHome />, // Layout con của nhóm search
+                            children: [
+                                {
+                                    index: true,
+                                    element: <Navigate to="word" replace />,
+                                },
+                                {
+                                    path: "word",
+                                    element: <SearchHomeContent />,
+                                },
+                                {
+                                    path: "kanji",
+                                    element: <SearchHomeContent />,
+                                },
+                                {
+                                    path: "grammar",
+                                    element: <GrammarSearchHome />,
+                                },
+                            ],
                         },
-                        { path: "word", element: <SearchHome /> },
-                        { path: "kanji", element: <SearchHome /> },
-                        { path: "grammar", element: <SearchHome /> },
-
-                        // Trang kết quả
                         {
                             path: "word/:keyword",
                             element: <VocabularyResult />,
                         },
+                        { path: "kanji/:keyword", element: <KanjiResult /> },
                         {
-                            path: "kanji/:keyword",
-                            element: <KanjiResult />,
+                            path: "grammar/:keyword",
+                            element: <GrammarResult />,
                         },
                     ],
                 },
