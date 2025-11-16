@@ -29,6 +29,9 @@ public class Comment extends BaseEntity {
     @Column(name = "entity_id")
     Long entityId; // chỉ lưu id, không FK cứng, id của từ vựng, kanji, ngữ pháp
 
+    @Column(nullable = false)
+    private String entityName;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     String content;
 

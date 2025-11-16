@@ -258,6 +258,7 @@ export interface ICommentResponse {
   avatarUrl?: string | null;
   entityType: EntityType;
   entityId: number;
+  entityName: string;
   content: string;
   likeCount: number;
   dislikeCount: number;
@@ -363,3 +364,17 @@ export interface IGrammarCheckSourceText {
     sourceLang?: string;
     targetLang: string;
 }
+
+/**
+ * Item lịch sử tìm kiếm (dùng cho history modal / API)
+ */
+export interface IHistorySearchItem {
+    id: number;
+    entityType: string;
+    entityId: number | null;
+    entityName: string | null;
+    keyword: string;
+    searchedAt: number[];
+}
+
+export type IHistoryPage = IPageResponse<IHistorySearchItem>;

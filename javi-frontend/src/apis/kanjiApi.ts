@@ -32,6 +32,13 @@ export const callGetKanjiDetail = (characterName: string, opts?: { saveHistory?:
   });
 };
 
+/** Lấy chi tiết Kanji theo id */
+export const callGetKanjiDetailById = (id: number | string, saveHistory = false) =>
+  axiosClient.get(`/kanji/search/get-mean/${id}`, {
+    params: { saveHistory },
+  });
+
+
 /** Phân tích Kanji */
 export const callAnalyzeKanji = (character: string) => {
   return axiosClient.get<IBackendRes<IKanjiDecompositionResult>>(

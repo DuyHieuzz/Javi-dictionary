@@ -54,8 +54,16 @@ export default function SearchResultModal({
                     });
                 }
 
+                // === FIX: handle different response shapes ===
+                // Some endpoints return { result: { ... } }, some return { data: { ... } },
+                // some return the entity directly as the JSON body. Try all possibilities.
                 if (res && res.data) {
-                    setData(res.data.result || null);
+                    const maybeResult =
+                        res.data.result ?? res.data.data ?? res.data;
+                    setData(maybeResult ?? null);
+                } else if (res) {
+                    // in case axios response isn't used and res itself is the object
+                    setData(res.result ?? res.data ?? res ?? null);
                 } else {
                     setData(null);
                 }

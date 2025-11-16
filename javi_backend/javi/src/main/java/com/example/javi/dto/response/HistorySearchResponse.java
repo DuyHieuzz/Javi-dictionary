@@ -17,6 +17,7 @@ public class HistorySearchResponse {
     Long userId;
     Long entityId;
     EntityType entityType;
+    String entityName;
     String keyword;
     LocalDateTime searchedAt;
 }

@@ -53,3 +53,17 @@ body,
   background-color: rgba(0, 0, 0, 0.5);
 }
 
+/* Bỏ padding mặc định của mọi Modal antd */
+.ant-modal .ant-modal-content {
+    padding: 0 !important;
+}
+
+.ant-modal .ant-modal-body {
+    padding: 0 !important;
+}
+
+/* Modal cần padding: override lại */
+.with-padding-modal .ant-modal-content,
+.with-padding-modal .ant-modal-body {
+    padding: 16px !important;   /* hoặc giá trị bạn muốn */
+}

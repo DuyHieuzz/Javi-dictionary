@@ -120,6 +120,7 @@ export default function KanjiDecompositionModal({
 
     return (
         <Modal
+            className="with-padding-modal"
             open={open}
             onCancel={onClose}
             footer={null}
@@ -135,7 +136,7 @@ export default function KanjiDecompositionModal({
         >
             <div
                 ref={containerRef}
-                className="scroll-container w-full h-full overflow-auto"
+                className="scroll-container w-full h-full overflow-auto "
                 style={{
                     scrollbarWidth: "thin",
                 }}

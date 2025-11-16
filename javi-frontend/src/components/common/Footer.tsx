@@ -192,7 +192,6 @@ export default function Footer() {
                 </div>
             </div>
             <div className="pt-4 border-t border-gray-200 flex flex-col items-center align-middle space-y-3">
-                <h2>DỰ ÁN CỦA MỘT MÌNH DUY HIẾU</h2>
                 <p>Bắt đầu thực hiện từ ngày 27-09-2025</p>
                 <p>Copyright © 2025</p>
             </div>

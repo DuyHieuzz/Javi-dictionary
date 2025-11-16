@@ -61,7 +61,7 @@ export default function GrammarResult() {
         setGrammarDetail(null);
         setLoadingDetail(true);
 
-        callGetGrammarDetail(selectedId)
+        callGetGrammarDetail(selectedId, { saveHistory: true })
             .then((res) => {
                 setGrammarDetail(res.data?.result || null);
             })

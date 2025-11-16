@@ -35,7 +35,7 @@ export default function KanjiResult() {
                     const firstKanji = list[0].characterName;
                     setSelectedKanji(firstKanji);
 
-                    callGetKanjiDetail(firstKanji, { saveHistory: true })
+                    callGetKanjiDetail(firstKanji, { saveHistory: false })
                         .then((detailRes) => {
                             setKanjiDetail(detailRes.data?.result || null);
                         })

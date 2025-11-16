@@ -24,7 +24,6 @@ import {
     callUpgradePremium,
 } from "@/apis/userApi";
 import { callGetAllRoles } from "@/apis/roleApi";
-import type { PremiumType } from "@/types/backend";
 
 interface Props {
     user: any;

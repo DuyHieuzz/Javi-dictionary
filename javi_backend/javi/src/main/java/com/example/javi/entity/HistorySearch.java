@@ -34,6 +34,9 @@ public class HistorySearch {
     @Column(name = "entity_id")
     Long entityId; // id của từ hoặc kanji hay ngữ pháp
 
+    @Column(name = "entity_name")
+    String entityName;
+
     String keyword; // tra từ, kanji, ngữ pháp
 
     @Column(name = "searched_at", nullable = false)

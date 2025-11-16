@@ -47,17 +47,17 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse createComment(CreateCommentRequest request) {
         Users currentUser = securityUtil.getCurrentUser();
         // Kiểm tra entity tồn tại
-        switch (request.getEntityType()) {
-            case WORD -> vocabRepository
-                    .findById(request.getEntityId())
+        String entityName = switch (request.getEntityType()) {
+            case WORD -> vocabRepository.findById(request.getEntityId())
+                    .map(Vocabularies::getWord)
                     .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
-            case KANJI -> kanjiRepository
-                    .findById(request.getEntityId())
+            case KANJI -> kanjiRepository.findById(request.getEntityId())
+                    .map(Kanji::getCharacterName)
                     .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
-            case GRAMMAR -> grammarRepository
-                    .findById(request.getEntityId())
+            case GRAMMAR -> grammarRepository.findById(request.getEntityId())
+                    .map(Grammar::getPattern)
                     .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
-        }
+        };
 
         String rawContent = request.getContent().replace("\r\n", "\n");
         String sanitizedContent = StringEscapeUtils.escapeHtml4(rawContent);
@@ -66,6 +66,7 @@ public class CommentServiceImpl implements CommentService {
                 .user(currentUser)
                 .entityType(request.getEntityType())
                 .entityId(request.getEntityId())
+                .entityName(entityName)
                 .content(sanitizedContent)
                 .build();
         boolean exists = commentRepository.existsByEntityTypeAndEntityIdAndUser(

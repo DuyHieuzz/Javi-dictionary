@@ -20,6 +20,7 @@ public class CommentResponse {
     String avatarUrl;
     EntityType entityType;
     Long entityId;
+    String entityName;
     String content;
     int likeCount;
     int dislikeCount;

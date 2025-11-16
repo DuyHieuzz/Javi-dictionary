@@ -2,6 +2,11 @@ package com.example.javi.service.Impl;
 
 import java.util.List;
 
+import com.example.javi.exeption.AppException;
+import com.example.javi.exeption.ErrorCode;
+import com.example.javi.repository.GrammarRepository;
+import com.example.javi.repository.KanjiRepository;
+import com.example.javi.repository.VocabulariesRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 public class HistorySearchServiceImpl implements HistorySearchService {
     HistorySearchRepository historySearchRepository;
     HistorySearchMapper historySearchMapper;
+    VocabulariesRepository vocabulariesRepository;
+    KanjiRepository kanjiRepository;
+    GrammarRepository grammarRepository;
 
     int MAX_HISTORY_PER_USER = 300;
 
@@ -58,10 +66,30 @@ public class HistorySearchServiceImpl implements HistorySearchService {
         String normalized = normalize(keyword);
         if (entityId == null) return null;
 
+        String entityName = null;
+        switch (type) {
+            case WORD -> {
+                var vocab = vocabulariesRepository.findById(entityId)
+                        .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+                entityName = vocab.getWord();
+            }
+            case KANJI -> {
+                var kanji = kanjiRepository.findById(entityId)
+                        .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
+                entityName = kanji.getCharacterName();
+            }
+            case GRAMMAR -> {
+                var grammar = grammarRepository.findById(entityId)
+                        .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
+                entityName = grammar.getPattern();
+            }
+        }
+
         HistorySearch history = HistorySearch.builder()
                 .user(user)
                 .entityId(entityId)
                 .entityType(type)
+                .entityName(entityName)
                 .keyword(normalized)
                 .build();
 
@@ -76,11 +104,13 @@ public class HistorySearchServiceImpl implements HistorySearchService {
     }
 
     @Override
+    @Transactional
     public void deleteAllByUser(Users user) {
         historySearchRepository.deleteByUser(user);
     }
 
     @Override
+    @Transactional
     public void deleteByIdsForUser(List<Long> ids, Users user) {
         if (ids == null || ids.isEmpty()) return;
         historySearchRepository.deleteByIdInAndUser(ids, user);

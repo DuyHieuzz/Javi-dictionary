@@ -63,3 +63,9 @@ export const callGetMyLikedComments = (page = 1, size = 20) =>
     `/comment-reactions/liked`,
     { params: { page, size } }
   );
+
+// Lấy tất cả bình luận mới nhất ("Bình luận gần đây")
+export const callGetRecentComments = (page = 1, size = 10) =>
+  axiosClient.get<IBackendRes<IPage<ICommentResponse>>>(`/comments/all`, {
+    params: { page, size }, // BE đã default sort createdAt desc
+  });

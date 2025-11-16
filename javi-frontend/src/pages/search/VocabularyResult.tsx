@@ -47,7 +47,7 @@ export default function VocabularyResult() {
                     const firstWord = list[0].word;
                     setSelectedVocab(firstWord);
 
-                    callGetVocabularyByWord(firstWord, { saveHistory: true })
+                    callGetVocabularyByWord(firstWord, { saveHistory: false })
                         .then((detailRes) => {
                             setVocabDetail(detailRes.data?.result || null);
                         })
