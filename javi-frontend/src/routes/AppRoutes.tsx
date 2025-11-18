@@ -20,6 +20,7 @@ import KanjiResult from "@/pages/search/KanjiResult";
 import GrammarSearchHome from "@/components/grammar/GrammarSearchHome";
 import GrammarResult from "@/pages/search/GrammarResult";
 import SearchHomeContent from "@/components/search/SearchHomeContent";
+import TranslatePage from "@/pages/translate/TranslatePage";
 
 export default function App() {
     const setAuth = useAuthStore((state) => state.setAuth);
@@ -68,6 +69,7 @@ export default function App() {
                         },
                     ],
                 },
+                { path: "translate", element: <TranslatePage /> },
                 { path: "/users/my-info", element: <UserDetailPage /> },
                 {
                     path: "/users/profile/:username",

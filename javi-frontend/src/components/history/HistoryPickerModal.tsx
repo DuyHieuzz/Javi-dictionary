@@ -404,7 +404,7 @@ export default function HistoryPickerModal({
             centered
             width={820}
             bodyStyle={{ padding: 0 }}
-            className="rounded-2xl overflow-hidden"
+            className="rounded-2xl overflow-hidden with-padding-modal"
             closable={true}
         >
             <div className="p-0">

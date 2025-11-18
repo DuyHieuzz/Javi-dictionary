@@ -298,16 +298,27 @@ export default function HistoryModal({
     // MỞ CHI TIẾT HOẶC PICKER
     // -------------------------
     const openDetailFromHistory = (item: IHistorySearchItem) => {
-        if (item.entityId) {
+        // nếu có entityId thì thường mở chi tiết bằng id...
+        // nhưng nếu là KANJI và có entityName (ký tự) -> ưu tiên gửi characterName
+        const typeKey = String(item.entityType ?? "").toUpperCase();
+
+        if (item.entityId !== undefined && item.entityId !== null) {
+            if (typeKey === "KANJI" && item.entityName) {
+                // ưu tiên ký tự (entityName) cho Kanji
+                setDetailEntityType(item.entityType);
+                setDetailEntityIdOrName(item.entityName);
+                setDetailOpen(true);
+                return;
+            }
+
+            // mặc định: gửi id
             setDetailEntityType(item.entityType);
-            setDetailEntityIdOrName(
-                item.entityId ?? item.entityName ?? item.keyword ?? ""
-            );
+            setDetailEntityIdOrName(item.entityId);
             setDetailOpen(true);
             return;
         }
 
-        // nếu không có entityId -> mở picker modal
+        // nếu không có entityId -> mở picker giống Mazii (tìm theo keyword/entityName)
         const kw = item.keyword ?? item.entityName ?? "";
         if (!kw) return;
 
@@ -480,7 +491,7 @@ export default function HistoryModal({
 
                     {/* right: controls */}
                     <div className="flex items-center gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                        {/* --- giữu chỗ khi màn nhỏ để dấu X luôn nằm bên phải --- */}
+                        {/* --- giữ chỗ khi màn nhỏ để dấu X luôn nằm bên phải --- */}
                         <div className="flex-1 sm:hidden"></div>
 
                         {/* Chỉ hiện controls xóa khi đang ở tab HISTORY */}

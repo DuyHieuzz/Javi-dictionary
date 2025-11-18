@@ -378,3 +378,87 @@ export interface IHistorySearchItem {
 }
 
 export type IHistoryPage = IPageResponse<IHistorySearchItem>;
+
+// ==========================
+// TRANSLATE
+// ==========================
+export type EngineType = "GOOGLE" | "AI";
+
+export interface ITranslateRequest {
+    sourceText?: string;
+    sourceLang?: string;  // "ja" | "vi"
+    targetLang: string;   // "ja" | "vi"
+    engine?: EngineType;
+}
+
+export interface ITranslateResponse {
+    id?: number;
+    sourceLang?: string;
+    targetLang?: string;
+    sourceText?: string | null;
+    translatedText?: string | null;
+    engine?: EngineType;
+    createdAt?: string; // ISO string
+}
+
+export interface ITranslateImageRequest {
+    file: File;
+    sourceLang?: string;
+    targetLang?: string;
+    engine?: EngineType;
+}
+
+// ==========================
+// GRAMMAR CHECK
+// ==========================
+export interface IGrammarCheckSourceText {
+    sourceText: string;
+    sourceLang?: string;
+    targetLang: string; // "vi"
+}
+
+export interface IGrammarCheckSuggestion {
+    original?: string;
+    corrected?: string;
+    explanation?: string;
+}
+
+export interface IGrammarCheckResult {
+    sourceText?: string;
+    sourceLang?: string;
+    score?: number;
+    isValidGrammar?: boolean;
+    suggest?: IGrammarCheckSuggestion[];
+    result?: string; // đoạn văn đã sửa
+    mean?: string;   // giải thích tổng quan
+}
+
+// ==========================
+// PAGE RESPONSE
+// ==========================
+export interface IPageResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first?: boolean;
+    last?: boolean;
+}
+
+// ==========================
+// UI: TRANSLATE BLOCK MODEL
+// ==========================
+export type LangCode = "ja" | "vi";
+
+export interface TranslateBlockModel {
+    id: string;
+    sourceText: string;
+    translatedText?: string;
+    sourceLang: LangCode;
+    targetLang: LangCode;
+    engine: EngineType;
+    loading?: boolean;
+    file?: File | undefined;
+    grammar?: IGrammarCheckResult | null;
+}
