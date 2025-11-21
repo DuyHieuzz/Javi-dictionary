@@ -1,5 +1,18 @@
 package com.example.javi.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.javi.dto.request.KanjiRequest;
 import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.KanjiDecompositionResult;
@@ -17,22 +30,11 @@ import com.example.javi.service.KanjiService;
 import com.example.javi.utils.SecurityUtil;
 import com.example.javi.utils.ValidationUtils;
 import com.turkraft.springfilter.boot.Filter;
-import jakarta.validation.Valid;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/kanji")
@@ -170,13 +172,9 @@ public class KanjiController {
             @Filter Specification<Kanji> spec,
             @RequestParam(required = false) String filter,
             @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
-
         return ApiResponse.<Page<KanjiResponse>>builder()
                 .message("Lấy danh sách kanji thành công")
-                .result(kanjiService.getAllKanjiByFilter(spec, oneIndexedPageable, filter))
+                .result(kanjiService.getAllKanjiByFilter(spec, pageable, filter))
                 .build();
     }
 }

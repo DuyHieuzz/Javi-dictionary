@@ -3,7 +3,6 @@ package com.example.javi.controller;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -58,12 +57,8 @@ public class CommentController {
                             sort = {"likeCount", "createdAt"},
                             direction = Sort.Direction.DESC)
                     Pageable pageable) {
-        int currentPage = pageable.getPageNumber();
-        if (currentPage > 0) currentPage = currentPage - 1;
 
-        Pageable adjustedPageable = PageRequest.of(currentPage, pageable.getPageSize(), pageable.getSort());
-
-        Page<CommentResponse> result = commentService.getCommentsByEntity(entityType, entityId, adjustedPageable);
+        Page<CommentResponse> result = commentService.getCommentsByEntity(entityType, entityId, pageable);
         return ApiResponse.<Page<CommentResponse>>builder().result(result).build();
     }
 
@@ -71,11 +66,8 @@ public class CommentController {
     public ApiResponse<Page<CommentResponse>> getCommentsByUsername( // lấy bình luận của người dùng cụ thể
             @PathVariable String username,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
 
-        Page<CommentResponse> result = commentService.getCommentsByUsername(username, oneIndexedPageable);
+        Page<CommentResponse> result = commentService.getCommentsByUsername(username, pageable);
         return ApiResponse.<Page<CommentResponse>>builder()
                 .message("Lấy bình luận thành công")
                 .result(result)
@@ -86,10 +78,8 @@ public class CommentController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<CommentResponse>> getMyComments( // lấy bình luận của mình, giờ nhận ra nó giống ở trên :v
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
-        Page<CommentResponse> result = commentService.getMyComments(oneIndexPageable);
+
+        Page<CommentResponse> result = commentService.getMyComments(pageable);
         return ApiResponse.<Page<CommentResponse>>builder().result(result).build();
     }
 
@@ -97,10 +87,8 @@ public class CommentController {
     @GetMapping("/all")
     public ApiResponse<Page<CommentResponse>> getAllComments(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
-        Page<CommentResponse> responses = commentService.getAllComment(oneIndexPageable);
+
+        Page<CommentResponse> responses = commentService.getAllComment(pageable);
 
         return ApiResponse.<Page<CommentResponse>>builder()
                 .message("Lấy bình luận thành công")

@@ -182,7 +182,7 @@ export default function Footer() {
                         </li>
                         <li>
                             <Link
-                                to="/about"
+                                to="/intro"
                                 className="hover:text-blue-600 transition"
                             >
                                 Giới thiệu

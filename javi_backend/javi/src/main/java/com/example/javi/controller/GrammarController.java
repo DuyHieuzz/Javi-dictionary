@@ -3,7 +3,6 @@ package com.example.javi.controller;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -91,11 +90,8 @@ public class GrammarController {
             @PageableDefault(size = 5, sort = "grammarId") Pageable pageable,
             @RequestParam(defaultValue = "true") boolean saveHistory,
             Authentication authentication) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
 
-        Page<GrammarResponse> responsePage = grammarService.searchGrammars(request, oneIndexPageable);
+        Page<GrammarResponse> responsePage = grammarService.searchGrammars(request, pageable);
         if (saveHistory && authentication != null && authentication.isAuthenticated()) {
             Users user = securityUtil.getCurrentUser();
             historySearchService.saveHistoryByKeyword(user, request.getKeyword(), EntityType.GRAMMAR);

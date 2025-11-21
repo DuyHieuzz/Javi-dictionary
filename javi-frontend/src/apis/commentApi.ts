@@ -17,7 +17,7 @@ export const callGetCommentsByEntity = (
   sort: string[] = ["likeCount,desc", "createdAt,desc"]
 ) =>
   axiosClient.get<IBackendRes<IPage<ICommentResponse>>>(`/comments`, {
-    params: { entityType, entityId, page, size, sort },
+    params: { entityType, entityId, page: page -1, size, sort },
   });
 
 /** Tạo comment mới */
@@ -48,24 +48,24 @@ export const callGetCommentsByUsername = (
 ) =>
   axiosClient.get<IBackendRes<IPage<ICommentResponse>>>(
     `/comments/user/${encodeURIComponent(username)}`,
-    { params: { page, size } }
+    { params: { page: page - 1, size } }
   );
 
 /** Comment của tôi */
 export const callGetMyComments = (page = 1, size = 20) =>
   axiosClient.get<IBackendRes<IPage<ICommentResponse>>>(`/comments/my-comment`, {
-    params: { page, size },
+    params: { page: page - 1, size },
   });
 
 /** Các comment tôi đã like */
 export const callGetMyLikedComments = (page = 1, size = 20) =>
   axiosClient.get<IBackendRes<IPage<ICommentResponse>>>(
     `/comment-reactions/liked`,
-    { params: { page, size } }
+    { params: { page: page - 1, size } }
   );
 
 // Lấy tất cả bình luận mới nhất ("Bình luận gần đây")
 export const callGetRecentComments = (page = 1, size = 10) =>
   axiosClient.get<IBackendRes<IPage<ICommentResponse>>>(`/comments/all`, {
-    params: { page, size }, // BE đã default sort createdAt desc
+    params: { page: page - 1, size }, // BE đã default sort createdAt desc
   });

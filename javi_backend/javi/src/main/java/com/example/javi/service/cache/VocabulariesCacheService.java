@@ -98,4 +98,18 @@ public class VocabulariesCacheService {
     public void clearAllExplains() {
         redisHelper.deleteByPattern(EXPLAIN_PREFIX + "*");
     }
+
+    // CACHE THEO ID
+    public VocabResponse getById(Long id) {
+        return redisHelper.find(PREFIX + "id:" + id, VocabResponse.class);
+    }
+
+    public void saveById(Long id, VocabResponse data) {
+        redisHelper.save(PREFIX + "id:" + id, data, TTL);
+    }
+
+    public void deleteById(Long id) {
+        redisHelper.delete(PREFIX + "id:" + id);
+    }
+
 }

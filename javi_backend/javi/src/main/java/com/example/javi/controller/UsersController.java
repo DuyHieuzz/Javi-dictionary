@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
@@ -102,13 +101,10 @@ public class UsersController {
     @PreAuthorize("hasAuthority('MANAGE_USER')")
     ApiResponse<Page<UserResponse>> getAllUsersByFilter(
             @Filter Specification<Users> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
 
         return ApiResponse.<Page<UserResponse>>builder()
                 .message("Lấy danh sách người dùng thành công")
-                .result(usersService.getAllUsersByFilter(spec, oneIndexedPageable))
+                .result(usersService.getAllUsersByFilter(spec, pageable))
                 .build();
     }
 

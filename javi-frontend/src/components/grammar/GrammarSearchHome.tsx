@@ -44,10 +44,11 @@ export default function GrammarSearchHome() {
     ) => {
         try {
             setLoading(true);
+            const pageParam = Math.max(0, pageToLoad - 1);
             const res = await callSearchGrammars({
                 keyword: keyword || undefined,
                 level: level || undefined,
-                page: pageToLoad,
+                page: pageParam,
                 size: 10,
                 saveHistory, // truyền tham số saveHistory vào API
             });

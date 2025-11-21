@@ -2,11 +2,6 @@ package com.example.javi.service.Impl;
 
 import java.util.List;
 
-import com.example.javi.exeption.AppException;
-import com.example.javi.exeption.ErrorCode;
-import com.example.javi.repository.GrammarRepository;
-import com.example.javi.repository.KanjiRepository;
-import com.example.javi.repository.VocabulariesRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,8 +11,13 @@ import com.example.javi.dto.response.HistorySearchResponse;
 import com.example.javi.entity.EntityType;
 import com.example.javi.entity.HistorySearch;
 import com.example.javi.entity.Users;
+import com.example.javi.exeption.AppException;
+import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.HistorySearchMapper;
+import com.example.javi.repository.GrammarRepository;
 import com.example.javi.repository.HistorySearchRepository;
+import com.example.javi.repository.KanjiRepository;
+import com.example.javi.repository.VocabulariesRepository;
 import com.example.javi.service.HistorySearchService;
 
 import lombok.AccessLevel;
@@ -69,17 +69,20 @@ public class HistorySearchServiceImpl implements HistorySearchService {
         String entityName = null;
         switch (type) {
             case WORD -> {
-                var vocab = vocabulariesRepository.findById(entityId)
+                var vocab = vocabulariesRepository
+                        .findById(entityId)
                         .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
                 entityName = vocab.getWord();
             }
             case KANJI -> {
-                var kanji = kanjiRepository.findById(entityId)
+                var kanji = kanjiRepository
+                        .findById(entityId)
                         .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
                 entityName = kanji.getCharacterName();
             }
             case GRAMMAR -> {
-                var grammar = grammarRepository.findById(entityId)
+                var grammar = grammarRepository
+                        .findById(entityId)
                         .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
                 entityName = grammar.getPattern();
             }

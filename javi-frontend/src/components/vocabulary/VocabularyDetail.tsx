@@ -123,7 +123,7 @@ export default function VocabularyDetail({ data }: Props) {
 
     return (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-3">
-            <h2 className="text-[36px] font-medium text-[#3e67d6] mb-[12px]">
+            <h2 className="text-[36px] font-medium text-[#3e67d6] mb-[12px] font-mplus">
                 {data.word}
             </h2>
             {data.hiragana && (
@@ -146,7 +146,7 @@ export default function VocabularyDetail({ data }: Props) {
                             </h3>
 
                             {m.description && (
-                                <p className="text-gray-600 ml-4 text-[15px] mb-2">
+                                <p className="text-gray-600 ml-4 text-[15px] mb-2 whitespace-pre-line">
                                     {m.description}
                                 </p>
                             )}
@@ -159,11 +159,11 @@ export default function VocabularyDetail({ data }: Props) {
                                                 <div
                                                     key={ex.id ?? ex.jaSentence}
                                                 >
-                                                    <div className="text-lg leading-relaxed">
+                                                    <div className="text-lg leading-relaxed whitespace-pre-line">
                                                         {ex.jaSentence}
                                                     </div>
                                                     {ex.viSentence && (
-                                                        <div className="text-base text-gray-500 mt-1">
+                                                        <div className="text-base text-gray-500 mt-1 whitespace-pre-line">
                                                             {ex.viSentence}
                                                         </div>
                                                     )}

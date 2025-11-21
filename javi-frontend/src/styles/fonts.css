@@ -1,0 +1,41 @@
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 100;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-Thin.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 300;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-Light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 400;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 500;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 700;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 800;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-ExtraBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "M PLUS 1p";
+  font-weight: 900;
+  src: url("../assets/fonts/MPLUS1p/MPLUS1p-Black.ttf") format("truetype");
+}

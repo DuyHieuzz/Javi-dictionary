@@ -1,4 +1,3 @@
-// src/components/common/ServerError.tsx
 import { ReloadOutlined } from "@ant-design/icons";
 
 export default function ServerError({ onRetry }: { onRetry?: () => void }) {

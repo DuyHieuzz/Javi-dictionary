@@ -1,7 +1,6 @@
 package com.example.javi.controller;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -32,13 +31,10 @@ public class CommentReactionController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<CommentResponse>> getMyLikedComments(
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexedPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
 
         Users user = securityUtil.getCurrentUser();
 
-        Page<CommentResponse> response = commentReactionService.getMyLikedComments(user, oneIndexedPageable);
+        Page<CommentResponse> response = commentReactionService.getMyLikedComments(user, pageable);
 
         return ApiResponse.<Page<CommentResponse>>builder()
                 .message("Lấy danh sách bình luận đã like thành công")

@@ -265,6 +265,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @Transactional
     public UserResponse setPremiumManually(Long userId, PremiumType premiumType) {
         if (premiumType == null) {
             throw new AppException(ErrorCode.INVALID_PREMIUM_TYPE);
@@ -274,12 +275,24 @@ public class UsersServiceImpl implements UsersService {
         securityUtil.requirePermission("MANAGE_USER");
 
         Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        LocalDateTime now = LocalDateTime.now();
+
+        ZoneId zoneId = getZoneId();
+        LocalDateTime now = LocalDateTime.now(zoneId);
+        // nếu user đang còn premium (expiredAt != null và sau now) -> cộng dồn từ expiredAt,
+        // ngược lại bắt đầu từ now (không cộng dồn).
+        LocalDateTime baseTime = now;
+        if (user.getAccountType() == AccountType.PREMIUM && user.getPremiumExpiredAt() != null) {
+            LocalDateTime existingExpired = user.getPremiumExpiredAt();
+            if (existingExpired.isAfter(now)) {
+                // cộng dồn từ ngày hết hạn cũ
+                baseTime = existingExpired;
+            }
+        }
         LocalDateTime expiredAt =
                 switch (premiumType) {
-                    case MONTHLY_1 -> now.plusMonths(1);
-                    case MONTHLY_3 -> now.plusMonths(3);
-                    case MONTHLY_6 -> now.plusMonths(6);
+                    case MONTHLY_1 -> baseTime.plusMonths(1);
+                    case MONTHLY_3 -> baseTime.plusMonths(3);
+                    case MONTHLY_6 -> baseTime.plusMonths(6);
                     case LIFETIME -> null;
                 };
 

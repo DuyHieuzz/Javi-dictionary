@@ -1,4 +1,5 @@
-import { useState } from "react";
+// src/components/user/UserInfoPanel.tsx
+import { useState, useEffect } from "react";
 import { FaUser } from "react-icons/fa";
 import { PiNotePencilLight } from "react-icons/pi";
 import {
@@ -30,6 +31,16 @@ interface Props {
     activeTab: "overview" | "activity" | "security";
     onUserUpdated?: (u: any) => void;
     isPublic?: boolean;
+    // mới: nếu parent muốn force mở modal
+    forceOpen?: boolean;
+    // callback để parent biết force open đã xử lý (đặt lại flag)
+    onForceOpenHandled?: () => void;
+    // optional overrides (giữ backward compat)
+    canManageUser?: boolean;
+    canManageRole?: boolean;
+    isSelfOverride?: boolean;
+    // nếu true => chỉ render Modal (không render body/panel)
+    modalOnly?: boolean;
 }
 
 export default function UserInfoPanel({
@@ -37,6 +48,12 @@ export default function UserInfoPanel({
     activeTab,
     onUserUpdated,
     isPublic = false,
+    forceOpen = false,
+    onForceOpenHandled,
+    canManageUser,
+    canManageRole,
+    isSelfOverride,
+    modalOnly = false,
 }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
@@ -44,18 +61,24 @@ export default function UserInfoPanel({
     const [roles, setRoles] = useState<{ label: string; value: number }[]>([]);
     const { user: userLogin, token, setAuth, clearAuth } = useAuthStore();
 
-    const canManageUser = userLogin?.role?.permissions?.some(
-        (p: any) => p.name === "MANAGE_USER"
-    );
-    const canManageRole = userLogin?.role?.permissions?.some(
-        (p: any) => p.name === "MANAGE_ROLE"
-    );
-    const isSelf = userLogin?.id === user?.id;
+    // tính quyền thực tế xem viewer có quản lý user/role hay không
+    const realCanManageUser =
+        canManageUser ??
+        userLogin?.role?.permissions?.some(
+            (p: any) => p.name === "MANAGE_USER"
+        );
+    const realCanManageRole =
+        canManageRole ??
+        userLogin?.role?.permissions?.some(
+            (p: any) => p.name === "MANAGE_ROLE"
+        );
+    const isSelf = isSelfOverride ?? userLogin?.id === user?.id;
 
     const showEditButton =
-        !isPublic && (isSelf || canManageUser || canManageRole);
+        !isPublic && (isSelf || realCanManageUser || realCanManageRole);
 
     const handleOpenModal = async () => {
+        // set giá trị mặc định cho form khi mở modal
         form.setFieldsValue({
             fullName: user.fullName,
             username: user.username,
@@ -73,7 +96,8 @@ export default function UserInfoPanel({
         setIntro(user.selfIntroduction || "");
         setIsModalOpen(true);
 
-        if (canManageRole) {
+        // nếu viewer có quyền quản role thì load danh sách role để chọn
+        if (realCanManageRole) {
             try {
                 const res = await callGetAllRoles();
                 const options =
@@ -89,8 +113,16 @@ export default function UserInfoPanel({
         }
     };
 
+    // Nếu parent set forceOpen => mở modal (ví dụ admin trigger từ nơi khác)
+    useEffect(() => {
+        if (forceOpen) {
+            handleOpenModal();
+            onForceOpenHandled?.();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [forceOpen, user?.id]);
+
     const handleSubmit = async () => {
-        // Validate form trước, tránh gọi API khi form lỗi
         let values;
         try {
             values = await form.validateFields();
@@ -109,6 +141,7 @@ export default function UserInfoPanel({
             intro !== user.selfIntroduction;
         const isPremiumChanged = !!values.premiumType;
 
+        // không cho block hoặc đổi role của ADMIN
         if (isTargetAdmin && isTryingToBlock) {
             message.warning("Không thể khóa tài khoản ADMIN!");
             return;
@@ -122,7 +155,7 @@ export default function UserInfoPanel({
             ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
             : null;
 
-        // Cập nhật thông tin chung
+        // cập nhật thông tin cơ bản (nếu có thay đổi và không phải view public)
         if (!isPublic && (isInfoChanged || isRoleChanged)) {
             const payload = {
                 username: values.username,
@@ -144,7 +177,7 @@ export default function UserInfoPanel({
                                 token: token!,
                                 tokenType: "Bearer",
                                 refresh_token: "",
-                                user: res.data.result, // đảm bảo chắc chắn không undefined
+                                user: res.data.result,
                             });
                         }
                     }
@@ -161,10 +194,10 @@ export default function UserInfoPanel({
             }
         }
 
-        // Block user
+        // block user nếu admin bật
         if (
             !isPublic &&
-            canManageUser &&
+            realCanManageUser &&
             isTryingToBlock &&
             user.status !== "BLOCKED"
         ) {
@@ -183,15 +216,15 @@ export default function UserInfoPanel({
                 const msg =
                     err?.response?.data?.message ||
                     err?.message ||
-                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
+                    "Máy chủ không phản hồi, vui lòng thử lại.";
                 message.error(msg);
             }
         }
 
-        // Unblock user
+        // mở lại account nếu admin bật
         if (
             !isPublic &&
-            canManageUser &&
+            realCanManageUser &&
             values.status === true &&
             user.status === "BLOCKED"
         ) {
@@ -209,13 +242,13 @@ export default function UserInfoPanel({
                 const msg =
                     err?.response?.data?.message ||
                     err?.message ||
-                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
+                    "Máy chủ không phản hồi, vui lòng thử lại.";
                 message.error(msg);
             }
         }
 
-        // Nâng cấp Premium (chỉ khi chọn gói)
-        if (!isPublic && canManageUser && isPremiumChanged) {
+        // nâng cấp premium (nếu admin thao tác)
+        if (!isPublic && realCanManageUser && isPremiumChanged) {
             try {
                 const res = await callUpgradePremium(
                     user.id,
@@ -238,7 +271,138 @@ export default function UserInfoPanel({
         setIsModalOpen(false);
     };
 
-    if (activeTab !== "overview") return null;
+    // Nếu parent chỉ muốn mount component để dùng modal (ví dụ admin), trả về modal
+    const modalElement = (
+        <Modal
+            title={
+                <span className="text-[16px] font-normal">
+                    Cập nhật thông tin người dùng
+                </span>
+            }
+            open={isModalOpen}
+            onCancel={() => setIsModalOpen(false)}
+            onOk={handleSubmit}
+            okText="Lưu thay đổi"
+            cancelText="Hủy"
+            width={750}
+            className="with-padding-modal"
+        >
+            <Form layout="vertical" form={form}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Form.Item
+                        name="fullName"
+                        label="Họ và tên"
+                        rules={[{ required: true }]}
+                    >
+                        <Input placeholder="Nhập họ tên" disabled={isPublic} />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="username"
+                        label="Tên đăng nhập"
+                        rules={[{ required: true }]}
+                    >
+                        <Input
+                            placeholder="Tên đăng nhập"
+                            disabled={isPublic}
+                        />
+                    </Form.Item>
+
+                    <Form.Item name="email" label="Email">
+                        <Input disabled />
+                    </Form.Item>
+
+                    <Form.Item name="dateOfBirth" label="Ngày sinh">
+                        <DatePicker
+                            style={{ width: "100%" }}
+                            format="DD-MM-YYYY"
+                            placeholder="Chọn ngày sinh"
+                            disabled={isPublic}
+                        />
+                    </Form.Item>
+
+                    <Form.Item name="level" label="Trình độ">
+                        <Select
+                            allowClear
+                            options={[
+                                { label: "N5", value: "N5" },
+                                { label: "N4", value: "N4" },
+                                { label: "N3", value: "N3" },
+                                { label: "N2", value: "N2" },
+                                { label: "N1", value: "N1" },
+                            ]}
+                            placeholder="Chọn trình độ"
+                            disabled={isPublic}
+                        />
+                    </Form.Item>
+
+                    {!isPublic && realCanManageRole && (
+                        <Form.Item name="role" label="Vai trò">
+                            <Select placeholder="Chọn role" options={roles} />
+                        </Form.Item>
+                    )}
+
+                    {!isPublic && realCanManageUser && (
+                        <Form.Item name="premiumType" label="Gói Premium">
+                            <Select
+                                allowClear
+                                placeholder="Chọn gói nâng cấp (tuỳ chọn)"
+                                options={[
+                                    { label: "1 tháng", value: "MONTHLY_1" },
+                                    { label: "3 tháng", value: "MONTHLY_3" },
+                                    { label: "6 tháng", value: "MONTHLY_6" },
+                                    { label: "Trọn đời", value: "LIFETIME" },
+                                ]}
+                            />
+                        </Form.Item>
+                    )}
+                </div>
+
+                <Form.Item label="Giới thiệu bản thân">
+                    <ReactQuill
+                        value={intro}
+                        onChange={setIntro}
+                        theme="snow"
+                        readOnly={isPublic}
+                    />
+                </Form.Item>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {!isPublic &&
+                        realCanManageUser &&
+                        user.role?.name !== "ADMIN" && (
+                            <Form.Item
+                                name="status"
+                                label="Trạng thái tài khoản"
+                                valuePropName="checked"
+                            >
+                                <Switch
+                                    checkedChildren="Active"
+                                    unCheckedChildren="Blocked"
+                                />
+                            </Form.Item>
+                        )}
+
+                    {!isPublic && user.role?.name === "ADMIN" && (
+                        <Form.Item label="Trạng thái tài khoản">
+                            <Tag color="blue">ADMIN (Luôn Active)</Tag>
+                        </Form.Item>
+                    )}
+                </div>
+            </Form>
+        </Modal>
+    );
+
+    if (modalOnly) {
+        return modalElement;
+    }
+
+    // ====== QUYẾT ĐỊNH HIỂN THỊ: nếu activeTab không phải 'overview' thì ẩn hoàn toàn phần body (chỉ giữ modal) ======
+    if (activeTab !== "overview") {
+        // trả về modal để modal vẫn có thể mở khi component mount
+        return modalElement;
+    }
+    // ================================================================================================
 
     return (
         <div className="bg-white rounded-2xl shadow p-3">
@@ -255,7 +419,7 @@ export default function UserInfoPanel({
                 )}
             </div>
 
-            {/* Body giữ nguyên */}
+            {/* Body */}
             <div className="pb-3">
                 <div className="flex items-center justify-start gap-2 text-base my-3">
                     <div className="bg-[#3e67d6] w-[26px] h-[26px] rounded-full flex items-center justify-center text-white">
@@ -301,9 +465,12 @@ export default function UserInfoPanel({
                 </p>
 
                 <Descriptions bordered column={1} size="small">
-                    <Descriptions.Item label="Giới thiệu bản thân">
+                    <Descriptions.Item
+                        label="Giới thiệu bản thân"
+                        labelStyle={{ width: 160 }}
+                    >
                         <div
-                            className="prose text-gray-600"
+                            className="prose text-gray-600 break-words whitespace-normal"
                             dangerouslySetInnerHTML={{
                                 __html: user.selfIntroduction || "—",
                             }}
@@ -312,8 +479,8 @@ export default function UserInfoPanel({
                 </Descriptions>
             </div>
 
-            {/* Vai trò & Quyền hạn giữ nguyên */}
-            {!isPublic && canManageUser && (
+            {/* CHANGED: hiển thị phần Vai trò & Quyền hạn nếu viewer có quyền quản lý user (realCanManageUser) */}
+            {realCanManageUser && (
                 <>
                     <h4 className="text-base text-[#3e67d6] mb-2 border-b border-gray-200 pb-3">
                         Vai trò & Quyền hạn
@@ -349,139 +516,8 @@ export default function UserInfoPanel({
                 </>
             )}
 
-            {/* Modal cập nhật */}
-            <Modal
-                title="Cập nhật thông tin người dùng"
-                open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                onOk={handleSubmit}
-                okText="Lưu thay đổi"
-                cancelText="Hủy"
-                width={750}
-            >
-                <Form layout="vertical" form={form}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Form.Item
-                            name="fullName"
-                            label="Họ và tên"
-                            rules={[{ required: true }]}
-                        >
-                            <Input
-                                placeholder="Nhập họ tên"
-                                disabled={isPublic}
-                            />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="username"
-                            label="Tên đăng nhập"
-                            rules={[{ required: true }]}
-                        >
-                            <Input
-                                placeholder="Tên đăng nhập"
-                                disabled={isPublic}
-                            />
-                        </Form.Item>
-
-                        <Form.Item name="email" label="Email">
-                            <Input disabled />
-                        </Form.Item>
-
-                        <Form.Item name="dateOfBirth" label="Ngày sinh">
-                            <DatePicker
-                                style={{ width: "100%" }}
-                                format="DD-MM-YYYY"
-                                placeholder="Chọn ngày sinh"
-                                disabled={isPublic}
-                            />
-                        </Form.Item>
-
-                        <Form.Item name="level" label="Trình độ">
-                            <Select
-                                allowClear
-                                options={[
-                                    { label: "N5", value: "N5" },
-                                    { label: "N4", value: "N4" },
-                                    { label: "N3", value: "N3" },
-                                    { label: "N2", value: "N2" },
-                                    { label: "N1", value: "N1" },
-                                ]}
-                                placeholder="Chọn trình độ"
-                                disabled={isPublic}
-                            />
-                        </Form.Item>
-
-                        {!isPublic && canManageRole && (
-                            <Form.Item name="role" label="Vai trò">
-                                <Select
-                                    placeholder="Chọn role"
-                                    options={roles}
-                                />
-                            </Form.Item>
-                        )}
-
-                        {/* Nâng cấp Premium: dropdown*/}
-                        {!isPublic && canManageUser && (
-                            <Form.Item name="premiumType" label="Gói Premium">
-                                <Select
-                                    allowClear
-                                    placeholder="Chọn gói nâng cấp (tuỳ chọn)"
-                                    options={[
-                                        {
-                                            label: "1 tháng",
-                                            value: "MONTHLY_1",
-                                        },
-                                        {
-                                            label: "3 tháng",
-                                            value: "MONTHLY_3",
-                                        },
-                                        {
-                                            label: "6 tháng",
-                                            value: "MONTHLY_6",
-                                        },
-                                        {
-                                            label: "Trọn đời",
-                                            value: "LIFETIME",
-                                        },
-                                    ]}
-                                />
-                            </Form.Item>
-                        )}
-                    </div>
-
-                    <Form.Item label="Giới thiệu bản thân">
-                        <ReactQuill
-                            value={intro}
-                            onChange={setIntro}
-                            theme="snow"
-                            readOnly={isPublic}
-                        />
-                    </Form.Item>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {!isPublic &&
-                            canManageUser &&
-                            user.role?.name !== "ADMIN" && (
-                                <Form.Item
-                                    name="status"
-                                    label="Trạng thái tài khoản"
-                                    valuePropName="checked"
-                                >
-                                    <Switch
-                                        checkedChildren="Active"
-                                        unCheckedChildren="Blocked"
-                                    />
-                                </Form.Item>
-                            )}
-
-                        {!isPublic && user.role?.name === "ADMIN" && (
-                            <Form.Item label="Trạng thái tài khoản">
-                                <Tag color="blue">ADMIN (Luôn Active)</Tag>
-                            </Form.Item>
-                        )}
-                    </div>
-                </Form>
-            </Modal>
+            {/* Modal */}
+            {modalElement}
         </div>
     );
 }

@@ -19,6 +19,7 @@
     "axios": "^1.12.2",
     "dayjs": "^1.11.18",
     "force-graph": "^1.51.0",
+    "framer-motion": "^12.23.24",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

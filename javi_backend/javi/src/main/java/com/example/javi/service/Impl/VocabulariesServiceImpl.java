@@ -212,6 +212,9 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         vocabulariesCacheService.deleteExplain(vocabResponse.getWord());
         log.info("[CACHE DELETE] Xóa cache explain của từ '{}'", vocabResponse.getWord());
         vocabulariesCacheService.clearAllSearches();
+        // Xóa & cập nhật lại cache detail theo id
+        vocabulariesCacheService.deleteById(id);
+        vocabulariesCacheService.saveById(id, vocabResponse);
 
         return vocabResponse;
     }
@@ -294,21 +297,24 @@ public class VocabulariesServiceImpl implements VocabulariesService {
 
     @Override
     public VocabResponse getVocabularyById(Long id) {
-        String cacheKey = "vocab:id:" + id;
-
-        VocabResponse cached = vocabulariesCacheService.get(cacheKey);
+        // 1. Lấy cache theo id
+        VocabResponse cached = vocabulariesCacheService.getById(id);
         if (cached != null) {
             log.info("[CACHE HIT] vocab id:{}", id);
             return cached;
         }
 
-        Vocabularies currentVocab =
-                vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+        // 2. Nếu chưa có cache thì lấy DB
+        Vocabularies currentVocab = vocabulariesRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
 
         VocabResponse response = vocabulariesMapper.toDto(currentVocab);
-        vocabulariesCacheService.save(cacheKey, response);
 
+        // 3. Lưu cache lại theo id
+        vocabulariesCacheService.saveById(id, response);
         log.info("[CACHE SAVE] vocab id:{}", id);
+
         return response;
     }
 
@@ -402,5 +408,8 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         vocabulariesCacheService.deleteExplain(vocabularies.getWord());
         log.info("[CACHE DELETE] Đã xóa cache explain của từ: {}", vocabularies.getWord());
         vocabulariesCacheService.clearAllSearches();
+        // Xóa cache theo id
+        vocabulariesCacheService.deleteById(id);
+
     }
 }

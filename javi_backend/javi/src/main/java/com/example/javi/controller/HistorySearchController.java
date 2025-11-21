@@ -3,7 +3,6 @@ package com.example.javi.controller;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -36,11 +35,7 @@ public class HistorySearchController {
             @PageableDefault(size = 15, sort = "searchedAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Users user = securityUtil.getCurrentUser();
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
-
-        Page<HistorySearch> response = historySearchService.getHistorySearch(user, oneIndexPageable);
+        Page<HistorySearch> response = historySearchService.getHistorySearch(user, pageable);
         return ApiResponse.builder()
                 .message("Lấy lịch sử người dùng thành công")
                 .result(response)

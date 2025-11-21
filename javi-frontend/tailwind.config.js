@@ -18,6 +18,7 @@ export default {
           "Arial",
           "sans-serif",
         ],
+        mplus: ['"M PLUS 1p"', "sans-serif"],
       },
     },
   },

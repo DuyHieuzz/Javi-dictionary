@@ -3,7 +3,7 @@ import { IBackendRes } from "@/types/backend";
 
 export const callGetHistory = (page: number, size = 15) => {
   return axiosClient.get<IBackendRes<any>>(`/history`, {
-    params: { page, size },
+    params: { page: page - 1, size },
   });
 };
 

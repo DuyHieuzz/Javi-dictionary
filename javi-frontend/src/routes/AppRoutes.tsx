@@ -3,7 +3,8 @@ import {
     RouterProvider,
     Navigate,
 } from "react-router-dom";
-
+import ProtectedRoute from "@/components/common/ProtectedRoute";
+import RequirePermission from "@/components/common/RequirePermission";
 import MainLayout from "../layouts/MainLayout";
 import NotFound from "../components/common/NotFount";
 import LoginPage from "../pages/auth/LoginPage";
@@ -14,17 +15,17 @@ import RegisterPage from "../pages/auth/RegisterPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import UserDetailPage from "@/pages/user/UserDetailPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import { useAuthStore } from "@/stores/useAuthStore";
 import OAuthCallbackPage from "@/pages/auth/OAuthCallbackPage";
 import KanjiResult from "@/pages/search/KanjiResult";
 import GrammarSearchHome from "@/components/grammar/GrammarSearchHome";
 import GrammarResult from "@/pages/search/GrammarResult";
 import SearchHomeContent from "@/components/search/SearchHomeContent";
 import TranslatePage from "@/pages/translate/TranslatePage";
+import IntroPage from "@/pages/intro/introPage";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminVocabulary from "@/pages/admin/AdminVocabulary";
 
 export default function App() {
-    const setAuth = useAuthStore((state) => state.setAuth);
-
     const router = createBrowserRouter([
         {
             path: "/",
@@ -71,6 +72,7 @@ export default function App() {
                 },
                 { path: "translate", element: <TranslatePage /> },
                 { path: "/users/my-info", element: <UserDetailPage /> },
+                { path: "intro", element: <IntroPage /> },
                 {
                     path: "/users/profile/:username",
                     element: <UserDetailPage />,
@@ -83,6 +85,89 @@ export default function App() {
                 { path: "register", element: <RegisterPage /> },
                 { path: "verify", element: <VerifyEmailPage /> },
                 { path: "/reset-password", element: <ResetPasswordPage /> },
+                // =====================
+                //     ADMIN ROUTES
+                // =====================
+                // {
+                //     path: "admin/grammar",
+                //     element: (
+                //         <ProtectedRoute>
+                //             <RequirePermission
+                //                 required={[
+                //                     "CREATE_GRAMMAR",
+                //                     "UPDATE_GRAMMAR",
+                //                     "DELETE_GRAMMAR",
+                //                 ]}
+                //             >
+                //                 <AdminGrammar />
+                //             </RequirePermission>
+                //         </ProtectedRoute>
+                //     ),
+                // },
+                {
+                    path: "admin/word",
+                    element: (
+                        <ProtectedRoute>
+                            <RequirePermission
+                                required={[
+                                    "CREATE_VOCABULARY",
+                                    "UPDATE_VOCABULARY",
+                                    "DELETE_VOCABULARY",
+                                ]}
+                            >
+                                <AdminVocabulary />
+                            </RequirePermission>
+                        </ProtectedRoute>
+                    ),
+                },
+                // {
+                //     path: "admin/kanji",
+                //     element: (
+                //         <ProtectedRoute>
+                //             <RequirePermission
+                //                 required={[
+                //                     "CREATE_KANJI",
+                //                     "UPDATE_KANJI",
+                //                     "DELETE_KANJI",
+                //                 ]}
+                //             >
+                //                 <AdminKanji />
+                //             </RequirePermission>
+                //         </ProtectedRoute>
+                //     ),
+                // },
+                {
+                    path: "admin/users",
+                    element: (
+                        <ProtectedRoute>
+                            <RequirePermission
+                                required={["MANAGE_USER", "CREATE_USER"]}
+                            >
+                                <AdminUsers />
+                            </RequirePermission>
+                        </ProtectedRoute>
+                    ),
+                },
+                // {
+                //     path: "admin/roles",
+                //     element: (
+                //         <ProtectedRoute>
+                //             <RequirePermission required={["MANAGE_ROLE"]}>
+                //                 <AdminRoles />
+                //             </RequirePermission>
+                //         </ProtectedRoute>
+                //     ),
+                // },
+                // {
+                //     path: "admin/permissions",
+                //     element: (
+                //         <ProtectedRoute>
+                //             <RequirePermission required={["MANAGE_PERMISSION"]}>
+                //                 <AdminPermissions />
+                //             </RequirePermission>
+                //         </ProtectedRoute>
+                //     ),
+                // },
                 { path: "*", element: <NotFound /> },
             ],
         },

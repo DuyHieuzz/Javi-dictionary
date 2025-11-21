@@ -38,6 +38,11 @@ body,
   font-family: "Inter", "Noto Sans JP", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important;
 }
 
+.font-mplus {
+  font-family: "M PLUS 1p", sans-serif !important;
+}
+
+
 /* Scrollbar nhỏ, đè lên nội dung */
 ::-webkit-scrollbar {
   width: 6px;

@@ -697,7 +697,7 @@ export default function HistoryModal({
                                                         </span>
                                                     ) : null}
                                                 </div>
-                                                <div className="text-sm text-gray-700 mt-1">
+                                                <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
                                                     {c.content}
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -778,7 +778,7 @@ export default function HistoryModal({
                                                         </span>
                                                     ) : null}
                                                 </div>
-                                                <div className="text-sm text-gray-700 mt-1">
+                                                <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
                                                     {c.content}
                                                 </div>
                                                 <div className="flex items-center justify-between">

@@ -44,7 +44,7 @@ export default function Comment({ entityType, entityId }: Props) {
                 params: {
                     entityType,
                     entityId,
-                    page,
+                    page: page - 1,
                     size: 10,
                     sort: ["likeCount,desc", "createdAt,desc"],
                 },

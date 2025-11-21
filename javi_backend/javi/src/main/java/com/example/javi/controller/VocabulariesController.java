@@ -5,7 +5,6 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
@@ -123,13 +122,9 @@ public class VocabulariesController {
             @Filter Specification<Vocabularies> spec,
             @RequestParam(required = false) String filter,
             @PageableDefault(size = 20, sort = "vocabId") Pageable pageable) {
-        int page = pageable.getPageNumber();
-        if (page <= 0) page = 1;
-        Pageable oneIndexPageable = PageRequest.of(page - 1, pageable.getPageSize(), pageable.getSort());
-
         return ApiResponse.<Page<VocabResponse>>builder()
                 .message("Lấy từ vựng thành công")
-                .result(vocabulariesService.getAllVocabulariesByFilter(spec, oneIndexPageable, filter))
+                .result(vocabulariesService.getAllVocabulariesByFilter(spec, pageable, filter))
                 .build();
     }
 

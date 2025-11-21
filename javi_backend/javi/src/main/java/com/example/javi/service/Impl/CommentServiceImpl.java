@@ -3,7 +3,10 @@ package com.example.javi.service.Impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.commons.text.StringEscapeUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Entities;
+import org.jsoup.safety.Safelist;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -47,20 +50,48 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse createComment(CreateCommentRequest request) {
         Users currentUser = securityUtil.getCurrentUser();
         // Kiểm tra entity tồn tại
-        String entityName = switch (request.getEntityType()) {
-            case WORD -> vocabRepository.findById(request.getEntityId())
-                    .map(Vocabularies::getWord)
-                    .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
-            case KANJI -> kanjiRepository.findById(request.getEntityId())
-                    .map(Kanji::getCharacterName)
-                    .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
-            case GRAMMAR -> grammarRepository.findById(request.getEntityId())
-                    .map(Grammar::getPattern)
-                    .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
-        };
+        String entityName =
+                switch (request.getEntityType()) {
+                    case WORD -> vocabRepository
+                            .findById(request.getEntityId())
+                            .map(Vocabularies::getWord)
+                            .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+                    case KANJI -> kanjiRepository
+                            .findById(request.getEntityId())
+                            .map(Kanji::getCharacterName)
+                            .orElseThrow(() -> new AppException(ErrorCode.KANJI_NOT_FOUND));
+                    case GRAMMAR -> grammarRepository
+                            .findById(request.getEntityId())
+                            .map(Grammar::getPattern)
+                            .orElseThrow(() -> new AppException(ErrorCode.GRAMMAR_NOT_FOUND));
+                };
 
-        String rawContent = request.getContent().replace("\r\n", "\n");
-        String sanitizedContent = StringEscapeUtils.escapeHtml4(rawContent);
+        // Chuẩn hoá và chuyển literal "\n" (nếu có) thành newline thật
+        String rawContent = Optional.ofNullable(request.getContent()).orElse("").replace("\r\n", "\n");
+        rawContent = rawContent.replace("\\n", "\n");
+
+        // Tách theo dòng, loại bỏ dòng chỉ có whitespace, trim từng dòng, sanitize từng dòng riêng
+        String[] lines = rawContent.split("\n", -1);
+        List<String> cleanedLines = new ArrayList<>();
+        for (String ln : lines) {
+            String trimmed = ln == null ? "" : ln.trim();
+            if (!trimmed.isEmpty()) {
+                // Loại bỏ thẻ HTML nguy hiểm nhưng giữ nguyên Unicode (không chuyển dấu tiếng Việt thành entity)
+                Document.OutputSettings os = new Document.OutputSettings();
+                os.escapeMode(Entities.EscapeMode.xhtml);
+                os.prettyPrint(false);
+                String safeLine = Jsoup.clean(trimmed, "", Safelist.none(), os);
+                cleanedLines.add(safeLine);
+            }
+        }
+
+        // Nối lại bằng newline (giữ xuống dòng giữa các dòng có chữ)
+        String sanitizedContent = String.join("\n", cleanedLines);
+
+        // Nếu sau khi lọc không còn nội dung hợp lệ thì trả lỗi
+        if (sanitizedContent.isBlank()) {
+            throw new AppException(ErrorCode.COMMENT_HAS_NO_CONTENT);
+        }
 
         Comment comment = Comment.builder()
                 .user(currentUser)
@@ -100,8 +131,33 @@ public class CommentServiceImpl implements CommentService {
         }
 
         // Làm sạch nội dung trước khi lưu
-        String rawContent = request.getContent().replace("\r\n", "\n");
-        String sanitizedContent = StringEscapeUtils.escapeHtml4(rawContent);
+        // Chuẩn hoá và chuyển literal "\n" (nếu có) thành newline thật
+        String rawContent = Optional.ofNullable(request.getContent()).orElse("").replace("\r\n", "\n");
+        rawContent = rawContent.replace("\\n", "\n");
+
+        // Tách theo dòng, loại bỏ dòng chỉ có whitespace, trim từng dòng, sanitize từng dòng riêng
+        String[] lines = rawContent.split("\n", -1);
+        List<String> cleanedLines = new ArrayList<>();
+        for (String ln : lines) {
+            String trimmed = ln == null ? "" : ln.trim();
+            if (!trimmed.isEmpty()) {
+                // Loại bỏ thẻ HTML nguy hiểm nhưng giữ nguyên Unicode (không chuyển dấu tiếng Việt thành entity)
+                Document.OutputSettings os = new Document.OutputSettings();
+                os.escapeMode(Entities.EscapeMode.xhtml);
+                os.prettyPrint(false);
+                String safeLine = Jsoup.clean(trimmed, "", Safelist.none(), os);
+                cleanedLines.add(safeLine);
+            }
+        }
+
+        // Nối lại bằng newline (giữ xuống dòng giữa các dòng có chữ)
+        String sanitizedContent = String.join("\n", cleanedLines);
+
+        // Nếu sau khi lọc không còn nội dung hợp lệ thì trả lỗi
+        if (sanitizedContent.isBlank()) {
+            throw new AppException(ErrorCode.COMMENT_HAS_NO_CONTENT);
+        }
+
         comment.setContent(sanitizedContent);
 
         commentRepository.save(comment);
