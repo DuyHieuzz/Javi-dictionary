@@ -50,6 +50,12 @@ export default function AppHeader({ onMenuClick }: HeaderProps) {
             "/jlpt": "JLPT",
             "/intro": "Giới thiệu",
             "/premium": "Nâng cấp",
+            "/admin/users": "Quản lý người dùng",
+            "/admin/word": "Quản lý từ vựng",
+            "/admin/kanji": "Quản lý kanji",
+            "/admin/grammar": "Quản lý ngữ pháp",
+            "/admin/roles": "Quản lý vai trò",
+            "/admin/permissions": "Quản lý quyền",
         }[location.pathname] || "Javi Dictionary";
 
     const displayName = user?.username || user?.fullName || "Người dùng";

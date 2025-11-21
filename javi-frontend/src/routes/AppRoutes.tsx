@@ -24,6 +24,7 @@ import TranslatePage from "@/pages/translate/TranslatePage";
 import IntroPage from "@/pages/intro/introPage";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminVocabulary from "@/pages/admin/AdminVocabulary";
+import AdminKanji from "@/pages/admin/AdminKanji";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -120,22 +121,22 @@ export default function App() {
                         </ProtectedRoute>
                     ),
                 },
-                // {
-                //     path: "admin/kanji",
-                //     element: (
-                //         <ProtectedRoute>
-                //             <RequirePermission
-                //                 required={[
-                //                     "CREATE_KANJI",
-                //                     "UPDATE_KANJI",
-                //                     "DELETE_KANJI",
-                //                 ]}
-                //             >
-                //                 <AdminKanji />
-                //             </RequirePermission>
-                //         </ProtectedRoute>
-                //     ),
-                // },
+                {
+                    path: "admin/kanji",
+                    element: (
+                        <ProtectedRoute>
+                            <RequirePermission
+                                required={[
+                                    "CREATE_KANJI",
+                                    "UPDATE_KANJI",
+                                    "DELETE_KANJI",
+                                ]}
+                            >
+                                <AdminKanji />
+                            </RequirePermission>
+                        </ProtectedRoute>
+                    ),
+                },
                 {
                     path: "admin/users",
                     element: (

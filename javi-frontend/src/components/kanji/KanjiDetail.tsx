@@ -5,6 +5,7 @@ import Comment from "@/components/comment/Comment";
 import { AiOutlinePartition } from "react-icons/ai";
 import KanjiDecompositionModal from "./KanjiDecompositionModal";
 import { IKanjiDetailResponse } from "@/types/backend";
+import DOMPurify from "dompurify";
 
 const { Title, Text } = Typography;
 
@@ -32,7 +33,11 @@ export default function KanjiDetail({ data }: Props) {
                         level={5}
                         className="!m-0 text-gray-700 text-base !font-normal"
                     >
-                        Chi tiết chữ Kanji {data.characterName}
+                        Chi tiết chữ Kanji:{" "}
+                        <span className="text-3xl text-[#3e67d6] font-mplus font-normal">
+                            {" "}
+                            {data.characterName}{" "}
+                        </span>
                     </Title>
 
                     {/* Hán tự */}
@@ -112,9 +117,15 @@ export default function KanjiDetail({ data }: Props) {
                         <Text strong className="block text-gray-600 mb-1">
                             Nghĩa và giải nghĩa
                         </Text>
-                        <pre className="whitespace-pre-wrap text-[15px] text-gray-700 font-sans leading-relaxed">
-                            {data.meaning}
-                        </pre>
+                        {/* Văn bản nghĩa (render HTML an toàn, giữ khoảng trắng) */}
+                        <div
+                            className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words"
+                            dangerouslySetInnerHTML={{
+                                __html:
+                                    DOMPurify.sanitize(data?.meaning || "") ||
+                                    `<span class="text-gray-400">—</span>`,
+                            }}
+                        />
                     </div>
                 </div>
 

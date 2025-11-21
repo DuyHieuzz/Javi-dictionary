@@ -25,7 +25,7 @@ public enum ErrorCode {
     NO_TRIAL_LEFT(1071, "Bạn đã dùng hết lượt giải thích miễn phí. Hãy nâng cấp lên Premium để tiếp tục.", HttpStatus.FORBIDDEN),
     FREE_USER_QUOTA_EXCEEDED(1073, "Bạn đã dùng hết lượt dịch ảnh miễn phí hôm nay.", HttpStatus.FORBIDDEN),
     IMAGE_TOO_LARGE(1074, "Dung lượng ảnh không được quá 4MB", HttpStatus.BAD_REQUEST),
-    IMAGE_GIF_TOO_LARGE(1092, "Dung lượng ảnh không được quá 10MB", HttpStatus.BAD_REQUEST),
+    IMAGE_GIF_TOO_LARGE(1092, "Dung lượng ảnh gif không được quá 10MB", HttpStatus.BAD_REQUEST),
 
     // LOGIN
     INCORRECT_LOGIN_INFORMATION(1006, "Đăng nhập thất bại. Email hoặc mật khẩu không đúng", HttpStatus.BAD_REQUEST),

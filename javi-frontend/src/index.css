@@ -72,3 +72,10 @@ body,
 .with-padding-modal .ant-modal-body {
     padding: 16px !important;   /* hoặc giá trị bạn muốn */
 }
+
+.meaning-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* số dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

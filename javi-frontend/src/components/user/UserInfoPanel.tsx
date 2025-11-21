@@ -1,4 +1,3 @@
-// src/components/user/UserInfoPanel.tsx
 import { useState, useEffect } from "react";
 import { FaUser } from "react-icons/fa";
 import { PiNotePencilLight } from "react-icons/pi";

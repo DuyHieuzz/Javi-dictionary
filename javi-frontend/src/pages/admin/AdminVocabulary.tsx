@@ -961,7 +961,7 @@ export default function AdminVocabulary() {
 
             <div className="bg-white rounded-2xl shadow p-4">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-base">Quản lý từ vựng</h3>
+                    <h3 className="font-semibold text-base"></h3>
 
                     {canCreate && (
                         <Button
