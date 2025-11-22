@@ -25,6 +25,7 @@ import IntroPage from "@/pages/intro/introPage";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminVocabulary from "@/pages/admin/AdminVocabulary";
 import AdminKanji from "@/pages/admin/AdminKanji";
+import AdminGrammar from "@/pages/admin/AdminGrammar";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -89,22 +90,22 @@ export default function App() {
                 // =====================
                 //     ADMIN ROUTES
                 // =====================
-                // {
-                //     path: "admin/grammar",
-                //     element: (
-                //         <ProtectedRoute>
-                //             <RequirePermission
-                //                 required={[
-                //                     "CREATE_GRAMMAR",
-                //                     "UPDATE_GRAMMAR",
-                //                     "DELETE_GRAMMAR",
-                //                 ]}
-                //             >
-                //                 <AdminGrammar />
-                //             </RequirePermission>
-                //         </ProtectedRoute>
-                //     ),
-                // },
+                {
+                    path: "admin/grammar",
+                    element: (
+                        <ProtectedRoute>
+                            <RequirePermission
+                                required={[
+                                    "CREATE_GRAMMAR",
+                                    "UPDATE_GRAMMAR",
+                                    "DELETE_GRAMMAR",
+                                ]}
+                            >
+                                <AdminGrammar />
+                            </RequirePermission>
+                        </ProtectedRoute>
+                    ),
+                },
                 {
                     path: "admin/word",
                     element: (

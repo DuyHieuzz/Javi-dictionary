@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,11 +19,13 @@ import com.example.javi.dto.response.ApiResponse;
 import com.example.javi.dto.response.GrammarCheckResult;
 import com.example.javi.dto.response.GrammarResponse;
 import com.example.javi.entity.EntityType;
+import com.example.javi.entity.Grammar;
 import com.example.javi.entity.Users;
 import com.example.javi.service.GeminiService;
 import com.example.javi.service.GrammarService;
 import com.example.javi.service.HistorySearchService;
 import com.example.javi.utils.SecurityUtil;
+import com.turkraft.springfilter.boot.Filter;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -87,7 +91,7 @@ public class GrammarController {
     @GetMapping("/search")
     public ApiResponse<Page<GrammarResponse>> searchGrammars(
             @ModelAttribute GrammarSearchRequest request,
-            @PageableDefault(size = 5, sort = "grammarId") Pageable pageable,
+            @PageableDefault(size = 10, sort = "grammarId", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(defaultValue = "true") boolean saveHistory,
             Authentication authentication) {
 
@@ -99,6 +103,17 @@ public class GrammarController {
         return ApiResponse.<Page<GrammarResponse>>builder()
                 .message("Tìm kiếm mẫu ngữ pháp thành công.")
                 .result(responsePage)
+                .build();
+    }
+
+    @GetMapping("")
+    public ApiResponse<Page<GrammarResponse>> findGrammarByFilter(
+            @Filter Specification<Grammar> spec,
+            @RequestParam(required = false) String filter,
+            @PageableDefault(size = 20, sort = "grammarId", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResponse.<Page<GrammarResponse>>builder()
+                .message("Lấy danh sách Ngữ pháp thành công")
+                .result(grammarService.getAllGrammarByFilter(spec, pageable, filter))
                 .build();
     }
 

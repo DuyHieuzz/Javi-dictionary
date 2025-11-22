@@ -305,9 +305,8 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         }
 
         // 2. Nếu chưa có cache thì lấy DB
-        Vocabularies currentVocab = vocabulariesRepository
-                .findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
+        Vocabularies currentVocab =
+                vocabulariesRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WORD_NOT_FOUND));
 
         VocabResponse response = vocabulariesMapper.toDto(currentVocab);
 
@@ -410,6 +409,5 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         vocabulariesCacheService.clearAllSearches();
         // Xóa cache theo id
         vocabulariesCacheService.deleteById(id);
-
     }
 }

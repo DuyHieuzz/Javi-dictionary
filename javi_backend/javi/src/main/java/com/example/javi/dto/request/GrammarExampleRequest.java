@@ -2,6 +2,8 @@ package com.example.javi.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -10,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true) // chấp nhận cho fe gửi lên các trường thừa
 public class GrammarExampleRequest {
     Long id;
 

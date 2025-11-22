@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 
 import com.example.javi.dto.request.CreateGrammarRequest;
 import com.example.javi.dto.request.GrammarExampleRequest;
@@ -192,6 +193,36 @@ public class GrammarServiceImpl implements GrammarService {
         // Lưu cache
         grammarCacheService.savePage(key, responsePage);
         log.info("[CACHE SAVE] Lưu cache page grammar với key {}", key);
+
+        return responsePage;
+    }
+
+    @Override
+    public Page<GrammarResponse> getAllGrammarByFilter(Specification<Grammar> spec, Pageable pageable, String filter) {
+        // Chuẩn hóa filter string để build key (giữ nguyên chuỗi filter nếu có, hoặc "no-filter")
+        String filterKey = (filter != null && !filter.isBlank()) ? filter.trim() : "no-filter";
+
+        // Hash chuỗi filter để key ngắn gọn và tránh vấn đề ký tự đặc biệt
+        String filterHash = DigestUtils.md5DigestAsHex(filterKey.getBytes());
+
+        // key chứa prefix + hash + paging (giống Kanji)
+        String cacheKey =
+                String.format("grammar:page:%s:%d:%d", filterHash, pageable.getPageNumber(), pageable.getPageSize());
+
+        // Thử lấy cache
+        Page<GrammarResponse> cached = grammarCacheService.getPage(cacheKey);
+        if (cached != null) {
+            log.info("[CACHE HIT] key={} (filter='{}')", cacheKey, filterKey);
+            return cached;
+        }
+
+        // Không có cache -> query DB
+        Page<Grammar> page = grammarRepository.findAll(spec, pageable);
+        Page<GrammarResponse> responsePage = page.map(grammarMapper::toGrammarResponse);
+
+        // Lưu cache
+        grammarCacheService.savePage(cacheKey, responsePage);
+        log.info("[CACHE SAVE] key={} (filter='{}')", cacheKey, filterKey);
 
         return responsePage;
     }

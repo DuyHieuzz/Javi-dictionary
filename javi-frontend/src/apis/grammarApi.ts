@@ -53,3 +53,16 @@ export const callDeleteGrammar = async (id: number) => {
 export const callCheckGrammar = async (data: IGrammarCheckSourceText) => {
     return axiosClient.post<IBackendRes<IGrammarCheckResult>>(`/grammar/check`, data);
 };
+
+/**
+ * Lấy danh sách grammar bằng turkraft filter
+ */
+export const callGetGrammarsByFilter = async (filter?: string, page = 0, size = 20) => {
+  return axiosClient.get<IBackendRes<IPageResponse<IGrammarResponse>>>(`/grammar`, {
+    params: {
+      filter: filter ?? undefined,
+      page,
+      size,
+    },
+  });
+};

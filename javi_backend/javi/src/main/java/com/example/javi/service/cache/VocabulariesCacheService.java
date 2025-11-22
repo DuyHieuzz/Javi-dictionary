@@ -111,5 +111,4 @@ public class VocabulariesCacheService {
     public void deleteById(Long id) {
         redisHelper.delete(PREFIX + "id:" + id);
     }
-
 }

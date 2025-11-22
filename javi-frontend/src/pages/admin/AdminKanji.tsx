@@ -1,4 +1,3 @@
-// (Toàn bộ file AdminKanji.tsx, chỉ thay đổi nhỏ ở phần input characterName -> thêm suffix icon)
 import { useEffect, useMemo, useState, useRef } from "react";
 
 import {

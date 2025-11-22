@@ -1,5 +1,6 @@
 import { IGrammarResponse } from "@/types/backend";
 import Comment from "@/components/comment/Comment";
+import DOMPurify from "dompurify";
 
 interface Props {
     data: IGrammarResponse;
@@ -14,18 +15,30 @@ export default function GrammarDetail({ data }: Props) {
                     <h1 className="text-xl mb-1 text-gray-900">
                         {data.pattern.trim()}
                     </h1>
-                    <p className="text-gray-700 text-[15px]">{data.meaning}</p>
+                    {/* Hiển thị meaning dưới dạng HTML đã sanitize (ReactQuill output) */}
+                    <div
+                        className="text-gray-700 text-[15px] prose max-w-none"
+                        // prose giúp một số style mặc định cho HTML (tuỳ project nếu dùng Tailwind Typography)
+                        dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(data.meaning || ""),
+                        }}
+                    />
                 </div>
             </div>
 
             <div className="">
                 {/* ====== CẤU TRÚC ====== */}
                 {data.structure && (
-                    <div className="text-[#3e67da] text-lg ">
-                        <h3 className="mb-3 mt-5">Cấu trúc</h3>
-                        <div className="border border-[#3e67d6] rounded-lg p-3 mt-3">
-                            {data.structure}
-                        </div>
+                    <div className="text-lg">
+                        <h3 className="text-[#3e67da] mb-3 mt-5">Cấu trúc:</h3>
+                        <div
+                            className="border border-[#3e67d6] p-2 rounded-lg"
+                            dangerouslySetInnerHTML={{
+                                __html: DOMPurify.sanitize(
+                                    data.structure || ""
+                                ),
+                            }}
+                        />
                     </div>
                 )}
 
@@ -35,9 +48,14 @@ export default function GrammarDetail({ data }: Props) {
                         <h3 className="text-lg text-[#3e67da] mb-3 mt-5">
                             Nghĩa
                         </h3>
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
-                            {data.usageNote}
-                        </p>
+                        <div
+                            className="text-gray-700 leading-relaxed text-base"
+                            dangerouslySetInnerHTML={{
+                                __html: DOMPurify.sanitize(
+                                    data.usageNote || ""
+                                ),
+                            }}
+                        />
                     </div>
                 )}
 
@@ -52,11 +70,11 @@ export default function GrammarDetail({ data }: Props) {
                                     <p className="text-lg text-gray-900">
                                         {ex.jaSentence}
                                     </p>
-                                    {ex.transcription && (
+                                    {/* {ex.transcription && (
                                         <p className="text-sm text-gray-500 ">
                                             {ex.transcription}
                                         </p>
-                                    )}
+                                    )} */}
                                     <p className="text-[15px] text-gray-700 mt-1">
                                         {ex.viSentence}
                                     </p>

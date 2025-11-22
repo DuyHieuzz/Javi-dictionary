@@ -79,3 +79,10 @@ body,
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.meaning-clamp-2-line {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* số dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
