@@ -219,7 +219,7 @@ export default function AdminKanji() {
                     const safeHtml = m ? DOMPurify.sanitize(m) : "";
                     return (
                         <div
-                            className="text-sm meaning-clamp whitespace-pre-wrap break-words "
+                            className="text-sm meaning-clamp whitespace-pre-wrap break-words truncate "
                             dangerouslySetInnerHTML={{
                                 __html:
                                     safeHtml ||
@@ -891,7 +891,7 @@ export default function AdminKanji() {
                                     setSize(pageSizeNew);
                             },
                         }}
-                        scroll={{ x: 900 }}
+                        scroll={{ x: 1200 }}
                     />
                 </div>
             </div>

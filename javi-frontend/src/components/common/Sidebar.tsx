@@ -126,7 +126,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         <>
             {/* Overlay cho mobile */}
             <div
-                className={`fixed inset-0 bg-black/40 z-30 transition-opacity duration-300 md:hidden ${
+                className={`fixed inset-0 bg-black/40 z-30 transition-opacity duration-300 lg:hidden ${
                     open ? "opacity-100 visible" : "opacity-0 invisible"
                 }`}
                 onClick={() => setOpen(false)}
@@ -138,7 +138,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                             bg-gradient-to-b from-[#3e66d4] to-[#2c3f84]
                             text-white flex flex-col transform transition-transform duration-300
                             ${open ? "translate-x-0" : "-translate-x-full"}
-                            md:translate-x-0 md:z-40`}
+                            lg:translate-x-0 lg:z-40`}
             >
                 <Link to="/">
                     <div className="flex justify-center items-center my-3">

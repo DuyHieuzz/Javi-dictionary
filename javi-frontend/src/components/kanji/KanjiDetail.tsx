@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tag, Tooltip, Button, Typography, Divider } from "antd";
 import { PlayCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import Comment from "@/components/comment/Comment";
@@ -23,6 +23,21 @@ export default function KanjiDetail({ data }: Props) {
             videoRef.current.play();
         }
     };
+
+    useEffect(() => {
+        // Khi video url thay đổi (hoặc component mount), thử phát video tự động.
+        // Việc gọi play() có thể bị block nếu browser không cho phép autoplay, nhưng
+        // vì video muted nên hầu hết browser sẽ cho phép.
+        const v = videoRef.current;
+        if (v) {
+            // đảm bảo start từ đầu
+            v.currentTime = 0;
+            // try play, catch lỗi để tránh console error
+            v.play().catch(() => {
+                // bình thường sẽ không có lỗi vì muted, nhưng vẫn bắt lỗi để an toàn
+            });
+        }
+    }, [data.videoUrl]); // chạy khi url thay đổi
 
     return (
         <div className=" bg-white rounded-2xl shadow-lg p-4">
@@ -147,6 +162,9 @@ export default function KanjiDetail({ data }: Props) {
                                 className="w-full h-full object-contain"
                                 playsInline
                                 muted
+                                autoPlay
+                                loop
+                                preload="auto"
                             />
                             <Tooltip title="Phát lại video">
                                 <Button

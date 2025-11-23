@@ -5,6 +5,7 @@ import {
     IMeaning,
 } from "@/types/backend";
 import { RotateCcw } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface Props {
     vocabularies: IVocabResponse[];
@@ -23,6 +24,20 @@ export default function VocabularyList({
     kanjiDetails,
     onViewKanjiDetail,
 }: Props) {
+    const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+    // khi kanjiDetails thay đổi -> thử autoplay các video (muted)
+    useEffect(() => {
+        kanjiDetails.forEach((k, idx) => {
+            const v = videoRefs.current[idx];
+            if (v && k.videoUrl) {
+                v.muted = true;
+                v.loop = true;
+                v.playsInline = true;
+                // try play, ignore rejection (browser có thể block)
+                v.play().catch(() => {});
+            }
+        });
+    }, [kanjiDetails]);
     return (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-3 flex flex-col">
             <h3 className="text-gray-800 mb-3 text-[15px]">
@@ -106,26 +121,40 @@ export default function VocabularyList({
                                         ) : (
                                             <>
                                                 <video
+                                                    ref={(el) => {
+                                                        videoRefs.current[idx] =
+                                                            el;
+                                                    }}
                                                     src={k.videoUrl}
                                                     className="w-[80px] h-[80px] object-contain rounded shadow-sm"
                                                     muted
                                                     playsInline
                                                     loop
-                                                    ref={(video) => {
-                                                        if (video)
-                                                            video.pause();
-                                                    }}
+                                                    // preload để giảm độ trễ
+                                                    preload="auto"
                                                 />
                                                 {/* Nút phát lại góc trên phải */}
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        const video = e
-                                                            .currentTarget
-                                                            .previousSibling as HTMLVideoElement;
+                                                        const video =
+                                                            videoRefs.current[
+                                                                idx
+                                                            ];
                                                         if (video) {
-                                                            video.currentTime = 0;
-                                                            video.play();
+                                                            try {
+                                                                video.pause();
+                                                                video.currentTime = 0;
+                                                                video
+                                                                    .play()
+                                                                    .catch(
+                                                                        () => {
+                                                                            // ignore nếu browser block play
+                                                                        }
+                                                                    );
+                                                            } catch (err) {
+                                                                // ignore timing errors
+                                                            }
                                                         }
                                                     }}
                                                     title="Phát lại video"

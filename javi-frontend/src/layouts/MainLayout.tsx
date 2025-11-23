@@ -22,7 +22,7 @@ export default function MainLayout() {
             <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
             {/* Nội dung chính */}
-            <div className="flex flex-col min-h-screen md:ml-[214px] transition-all duration-300">
+            <div className="flex flex-col min-h-screen lg:ml-[214px] transition-all duration-300">
                 {/* Header */}
                 <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 

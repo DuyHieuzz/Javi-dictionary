@@ -510,24 +510,26 @@ export default function AdminGrammar() {
                         </div>
                     )}
                 </div>
-
-                <Table
-                    rowKey="id"
-                    columns={columns}
-                    dataSource={data}
-                    loading={loading}
-                    pagination={{
-                        current: page,
-                        pageSize: size,
-                        position: ["bottomCenter"],
-                        total,
-                        showSizeChanger: true,
-                        onChange: (p, s) => {
-                            setPage(p);
-                            setSize(s || size);
-                        },
-                    }}
-                />
+                <div className="overflow-x-auto">
+                    <Table
+                        rowKey="id"
+                        columns={columns}
+                        dataSource={data}
+                        loading={loading}
+                        pagination={{
+                            current: page,
+                            pageSize: size,
+                            position: ["bottomCenter"],
+                            total,
+                            showSizeChanger: true,
+                            onChange: (p, s) => {
+                                setPage(p);
+                                setSize(s || size);
+                            },
+                        }}
+                        scroll={{ x: 1200 }}
+                    />
+                </div>
             </div>
 
             {/* Modal create/edit */}

@@ -26,6 +26,7 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminVocabulary from "@/pages/admin/AdminVocabulary";
 import AdminKanji from "@/pages/admin/AdminKanji";
 import AdminGrammar from "@/pages/admin/AdminGrammar";
+import JlptPage from "@/pages/jlpt/JlptPage";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -73,6 +74,7 @@ export default function App() {
                     ],
                 },
                 { path: "translate", element: <TranslatePage /> },
+                { path: "/jlpt", element: <JlptPage /> },
                 { path: "/users/my-info", element: <UserDetailPage /> },
                 { path: "intro", element: <IntroPage /> },
                 {

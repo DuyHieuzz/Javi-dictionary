@@ -1,5 +1,6 @@
 import { Select, Empty } from "antd";
 import { IGrammarResponse } from "@/types/backend";
+import DOMPurify from "dompurify";
 
 interface Props {
     grammars: IGrammarResponse[];
@@ -86,9 +87,12 @@ export default function GrammarList({
                                 </span>
                             </div>
 
-                            <div className="text-gray-600 text-sm line-clamp-2">
-                                {g.meaning}
-                            </div>
+                            <div
+                                className="text-gray-600 text-sm line-clamp-2"
+                                dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(g.meaning || ""),
+                                }}
+                            />
                         </div>
                     ))}
                 </div>

@@ -5,6 +5,7 @@ import { callSearchGrammars, callGetGrammarDetail } from "@/apis/grammarApi";
 import { IGrammarResponse, IPageResponse } from "@/types/backend";
 import { useSearchParams } from "react-router-dom";
 import GrammarDetail from "@/components/grammar/GrammarDetail";
+import DOMPurify from "dompurify";
 
 const levelOptions: {
     label: string;
@@ -21,7 +22,6 @@ const levelOptions: {
 export default function GrammarSearchHome() {
     const [searchParams] = useSearchParams();
     const keyword = searchParams.get("q") || "";
-
     const [level, setLevel] = useState<"" | "N5" | "N4" | "N3" | "N2" | "N1">(
         ""
     );
@@ -102,12 +102,8 @@ export default function GrammarSearchHome() {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="w-full p-3 bg-white">
-                <h2 className="text-lg font-semibold mb-3">
-                    Kết quả tra cứu ngữ pháp
-                </h2>
-
-                <div className="flex gap-3 mb-5">
+            <div className="w-full p-3 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                <div className="flex gap-3 mb-3">
                     <Select
                         value={level || undefined}
                         onChange={handleLevelChange}
@@ -145,28 +141,48 @@ export default function GrammarSearchHome() {
                                     onClick={() => handleOpenDetail(g.id)} // mở modal thay vì navigate
                                     className="p-3 cursor-pointer hover:bg-gray-50 transition rounded-md"
                                 >
-                                    <div className="flex flex-col items-start ">
-                                        <span
-                                            className={`text-xs font-bold text-white rounded-full px-2 py-0.5 ${
-                                                g.level === "N1"
-                                                    ? "bg-blue-600"
-                                                    : g.level === "N2"
-                                                    ? "bg-green-600"
-                                                    : g.level === "N3"
-                                                    ? "bg-yellow-500"
-                                                    : g.level === "N4"
-                                                    ? "bg-red-500"
-                                                    : "bg-purple-700"
-                                            }`}
-                                        >
-                                            {g.level}
-                                        </span>
-                                        <span className="text-lg font-medium my-2">
-                                            {g.pattern.trim()}
-                                        </span>
-                                    </div>
-                                    <div className="text-gray-600 text-sm line-clamp-2">
-                                        {g.meaning}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="w-full flex items-center justify-between">
+                                            <div className="flex items-center">
+                                                <span
+                                                    className={`text-xs font-bold text-white rounded-full px-2 py-0.5 flex-shrink-0
+                                                        ${
+                                                            g.level === "N1"
+                                                                ? "bg-blue-600"
+                                                                : g.level ===
+                                                                  "N2"
+                                                                ? "bg-green-600"
+                                                                : g.level ===
+                                                                  "N3"
+                                                                ? "bg-yellow-500"
+                                                                : g.level ===
+                                                                  "N4"
+                                                                ? "bg-red-500"
+                                                                : "bg-purple-700"
+                                                        }
+                                                    `}
+                                                >
+                                                    {g.level}
+                                                </span>
+                                            </div>
+
+                                            <div className="ml-4 flex-1 text-left">
+                                                <span className="text-lg font-medium">
+                                                    {g.pattern.trim()}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            className="text-gray-600 text-sm line-clamp-2 whitespace-pre-wrap break-words md:w-1/2 self-start"
+                                            dangerouslySetInnerHTML={{
+                                                __html: g.meaning
+                                                    ? DOMPurify.sanitize(
+                                                          g.meaning
+                                                      )
+                                                    : `<span class='text-gray-400'>—</span>`,
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             ))}

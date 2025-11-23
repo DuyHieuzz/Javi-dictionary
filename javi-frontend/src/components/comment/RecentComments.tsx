@@ -19,7 +19,7 @@ export default function RecentComments() {
     const [entityType, setEntityType] = useState<EntityType>("WORD");
     const [entityId, setEntityId] = useState<number | string>(0);
 
-    const load = async (pageToLoad = 1, reset = false) => {
+    const load = async (pageToLoad = page, reset = false) => {
         if (loading) return;
         try {
             setLoading(true);
@@ -29,7 +29,7 @@ export default function RecentComments() {
             // dùng functional update để tránh stale state khi setItems dựa trên items hiện tại
             setItems((prev) => (reset ? list : [...prev, ...list]));
             setHasMore(!(data?.last ?? true));
-            setPage((data?.number ?? 0) + 1);
+            setPage(pageToLoad + 1);
         } finally {
             setLoading(false);
         }
@@ -52,7 +52,7 @@ export default function RecentComments() {
         t === "WORD" ? "từ vựng" : t === "KANJI" ? "hán tự" : "ngữ pháp";
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm p-3 flex flex-col">
+        <div className="bg-white rounded-2xl shadow-sm py-3 pl-3 flex flex-col">
             <h2 className="flex items-center gap-2 text-base text-center pb-3 border-b border-gray-300">
                 <GoCommentDiscussion className="text-lg" /> Bình luận gần đây
             </h2>

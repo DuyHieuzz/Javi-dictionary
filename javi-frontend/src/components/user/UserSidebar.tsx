@@ -85,7 +85,7 @@ export default function UserSidebar({
     ];
 
     return (
-        <div className="w-full md:w-[320px] bg-white rounded-2xl shadow p-5 flex flex-col items-center text-center gap-3">
+        <div className="w-full lg:w-[320px] bg-white rounded-2xl shadow p-5 flex flex-col items-center text-center gap-3">
             {/* Avatar (giữ nguyên layout & overlay) */}
             <div className="relative mb-3 mt-5 flex flex-col items-center">
                 {canUpload ? (

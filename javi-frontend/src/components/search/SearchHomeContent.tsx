@@ -63,16 +63,6 @@ export default function SearchHomeContent() {
     const openHistoryModal = () => setHistoryModalOpen(true);
     const closeHistoryModal = () => setHistoryModalOpen(false);
 
-    // helper map entityType -> picker default tab
-    const mapToTab = (entityType?: string | null) => {
-        if (!entityType) return null;
-        const key = String(entityType).toUpperCase();
-        if (key === "KANJI") return "KANJI";
-        if (key === "WORD" || key === "VOCABULARY") return "WORD";
-        if (key === "GRAMMAR") return "GRAMMAR";
-        return null;
-    };
-
     /**
      * Khi click 1 chip trong preview lịch sử:
      * - Nếu item.entityId tồn tại => mở detail modal (truyền id hoặc character string)
@@ -88,7 +78,6 @@ export default function SearchHomeContent() {
             h?.entityId !== null &&
             String(h.entityId) !== ""
         ) {
-            // For Kanji we still prefer entityName (character) if present
             let idOrName: number | string = h.entityId;
             if (type === "KANJI" && h.entityName) {
                 idOrName = h.entityName;
@@ -104,7 +93,6 @@ export default function SearchHomeContent() {
         const kw = h.entityName ?? h.keyword ?? "";
         if (!kw) return;
 
-        // set defaultTab = null explicitly so HistoryPickerModal will fetch all three
         setPickerKeyword(kw);
         setPickerDefaultTab(null);
         setPickerOpen(true);
@@ -113,7 +101,6 @@ export default function SearchHomeContent() {
     /**
      * Handler khi picker modal trả về 1 selection
      * payload: { entityType, id?, name? }
-     *
      * - Nếu id tồn tại -> mở detail modal (SearchResultModal)
      * - Nếu id không tồn tại -> điều hướng tới trang search?keyword=...&type=...
      */
@@ -140,7 +127,6 @@ export default function SearchHomeContent() {
         const kw = payload.name ?? "";
         if (!kw) return;
 
-        // close history modal preview if it's open
         setHistoryModalOpen(false);
 
         const params = new URLSearchParams();
@@ -255,21 +241,17 @@ export default function SearchHomeContent() {
                         JLPT
                     </h2>
                     <div className="flex flex-wrap justify-start items-center">
-                        <button className="px-4 py-2 rounded-2xl first:ml-[6px] bg-[#f1f5fd] text-black m-[6px] px-[14px] py-[8px]">
-                            N1
-                        </button>
-                        <button className="px-4 py-2 rounded-2xl first:ml-[6px] bg-[#f1f5fd] text-black m-[6px] px-[14px] py-[8px]">
-                            N2
-                        </button>
-                        <button className="px-4 py-2 rounded-2xl first:ml-[6px] bg-[#f1f5fd] text-black m-[6px] px-[14px] py-[8px]">
-                            N3
-                        </button>
-                        <button className="px-4 py-2 rounded-2xl first:ml-[6px] bg-[#f1f5fd] text-black m-[6px] px-[14px] py-[8px]">
-                            N4
-                        </button>
-                        <button className="px-4 py-2 rounded-2xl first:ml-[6px] bg-[#f1f5fd] text-black m-[6px] px-[14px] py-[8px]">
-                            N5
-                        </button>
+                        {["N1", "N2", "N3", "N4", "N5"].map((lvl) => (
+                            <button
+                                key={lvl}
+                                className="px-4 py-2 rounded-2xl first:ml-[6px] bg-[#f1f5fd] text-black m-[6px] px-[14px] py-[8px]"
+                                onClick={() =>
+                                    navigate(`/jlpt?level=${lvl}&type=vocab`)
+                                }
+                            >
+                                {lvl}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </section>

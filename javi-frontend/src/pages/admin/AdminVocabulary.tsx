@@ -621,7 +621,7 @@ export default function AdminVocabulary() {
                 key: "word",
                 render: (_: any, record: IVocabResponse) => (
                     <div className="space-y-1">
-                        <Text className="text-3xl text-[#3e67d6] font-mplus font-normal">
+                        <Text className="text-3xl text-[#3e67d6] font-mplus font-normal truncate">
                             {record.word}
                         </Text>
                         <div className="flex flex-col text-xs text-gray-600 ">
@@ -683,7 +683,7 @@ export default function AdminVocabulary() {
                         .map((m) => m.meaningVn);
                     const remain = meanings.length - firstTwo.length;
                     return (
-                        <div className="space-y-1">
+                        <div className="space-y-1 truncate">
                             {firstTwo.map((m, idx) => (
                                 <div key={idx} className="text-sm">
                                     - {m}

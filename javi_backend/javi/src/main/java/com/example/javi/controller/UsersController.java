@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -100,7 +101,8 @@ public class UsersController {
     @GetMapping("")
     @PreAuthorize("hasAuthority('MANAGE_USER')")
     ApiResponse<Page<UserResponse>> getAllUsersByFilter(
-            @Filter Specification<Users> spec, @PageableDefault(size = 20, sort = "Id") Pageable pageable) {
+            @Filter Specification<Users> spec,
+            @PageableDefault(size = 20, sort = "Id", direction = Sort.Direction.DESC) Pageable pageable) {
 
         return ApiResponse.<Page<UserResponse>>builder()
                 .message("Lấy danh sách người dùng thành công")

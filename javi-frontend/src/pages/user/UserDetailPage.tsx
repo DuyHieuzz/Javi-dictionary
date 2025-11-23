@@ -109,7 +109,7 @@ export default function UserDetailPage() {
 
     return (
         <div className="flex flex-col lg:flex-row gap-4">
-            <div className="w-full md:w-[25%]">
+            <div className="w-full lg:w-[25%]">
                 <UserSidebar
                     user={user}
                     activeTab={activeTab}
@@ -119,7 +119,7 @@ export default function UserDetailPage() {
                 />
             </div>
 
-            <div className="w-full md:w-[75%]">
+            <div className="w-full lg:w-[75%]">
                 {/*
                   Lưu ý:
                   - Nếu admin view (state.adminView) thì chúng ta đã fetch user bằng id (callGetUserById),

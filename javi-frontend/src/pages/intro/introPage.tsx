@@ -48,7 +48,7 @@ export default function IntroPage(): JSX.Element {
     return (
         <main className="min-h-screen text-gray-900">
             {/* HERO */}
-            <section className="mx-auto px-3 md:px-0 py-16 flex flex-col lg:flex-row items-center gap-10">
+            <section className="mx-auto px-3 lg:px-0 py-16 flex flex-col lg:flex-row items-center gap-10">
                 <div className="flex-1">
                     <motion.h1
                         initial={{ opacity: 0, y: 8 }}
@@ -150,7 +150,7 @@ export default function IntroPage(): JSX.Element {
             </section>
 
             {/* FEATURES */}
-            <section id="features" className="mx-auto px-3 md:px-0 py-12">
+            <section id="features" className="mx-auto px-3 lg:px-0 py-12">
                 <h2 className="text-2xl font-medium text-[#3e67d6]">
                     Tính năng nổi bật
                 </h2>
@@ -192,7 +192,7 @@ export default function IntroPage(): JSX.Element {
             </section>
 
             {/* HOW IT WORKS */}
-            <section id="how" className="mx-auto px-3 md:px-0 py-12">
+            <section id="how" className="mx-auto px-3 lg:px-0 py-12">
                 <h3 className="text-2xl font-medium text-[#3e67d6]">
                     Hoạt động trong 3 bước
                 </h3>

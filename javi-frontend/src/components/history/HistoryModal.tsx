@@ -197,65 +197,155 @@ export default function HistoryModal({
         } else if (isLiked) {
             fetchLikedCommentsPage(1, true);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, activeTab]);
 
     // -------------------------
     // infinite scroll HISTORY
     // -------------------------
     useEffect(() => {
-        if (!isHistory) return;
+        // chỉ gắn listener khi element tồn tại
         const el = historyRef.current;
         if (!el) return;
+
+        let throttleTimeout: any = null;
+
+        // handler chính (chỉ quyết định gọi khi guard ok)
         const onScroll = () => {
-            if (!hasMore || loadingMore) return;
+            // guard tổng quát: nếu đang load hoặc không còn page thì không gọi
+            if (!hasMore || loading || loadingMore) return;
+
             const threshold = 260;
             const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+
             if (remaining < threshold) {
                 fetchHistoryPage(page + 1, false);
             }
         };
-        el.addEventListener("scroll", onScroll);
-        return () => el.removeEventListener("scroll", onScroll);
-    }, [hasMore, loadingMore, page, isHistory]);
+
+        // throttle đơn giản để giảm tần suất xử lý khi user scroll nhanh
+        const throttled = () => {
+            if (throttleTimeout) return;
+            throttleTimeout = window.setTimeout(() => {
+                throttleTimeout = null;
+                onScroll();
+            }, 120);
+        };
+
+        // luôn add listener khi element có mặt (không phụ thuộc hasMore)
+        el.addEventListener("scroll", throttled);
+
+        // kiểm tra ngay lần đầu (trường hợp content ngắn, cần load tiếp)
+        setTimeout(() => {
+            try {
+                const remaining =
+                    el.scrollHeight - el.scrollTop - el.clientHeight;
+                if (remaining < 260 && hasMore && !loading && !loadingMore) {
+                    fetchHistoryPage(page + 1, false);
+                }
+            } catch (e) {}
+        }, 50);
+
+        return () => {
+            el.removeEventListener("scroll", throttled);
+            if (throttleTimeout) clearTimeout(throttleTimeout);
+        };
+    }, [page, hasMore, loading, loadingMore, isHistory, open]);
 
     // -------------------------
-    // infinite scroll COMMENTS (auto load khi cuộn gần đáy)
+    // infinite scroll COMMENTS (góp ý của tôi)
     // -------------------------
     useEffect(() => {
-        if (!isComments) return;
         const el = commentsRef.current;
         if (!el) return;
+
+        let throttleTimeout: any = null;
+
         const onScroll = () => {
             if (!commentsHasMore || commentsLoading) return;
+
             const threshold = 260;
             const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+
             if (remaining < threshold) {
                 fetchCommentsPage(commentsPage + 1, false);
             }
         };
-        el.addEventListener("scroll", onScroll);
-        return () => el.removeEventListener("scroll", onScroll);
-    }, [commentsHasMore, commentsLoading, commentsPage, isComments]);
+
+        const throttled = () => {
+            if (throttleTimeout) return;
+            throttleTimeout = window.setTimeout(() => {
+                throttleTimeout = null;
+                onScroll();
+            }, 120);
+        };
+
+        el.addEventListener("scroll", throttled);
+
+        // kiểm tra ngay lần đầu
+        setTimeout(() => {
+            try {
+                const remaining =
+                    el.scrollHeight - el.scrollTop - el.clientHeight;
+                if (remaining < 260 && commentsHasMore && !commentsLoading) {
+                    fetchCommentsPage(commentsPage + 1, false);
+                }
+            } catch (e) {}
+        }, 50);
+
+        return () => {
+            el.removeEventListener("scroll", throttled);
+            if (throttleTimeout) clearTimeout(throttleTimeout);
+        };
+        // dependencies
+    }, [commentsPage, commentsHasMore, commentsLoading, isComments, open]);
 
     // -------------------------
-    // infinite scroll LIKED (auto load khi cuộn gần đáy)
+    // infinite scroll LIKED (góp ý đã thích)
     // -------------------------
     useEffect(() => {
-        if (!isLiked) return;
         const el = likedRef.current;
         if (!el) return;
+
+        let throttleTimeout: any = null;
+
         const onScroll = () => {
             if (!commentsHasMore || commentsLoading) return;
+
             const threshold = 260;
             const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+
             if (remaining < threshold) {
                 fetchLikedCommentsPage(commentsPage + 1, false);
             }
         };
-        el.addEventListener("scroll", onScroll);
-        return () => el.removeEventListener("scroll", onScroll);
-    }, [commentsHasMore, commentsLoading, commentsPage, isLiked]);
+
+        const throttled = () => {
+            if (throttleTimeout) return;
+            throttleTimeout = window.setTimeout(() => {
+                throttleTimeout = null;
+                onScroll();
+            }, 120);
+        };
+
+        el.addEventListener("scroll", throttled);
+
+        // kiểm tra ngay lần đầu
+        setTimeout(() => {
+            try {
+                const remaining =
+                    el.scrollHeight - el.scrollTop - el.clientHeight;
+                if (remaining < 260 && commentsHasMore && !commentsLoading) {
+                    fetchLikedCommentsPage(commentsPage + 1, false);
+                }
+            } catch (e) {}
+        }, 50);
+
+        return () => {
+            el.removeEventListener("scroll", throttled);
+            if (throttleTimeout) clearTimeout(throttleTimeout);
+        };
+        // dependencies
+    }, [commentsPage, commentsHasMore, commentsLoading, isLiked, open]);
 
     // -------------------------
     // XỬ LÝ XÓA (history)

@@ -112,19 +112,19 @@ export default function AppHeader({ onMenuClick }: HeaderProps) {
     return (
         <header
             className={`fixed top-0 z-40
-        w-full md:w-[calc(100%-214px)] md:left-[214px]
+        w-full lg:w-[calc(100%-214px)] lg:left-[214px]
         h-[64px] flex items-center transition-all duration-200
         ${isScrolled ? "bg-[#fefefe]/90" : "bg-transparent"}`}
         >
             <div className="w-full max-w-[1380px] mx-auto flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
                     <button
-                        className="md:hidden text-gray-700 text-2xl"
+                        className="lg:hidden text-gray-700 text-2xl"
                         onClick={onMenuClick}
                     >
                         <RxHamburgerMenu />
                     </button>
-                    <h1 className="hidden md:block text-xl transition-colors duration-300 text-gray-800">
+                    <h1 className="hidden lg:block text-xl transition-colors duration-300 text-gray-800">
                         {currentTitle}
                     </h1>
                 </div>

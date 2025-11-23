@@ -287,7 +287,7 @@ export default function UserInfoPanel({
             className="with-padding-modal"
         >
             <Form layout="vertical" form={form}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <Form.Item
                         name="fullName"
                         label="Họ và tên"
@@ -366,7 +366,7 @@ export default function UserInfoPanel({
                     />
                 </Form.Item>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {!isPublic &&
                         realCanManageUser &&
                         user.role?.name !== "ADMIN" && (
@@ -484,7 +484,7 @@ export default function UserInfoPanel({
                     <h4 className="text-base text-[#3e67d6] mb-2 border-b border-gray-200 pb-3">
                         Vai trò & Quyền hạn
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-700">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 text-gray-700">
                         <div>
                             <p className="font-normal text-[15px] mb-1">
                                 Role: <span>{user.role?.name}</span>
@@ -493,7 +493,7 @@ export default function UserInfoPanel({
                                 {user.role?.description}
                             </p>
                         </div>
-                        <div className="md:mt-2">
+                        <div className="lg:mt-2">
                             <div className="flex flex-wrap gap-2">
                                 {user.role?.permissions?.map((perm: any) => (
                                     <Tooltip
