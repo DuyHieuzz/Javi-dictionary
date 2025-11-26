@@ -109,7 +109,7 @@ export default function UserDetailPage() {
 
     return (
         <div className="flex flex-col lg:flex-row gap-4">
-            <div className="w-full lg:w-[25%]">
+            <div className="w-full lg:w-[25%] px-2 lg:px-0">
                 <UserSidebar
                     user={user}
                     activeTab={activeTab}
@@ -119,7 +119,7 @@ export default function UserDetailPage() {
                 />
             </div>
 
-            <div className="w-full lg:w-[75%]">
+            <div className="w-full lg:w-[75%] px-2 lg:px-0">
                 {/*
                   Lưu ý:
                   - Nếu admin view (state.adminView) thì chúng ta đã fetch user bằng id (callGetUserById),
@@ -140,7 +140,11 @@ export default function UserDetailPage() {
                 />
                 {activeTab === "security" && <UserSecurityPanel />}
                 {activeTab === "activity" && (
-                    <UserActivityPanel pageSize={20} />
+                    <UserActivityPanel
+                        pageSize={20}
+                        // truyền username từ route (public) hoặc fallback user?.username (admin view)
+                        username={username || user?.username || null}
+                    />
                 )}
             </div>
         </div>

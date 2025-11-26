@@ -1,36 +1,31 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Search, ImageIcon, Zap, ShieldCheck, Repeat } from "lucide-react";
+import { Search, ImageIcon, Zap, ShieldCheck } from "lucide-react";
 import introVideo from "@/assets/introVideo.mp4";
+import { AiOutlineHistory } from "react-icons/ai";
 
 export default function IntroPage(): JSX.Element {
-    // Smooth scroll helper
     const smoothScrollTo = (id: string) => {
         const el = document.getElementById(id);
         if (!el) return;
 
-        // If you have a fixed header, set headerHeight to its pixel height
-        const headerHeight = getFixedHeaderHeight(); // function below
+        const headerHeight = getFixedHeaderHeight();
         const rect = el.getBoundingClientRect();
         const absoluteElementTop = rect.top + window.pageYOffset;
-        const target = absoluteElementTop - headerHeight - 12; // tiny gap
+        const target = absoluteElementTop - headerHeight - 12;
 
-        // Use window.scrollTo with smooth behavior
         window.scrollTo({
             top: target,
             behavior: "smooth",
         });
     };
 
-    // Detect a common fixed header height (customize if your header height differs)
     const getFixedHeaderHeight = () => {
-        // Try to find common header IDs/classes you might use (adjust if needed)
         const header =
             document.querySelector("header") ||
             document.getElementById("main-header") ||
             document.querySelector(".site-header");
         if (!header) return 0;
-        // get bounding height (if header is fixed)
         const style = window.getComputedStyle(header);
         const position = style.position;
         if (position !== "fixed" && position !== "sticky") {
@@ -39,16 +34,15 @@ export default function IntroPage(): JSX.Element {
         return (header as HTMLElement).getBoundingClientRect().height || 0;
     };
 
-    // anchor click wrapper
     const onAnchorClick = (e: React.MouseEvent, id: string) => {
         e.preventDefault();
         smoothScrollTo(id);
     };
 
     return (
-        <main className="min-h-screen text-gray-900">
+        <main className="min-h-screen text-gray-900 px-2">
             {/* HERO */}
-            <section className="mx-auto px-3 lg:px-0 py-16 flex flex-col lg:flex-row items-center gap-10">
+            <section className="mx-auto py-16 flex flex-col lg:flex-row items-center gap-10">
                 <div className="flex-1">
                     <motion.h1
                         initial={{ opacity: 0, y: 8 }}
@@ -134,7 +128,7 @@ export default function IntroPage(): JSX.Element {
                             </video>
                         </div>
 
-                        <div className="mt-2 grid grid-cols-3 gap-1 text-xs text-gray-600 text-center">
+                        <div className="mt-2 grid grid-cols-3 text-xs text-gray-600 text-center">
                             <div className="p-2 bg-gray-50 rounded hover:bg-gray-200">
                                 SearchBar cố định
                             </div>
@@ -150,7 +144,7 @@ export default function IntroPage(): JSX.Element {
             </section>
 
             {/* FEATURES */}
-            <section id="features" className="mx-auto px-3 lg:px-0 py-12">
+            <section id="features" className="mx-auto py-12">
                 <h2 className="text-2xl font-medium text-[#3e67d6]">
                     Tính năng nổi bật
                 </h2>
@@ -160,31 +154,43 @@ export default function IntroPage(): JSX.Element {
 
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <FeatureCard
-                        icon={<Search className="w-5 h-5" />}
+                        icon={<Search className="shrink-0" strokeWidth={1.5} />}
                         title="Tra cứu thông minh"
                         desc={`Tìm kiếm từ vựng, kanji và ngữ pháp với bộ lọc, gợi ý và phân trang nhanh.`}
                     />
 
                     <FeatureCard
-                        icon={<ImageIcon className="w-5 h-5" />}
+                        icon={
+                            <ImageIcon className="shrink-0" strokeWidth={1.5} />
+                        }
                         title="Dịch ảnh nhanh"
                         desc="Chọn ảnh 1 lần → dịch ngay. Hỗ trợ snapshot & guard để tránh gọi API lặp."
                     />
 
                     <FeatureCard
-                        icon={<Zap className="w-5 h-5" />}
+                        icon={<Zap className="shrink-0" strokeWidth={1.5} />}
                         title="Giải thích & Gợi ý bằng AI"
                         desc="Giải thích ngữ pháp, phân loại lỗi, điểm naturalness và gợi ý cách diễn đạt tự nhiên."
                     />
 
                     <FeatureCard
-                        icon={<ShieldCheck className="w-5 h-5" />}
+                        icon={
+                            <ShieldCheck
+                                className="shrink-0"
+                                strokeWidth={1.5}
+                            />
+                        }
                         title="Xác thực & Bảo mật"
                         desc="Xác minh email, Google OAuth và refresh token bảo mật bằng cookie HTTP-only."
                     />
 
                     <FeatureCard
-                        icon={<Repeat className="w-5 h-5" />}
+                        icon={
+                            <AiOutlineHistory
+                                className="shrink-0"
+                                strokeWidth={1.5}
+                            />
+                        }
                         title="Lịch sử thông minh"
                         desc="Lưu lịch sử có điều kiện, preview, xóa từng mục hoặc xóa toàn bộ; mở từ lịch sử sẽ không lưu thêm."
                     />
@@ -192,7 +198,7 @@ export default function IntroPage(): JSX.Element {
             </section>
 
             {/* HOW IT WORKS */}
-            <section id="how" className="mx-auto px-3 lg:px-0 py-12">
+            <section id="how" className="mx-auto py-12">
                 <h3 className="text-2xl font-medium text-[#3e67d6]">
                     Hoạt động trong 3 bước
                 </h3>
@@ -228,14 +234,27 @@ function FeatureCard({
     desc: string;
 }) {
     return (
+        // Đặt relative để có thể nâng z-index khi hover, thêm transition cho transform & box-shadow để mượt
         <motion.div
             whileHover={{ y: -6 }}
-            className="p-5 rounded-2xl bg-white shadow-md"
+            className="p-5 rounded-2xl bg-white shadow-md relative transition-transform duration-200 ease-out"
+            style={{ willChange: "transform" /* hint cho browser tối ưu */ }}
         >
-            <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center">
-                    {icon}
+            <div className="flex items-center gap-4">
+                {/* Outer icon box: giữ background ở đây (không di chuyển khi hover) */}
+                <div className="w-[48px] h-[48px] rounded-lg bg-indigo-50 flex items-center justify-center flex-none box-border">
+                    <div className="w-[24px] h-[24px] flex items-center justify-center overflow-hidden flex-none">
+                        {React.isValidElement(icon)
+                            ? React.cloneElement(icon as React.ReactElement, {
+                                  width: 24,
+                                  height: 24,
+                                  className: "w-full h-full block",
+                                  style: { display: "block" },
+                              })
+                            : icon}
+                    </div>
                 </div>
+
                 <div>
                     <div className="">{title}</div>
                     <div className="text-xs text-gray-600 mt-1 whitespace-pre-line">

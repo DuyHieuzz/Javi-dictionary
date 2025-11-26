@@ -34,7 +34,7 @@ export default function MainLayout() {
                 </main>
 
                 {/* Footer */}
-                <div className="md:px-4 mt-4">
+                <div className="px-2 lg:px-4 mt-4">
                     <Footer />
                 </div>
             </div>

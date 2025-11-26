@@ -78,7 +78,7 @@ export default function AdminKanji() {
     const [searchForm] = Form.useForm<KanjiSearchValues>();
     const [searchValues, setSearchValues] = useState<KanjiSearchValues>({});
 
-    // modal xem chi tiết (modal toàn năng)
+    // modal xem chi tiết
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailKey, setDetailKey] = useState<string | null>(null);
 
@@ -263,7 +263,7 @@ export default function AdminKanji() {
                         size="small"
                         style={{ display: "flex", justifyContent: "center" }}
                     >
-                        <Tooltip title="Xem chi tiết (modal toàn năng)">
+                        <Tooltip title="Xem chi tiết">
                             <button
                                 onClick={() => {
                                     setDetailKey(record.characterName);
@@ -790,7 +790,7 @@ export default function AdminKanji() {
     };
 
     return (
-        <div className="py-4">
+        <div className="py-4 px-2">
             {/* === SEARCH AREA === */}
             <Form<KanjiSearchValues>
                 form={searchForm}
@@ -808,6 +808,7 @@ export default function AdminKanji() {
                                 <Input.Search
                                     allowClear
                                     placeholder="Tìm theo ký tự, Hán-Việt..."
+                                    autoComplete="off"
                                     onSearch={() => searchForm.submit()}
                                 />
                             </Form.Item>
@@ -855,7 +856,7 @@ export default function AdminKanji() {
 
             <div className="bg-white rounded-2xl shadow p-4 mb-3">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-base">Quản lý Kanji</h3>
+                    <h3 className="font-semibold text-base"></h3>
                     <div className="flex items-center gap-3">
                         {canCreate && (
                             <Button
@@ -896,7 +897,7 @@ export default function AdminKanji() {
                 </div>
             </div>
 
-            {/* Modal xem chi tiết (modal toàn năng) */}
+            {/* Modal xem chi tiết */}
             {detailKey !== null && (
                 <SearchResultModal
                     open={detailOpen}

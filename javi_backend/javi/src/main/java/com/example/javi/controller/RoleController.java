@@ -1,5 +1,7 @@
 package com.example.javi.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -62,6 +64,16 @@ public class RoleController {
         return ApiResponse.<Role>builder()
                 .message("Lấy thông tin role thành công")
                 .result(role)
+                .build();
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<Role>> getAllRoles() {
+        List<Role> roles = roleService.getAllRoles();
+        return ApiResponse.<List<Role>>builder()
+                .message("Lấy toàn bộ vai trò thành công")
+                .result(roles)
                 .build();
     }
 

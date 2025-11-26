@@ -37,11 +37,12 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
 
     return (
         <Modal
-            title="Quên mật khẩu"
+            title={<div className="font-normal text-base">Quên mật khẩu</div>}
             open={open}
             onCancel={onClose}
             footer={null}
             centered
+            className="with-padding-modal"
             destroyOnClose
         >
             <p className="text-sm text-gray-500 mb-4">
@@ -70,7 +71,10 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
                 </Form.Item>
 
                 <div className="flex justify-end mt-2">
-                    <Button onClick={onClose} className="mr-2 rounded-lg">
+                    <Button
+                        onClick={onClose}
+                        className="mr-2 rounded-lg hover:!border-red-500 hover:!text-red-500"
+                    >
                         Hủy
                     </Button>
                     <Button

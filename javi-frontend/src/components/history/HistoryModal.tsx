@@ -1,5 +1,3 @@
-// src/components/history/HistoryModal.tsx
-
 import { Modal, Spin, Empty } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";

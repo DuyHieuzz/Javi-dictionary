@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 import { TbMailFilled } from "react-icons/tb";
@@ -10,6 +10,7 @@ import { useAuthStore } from "../../stores/useAuthStore";
 import ForgotPasswordModal from "@/components/auth/ForgotPasswordModal";
 
 export default function LoginPage() {
+    const location = useLocation();
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
     const [forgotOpen, setForgotOpen] = useState(false);
@@ -38,7 +39,15 @@ export default function LoginPage() {
             setAuth(res.data); // Lưu token và user vào Zustand
 
             toast.success("Đăng nhập thành công!", { position: "top-right" });
-            navigate("/search"); // Điều hướng sang /search sau đăng nhập
+
+            // LẤY from từ state (được gửi từ RequireLoginModal)
+            const from = (location.state as any)?.from;
+
+            // BẢO VỆ chống open-redirect – chỉ cho redirect nội bộ
+            const isSafe = typeof from === "string" && from.startsWith("/");
+
+            // Điều hướng về trang cũ hoặc trang mặc định
+            navigate(isSafe ? from : "/search", { replace: true });
         } catch (err: any) {
             console.error("Login failed:", err);
 
@@ -69,14 +78,14 @@ export default function LoginPage() {
         }
     };
 
-    const handleGoogleLogin = () => {
-        window.location.href = `${
-            import.meta.env.VITE_API_URL
-        }/oauth2/authorize/google`;
-    };
+    // const handleGoogleLogin = () => {
+    //     window.location.href = `${
+    //         import.meta.env.VITE_API_URL
+    //     }/oauth2/authorize/google`;
+    // };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="flex justify-center items-center min-h-screen bg-gray-50 px-2 lg:px-0">
             <div className="bg-white w-[870px] rounded-2xl shadow-md flex flex-col items-center px-4 py-8">
                 {/* Tiêu đề */}
                 <h2 className="text-xl mb-5">Đăng nhập với</h2>
@@ -91,6 +100,12 @@ export default function LoginPage() {
                     //     }/auth/google?redirect_uri=${redirectUri}`;
                     // }}
                     onClick={() => {
+                        // lưu redirect về sau khi OAuth xong
+                        const redirect =
+                            location.pathname + location.search + location.hash;
+                        localStorage.setItem("javi_oauth_redirect", redirect);
+
+                        // redirect sang backend OAuth (endpoint hiện tại)
                         window.location.href = `${
                             import.meta.env.VITE_API_URL
                         }/auth/google`;
@@ -124,10 +139,11 @@ export default function LoginPage() {
                                     : "border-gray-300 focus-within:border-blue-500"
                             }`}
                         >
-                            <TbMailFilled className="text-gray-400 text-xl mr-2" />
+                            <TbMailFilled className="text-gray-400 text-xl mr-2 mt-1" />
                             <input
                                 type="email"
                                 name="email"
+                                autoComplete="email"
                                 placeholder="Nhập email của bạn"
                                 className="w-full py-2.5 outline-none text-gray-700"
                             />
@@ -159,6 +175,7 @@ export default function LoginPage() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 name="password"
+                                autoComplete="current-password"
                                 placeholder="Nhập mật khẩu"
                                 className="w-full py-2.5 outline-none text-gray-700"
                             />
@@ -216,7 +233,6 @@ export default function LoginPage() {
                     open={forgotOpen}
                     onClose={() => setForgotOpen(false)}
                 />
-                ;
             </div>
         </div>
     );

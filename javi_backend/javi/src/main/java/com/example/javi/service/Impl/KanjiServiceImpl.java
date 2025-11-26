@@ -190,7 +190,7 @@ public class KanjiServiceImpl implements KanjiService {
             throw new AppException(ErrorCode.EMPTY_KANJI);
         }
 
-        String q = keyword.trim();
+        String q = keyword.trim().toUpperCase();
         List<KanjiResponse> results = new ArrayList<>();
 
         // Kiểm tra cache trước
@@ -253,7 +253,7 @@ public class KanjiServiceImpl implements KanjiService {
         }
 
         // Fallback cuối cùng: tìm theo Hán Việt (Sino-Vi)
-        results.addAll(kanjiRepository.findBySinoViName(q).stream()
+        results.addAll(kanjiRepository.findBySinoViNameContainingIgnoreCase(q).stream()
                 .map(kanjiMapper::toKanjiResponse)
                 .toList());
 

@@ -1,27 +1,32 @@
 import { useEffect, useRef, useState } from "react";
 import { Spin, Empty } from "antd";
 import dayjs from "dayjs";
-import { callGetMyComments } from "@/apis/commentApi";
+import {
+    callGetMyComments,
+    callGetCommentsByUsername,
+} from "@/apis/commentApi";
 import { ICommentResponse } from "@/types/backend";
 import SearchResultModal from "@/components/search/SearchResultModal";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface Props {
     pageSize?: number;
-    userId?: number | null;
+    username?: string | null;
 }
 
 export default function UserActivityPanel({
     pageSize = 20,
-    userId = null,
+    username = null,
 }: Props) {
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
     const [items, setItems] = useState<ICommentResponse[]>([]);
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
 
+    const { user: currentUser } = useAuthStore();
     // Trạng thái mở modal chi tiết
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailEntityType, setDetailEntityType] = useState<any>("WORD");
@@ -29,24 +34,57 @@ export default function UserActivityPanel({
         number | string
     >(0);
 
-    // Lấy danh sách comment (hiện tại chỉ lấy comment của chính người dùng)
-    const fetchPage = async (p = 1, reset = false) => {
-        // Chặn không cho gọi API trùng khi đang tải
+    /**
+     * fetchPage: tự động chọn API phù hợp:
+     *  - Nếu có username prop và khác currentUser.username -> callGetCommentsByUsername
+     *  - Ngược lại -> callGetMyComments
+     */
+    const fetchPage = async (pageIndex = 0, reset = false) => {
         if (loading || loadingMore) return;
         try {
             if (reset) setLoading(true);
             else setLoadingMore(true);
 
-            // Hiện tại chỉ gọi API: lấy comment của user đang đăng nhập
-            const res = await callGetMyComments(p, pageSize);
+            let res: any;
+            // Gọi API: helpers mong page là 1-based -> truyền pageIndex + 1
+            if (username && username !== currentUser?.username) {
+                res = await callGetCommentsByUsername(
+                    username,
+                    pageIndex + 1,
+                    pageSize
+                );
+            } else {
+                res = await callGetMyComments(pageIndex + 1, pageSize);
+            }
+
             const data = res.data?.result;
             const list = data?.content ?? [];
 
+            // nếu reset thì thay mới, ngược lại append
             setItems((prev) => (reset ? list : [...prev, ...list]));
-            setHasMore(!(data?.last ?? true));
-            setPage((data?.number ?? p - 1) + 1);
+
+            // hasMore = !last
+            const lastFlag = Boolean(data?.last ?? true);
+            setHasMore(!lastFlag);
+
+            // data.number từ backend là 0-based page index (nếu backend trả)
+            const returnedNumber =
+                typeof data?.number !== "undefined" ? data.number : pageIndex;
+            setPage(returnedNumber);
+            // Nếu còn trang tiếp và nội dung hiện tại chưa tạo scrollbar (chưa đủ cao)
+            // -> tự gọi trang kế để fill content (tránh trường hợp không có scroll và user không thể trigger)
+            setTimeout(() => {
+                const el2 = scrollRef.current;
+                if (!el2) return;
+                // true nếu chưa có scrollbar (nội dung fit trong container)
+                const contentFits = el2.scrollHeight <= el2.clientHeight;
+
+                if (contentFits && !loadingMore && !lastFlag) {
+                    // gọi trang kế (returnedNumber là index 0-based)
+                    fetchPage(returnedNumber + 1, false);
+                }
+            }, 120);
         } catch (err) {
-            console.error("Lỗi tải hoạt động:", err);
             if (reset) setItems([]);
             setHasMore(false);
         } finally {
@@ -57,9 +95,8 @@ export default function UserActivityPanel({
 
     useEffect(() => {
         // Tải trang đầu tiên khi component mount
-        fetchPage(1, true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userId]);
+        fetchPage(0, true);
+    }, [username]);
 
     // Infinite scroll: tự động load trang tiếp theo khi cuộn gần cuối
     useEffect(() => {
@@ -161,27 +198,31 @@ export default function UserActivityPanel({
                                     className="flex items-start gap-3 py-2 px-3 border-b hover:bg-gray-50 cursor-pointer"
                                     onClick={() => onClickComment(c)}
                                 >
-                                    <div className="">
-                                        <div className="text-xs text-gray-400 ">
-                                            <span className="capitalize">
-                                                {String(c.entityType ?? "")}
-                                            </span>
-                                            {entityName ? (
-                                                <span className="mx-1">:</span>
-                                            ) : null}
-                                            {entityName ? (
-                                                <span className="font-medium text-[15px] text-gray-600">
-                                                    {entityName}
+                                    <div className="w-full">
+                                        <div className="flex items-center justify-between text-xs w-full">
+                                            <div className="text-gray-400">
+                                                <span className="capitalize">
+                                                    {String(c.entityType ?? "")}
                                                 </span>
-                                            ) : null}
+                                                {entityName ? (
+                                                    <span className="mx-1">
+                                                        :
+                                                    </span>
+                                                ) : null}
+                                                {entityName ? (
+                                                    <span className="font-medium text-[15px] text-gray-600">
+                                                        {entityName}
+                                                    </span>
+                                                ) : null}
+                                            </div>
+
+                                            <div className="text-gray-400 ml-4 text-nowrap">
+                                                {formatDateOnly(commentDate)}
+                                            </div>
                                         </div>
 
-                                        <div className="text-sm text-gray-700 mt-1">
+                                        <div className="text-sm text-gray-700 mt-1 whitespace-pre-line break-words">
                                             {c.content}
-                                        </div>
-
-                                        <div className="text-xs text-gray-400 mt-1">
-                                            {formatDateOnly(commentDate)}
                                         </div>
                                     </div>
                                 </div>

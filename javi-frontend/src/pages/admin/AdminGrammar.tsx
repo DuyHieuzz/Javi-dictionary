@@ -253,7 +253,7 @@ export default function AdminGrammar() {
                         size="small"
                         style={{ display: "flex", justifyContent: "center" }}
                     >
-                        <Tooltip title="Xem chi tiết (modal)">
+                        <Tooltip title="Xem chi tiết">
                             <button
                                 onClick={() => {
                                     setDetailKey(record.id);
@@ -428,76 +428,73 @@ export default function AdminGrammar() {
     };
 
     return (
-        <div>
-            <div className="py-4">
-                <Form
-                    form={searchForm}
-                    layout="vertical"
-                    onFinish={handleSearchSubmit}
-                >
-                    <div className="bg-white rounded-2xl shadow p-4 mb-3">
-                        <div className="flex flex-col gap-3">
-                            <div className="flex flex-col md:flex-row md:items-end gap-3">
-                                <Form.Item
-                                    name="keyword"
-                                    label="Từ khóa"
-                                    className="mb-0 flex-1"
-                                >
-                                    <Input.Search
-                                        allowClear
-                                        placeholder="Tìm theo mẫu / nghĩa..."
-                                        onSearch={() => searchForm.submit()}
-                                    />
-                                </Form.Item>
+        <div className="py-4 px-2">
+            <Form
+                form={searchForm}
+                layout="vertical"
+                onFinish={handleSearchSubmit}
+            >
+                <div className="bg-white rounded-2xl shadow p-4 mb-3">
+                    <div className="flex flex-col gap-3">
+                        <div className="flex flex-col md:flex-row md:items-end gap-3">
+                            <Form.Item
+                                name="keyword"
+                                label="Từ khóa"
+                                className="mb-0 flex-1"
+                            >
+                                <Input.Search
+                                    allowClear
+                                    placeholder="Tìm theo mẫu / nghĩa..."
+                                    autoComplete="off"
+                                    onSearch={() => searchForm.submit()}
+                                />
+                            </Form.Item>
 
-                                <div className="flex gap-2">
-                                    <Button type="primary" htmlType="submit">
-                                        Tìm kiếm
-                                    </Button>
-                                </div>
+                            <div className="flex gap-2">
+                                <Button type="primary" htmlType="submit">
+                                    Tìm kiếm
+                                </Button>
                             </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                                <Form.Item
-                                    name="levels" // lưu mảng levels thay vì 1 level
-                                    label="Trình độ (JLPT)"
-                                    className="mb-0"
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                            <Form.Item
+                                name="levels" // lưu mảng levels thay vì 1 level
+                                label="Trình độ (JLPT)"
+                                className="mb-0"
+                            >
+                                <Select
+                                    mode="multiple" // nhiều lựa chọn
+                                    allowClear
+                                    placeholder="Chọn level"
+                                    options={[
+                                        { label: "N5", value: "N5" },
+                                        { label: "N4", value: "N4" },
+                                        { label: "N3", value: "N3" },
+                                        { label: "N2", value: "N2" },
+                                        { label: "N1", value: "N1" },
+                                    ]}
+                                    style={{ maxWidth: 430, width: "100%" }}
+                                />
+                            </Form.Item>
+
+                            <div className="flex md:justify-end md:items-end justify-start">
+                                <Button
+                                    className="w-full md:w-auto hover:!border-red-500 hover:!text-red-500"
+                                    onClick={handleSearchReset}
                                 >
-                                    <Select
-                                        mode="multiple" // nhiều lựa chọn
-                                        allowClear
-                                        placeholder="Chọn level"
-                                        options={[
-                                            { label: "N5", value: "N5" },
-                                            { label: "N4", value: "N4" },
-                                            { label: "N3", value: "N3" },
-                                            { label: "N2", value: "N2" },
-                                            { label: "N1", value: "N1" },
-                                        ]}
-                                        style={{ maxWidth: 430, width: "100%" }}
-                                    />
-                                </Form.Item>
-
-                                <div className="flex md:justify-end md:items-end justify-start">
-                                    <Button
-                                        className="w-full md:w-auto hover:!border-red-500 hover:!text-red-500"
-                                        onClick={handleSearchReset}
-                                    >
-                                        Xóa lọc
-                                    </Button>
-                                </div>
+                                    Xóa lọc
+                                </Button>
                             </div>
                         </div>
                     </div>
-                </Form>
-            </div>
+                </div>
+            </Form>
 
             {/* Table area */}
-            <div className="bg-white rounded-2xl shadow p-4">
+            <div className="bg-white rounded-2xl shadow p-4 mb-3">
                 <div className="mb-4 flex items-center justify-between">
-                    <div className="text-lg font-semibold">
-                        Quản lý Ngữ Pháp
-                    </div>
+                    <div className="text-lg font-semibold"></div>
                     {/* giữ nút ở cùng thẻ */}
                     {canCreate && (
                         <div>

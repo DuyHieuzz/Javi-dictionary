@@ -11,6 +11,7 @@ import axiosClient from "@/apis/axiosClient";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { ICommentResponse, EntityType } from "@/types/backend";
 import { useNavigate } from "react-router-dom";
+import RequireLoginModal from "../common/RequireLoginModal";
 
 interface Props {
     entityType: EntityType;
@@ -25,7 +26,7 @@ export default function Comment({ entityType, entityId }: Props) {
         user?.role?.permissions?.some(
             (p) => p.name === "MANAGE_USER_COMMENT"
         ) ?? false;
-
+    const [openLoginModal, setOpenLoginModal] = useState(false);
     const [comments, setComments] = useState<ICommentResponse[]>([]);
     const [activePage, setActivePage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -206,9 +207,13 @@ export default function Comment({ entityType, entityId }: Props) {
                             <div className="flex items-center justify-between mt-2 text-sm text-gray-500">
                                 <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() =>
-                                            handleReact(c.id, "LIKE")
-                                        }
+                                        onClick={() => {
+                                            if (!isLoggedIn) {
+                                                setOpenLoginModal(true);
+                                                return;
+                                            }
+                                            handleReact(c.id, "LIKE");
+                                        }}
                                         className={`flex items-center gap-1 transition ${
                                             c.myReaction === "LIKE"
                                                 ? "text-[#3e67d6]"
@@ -224,9 +229,13 @@ export default function Comment({ entityType, entityId }: Props) {
                                     </button>
 
                                     <button
-                                        onClick={() =>
-                                            handleReact(c.id, "DISLIKE")
-                                        }
+                                        onClick={() => {
+                                            if (!isLoggedIn) {
+                                                setOpenLoginModal(true);
+                                                return;
+                                            }
+                                            handleReact(c.id, "DISLIKE");
+                                        }}
                                         className={`flex items-center gap-1 transition ${
                                             c.myReaction === "DISLIKE"
                                                 ? "text-[#d9534f]"
@@ -279,7 +288,7 @@ export default function Comment({ entityType, entityId }: Props) {
                         onChange={(e) => setNewComment(e.target.value)}
                         className="w-full resize-none border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
                         rows={3}
-                        placeholder="Thêm nghĩa hoặc ví dụ. Ấn SHIFT + ENTER để xuống dòng"
+                        placeholder="Thêm nghĩa hoặc ví dụ. Ấn ENTER để xuống dòng"
                     />
                     <div className="flex justify-end mt-2">
                         <button
@@ -302,10 +311,14 @@ export default function Comment({ entityType, entityId }: Props) {
             )}
 
             {!isLoggedIn && (
-                <p className="text-gray-500 text-sm italic mt-3">
+                <p className="text-gray-500 text-sm italic mt-3 text-center">
                     Vui lòng đăng nhập để bình luận.
                 </p>
             )}
+            <RequireLoginModal
+                open={openLoginModal}
+                onClose={() => setOpenLoginModal(false)}
+            />
         </div>
     );
 }

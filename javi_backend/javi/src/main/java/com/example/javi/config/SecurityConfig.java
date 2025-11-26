@@ -16,12 +16,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -107,23 +105,43 @@ public class SecurityConfig {
                 .macAlgorithm(MacAlgorithm.HS512)
                 .build();
 
-        // Custom validator kiểm tra token trong DB
-        jwtDecoder.setJwtValidator(jwt -> {
-            String tokenValue = jwt.getTokenValue();
-            Token storedToken = tokenRepository.findByToken(tokenValue);
+        // Validator kiểm tra thời gian (exp/nbf)
+        OAuth2TokenValidator<Jwt> expiryValidator = jwt -> {
+            JwtTimestampValidator validator = new JwtTimestampValidator();
+            OAuth2TokenValidatorResult result = validator.validate(jwt);
+            if (result.hasErrors()) {
+                return result; // Token hết hạn thì STOP
+            }
+            return OAuth2TokenValidatorResult.success();
+        };
 
-            if (storedToken == null) {
+        // Validator kiểm tra DB (tồn tại + revoked)
+        OAuth2TokenValidator<Jwt> databaseValidator = jwt -> {
+            String tokenValue = jwt.getTokenValue();
+            Token stored = tokenRepository.findByToken(tokenValue);
+            if (stored == null) {
                 return OAuth2TokenValidatorResult.failure(
                         new OAuth2Error("invalid_token", "Token không tồn tại trong hệ thống", null));
             }
 
-            if (storedToken.isRevoked()) {
+            if (stored.isRevoked()) {
                 return OAuth2TokenValidatorResult.failure(
                         new OAuth2Error("invalid_token", "Token đã bị thu hồi (revoked)", null));
             }
 
             return OAuth2TokenValidatorResult.success();
-        });
+        };
+
+        // Chain validator theo thứ tự
+        OAuth2TokenValidator<Jwt> validatorChain = jwt -> {
+            OAuth2TokenValidatorResult ts = expiryValidator.validate(jwt);
+            if (ts.hasErrors()) {
+                return ts; // Token hết hạn thì không check DB
+            }
+            return databaseValidator.validate(jwt);
+        };
+
+        jwtDecoder.setJwtValidator(validatorChain);
 
         return jwtDecoder;
     }

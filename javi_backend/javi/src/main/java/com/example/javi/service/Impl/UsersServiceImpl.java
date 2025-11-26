@@ -25,6 +25,7 @@ import com.example.javi.exeption.AppException;
 import com.example.javi.exeption.ErrorCode;
 import com.example.javi.mapper.UsersMapper;
 import com.example.javi.repository.RoleRepository;
+import com.example.javi.repository.TokenRepository;
 import com.example.javi.repository.UsersRepository;
 import com.example.javi.service.UsersService;
 import com.example.javi.utils.SecurityUtil;
@@ -48,6 +49,7 @@ public class UsersServiceImpl implements UsersService {
     PasswordEncoder passwordEncoder;
     SecurityUtil securityUtil;
     RoleRepository roleRepository;
+    TokenRepository tokenRepository;
 
     @NonFinal
     @Value("${app.time-zone}")
@@ -159,6 +161,8 @@ public class UsersServiceImpl implements UsersService {
         Users user = usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         user.setStatus(Status.BLOCKED);
         usersRepository.save(user);
+        // Revoke tất cả token và xóa token
+        tokenRepository.revokeAllByUserId(userId);
     }
 
     @Override

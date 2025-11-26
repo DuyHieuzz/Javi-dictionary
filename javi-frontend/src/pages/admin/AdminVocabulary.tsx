@@ -529,7 +529,7 @@ export default function AdminVocabulary() {
 
     const [searchValues, setSearchValues] = useState<VocabSearchValues>({});
 
-    // modal xem chi tiết (modal toàn năng)
+    // modal xem chi tiết
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailEntityId, setDetailEntityId] = useState<number | null>(null);
 
@@ -712,7 +712,7 @@ export default function AdminVocabulary() {
                             justifyContent: "center",
                         }}
                     >
-                        <Tooltip title="Xem chi tiết (modal toàn năng)">
+                        <Tooltip title="Xem chi tiết">
                             <button
                                 onClick={() => {
                                     setDetailEntityId(record.id);
@@ -886,7 +886,7 @@ export default function AdminVocabulary() {
     };
 
     return (
-        <div className="py-4">
+        <div className="py-4 px-2">
             {/* Khu vực tìm kiếm: layout giống màn quản lý user */}
             <Form<VocabSearchValues>
                 form={searchForm}
@@ -905,6 +905,7 @@ export default function AdminVocabulary() {
                                 <Input.Search
                                     allowClear
                                     placeholder="Tìm theo từ, nghĩa hoặc cách đọc"
+                                    autoComplete="off"
                                     onSearch={() => searchForm.submit()}
                                 />
                             </Form.Item>
@@ -1002,7 +1003,7 @@ export default function AdminVocabulary() {
                 </div>
             </div>
 
-            {/* Modal xem chi tiết (modal toàn năng) */}
+            {/* Modal xem chi tiết */}
             {detailEntityId !== null && (
                 <SearchResultModal
                     open={detailOpen}

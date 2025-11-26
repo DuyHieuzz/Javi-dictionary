@@ -103,7 +103,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="flex justify-center items-center min-h-screen bg-gray-50 px-2 lg:px-0">
             <div className="bg-white w-[870px] rounded-2xl shadow-md flex flex-col items-center px-4 py-8">
                 {/* Tiêu đề */}
                 <h2 className="text-xl mb-5">Đăng ký với</h2>

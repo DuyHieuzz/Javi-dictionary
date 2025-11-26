@@ -1,5 +1,7 @@
 package com.example.javi.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,6 +17,8 @@ public interface RoleService {
     void deleteRole(Long id);
 
     Role getRoleById(Long id);
+
+    List<Role> getAllRoles();
 
     Page<Role> getAllRolesByFilter(Specification<Role> spec, Pageable pageable);
 }

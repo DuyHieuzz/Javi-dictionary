@@ -3,7 +3,10 @@ import { message } from "antd";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { callRefreshToken } from "./authApi";
 import { useGlobalErrorStore } from "@/stores/useGlobalErrorStore";
+import { callLogout } from "@/apis/authApi";
+// import { useNavigate } from "react-router-dom";
 
+// const navigate = useNavigate();
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
@@ -69,11 +72,19 @@ axiosClient.interceptors.response.use(
       } catch (e) {
         // Refresh thất bại → xóa auth
         const { clearAuth } = useAuthStore.getState();
-        clearAuth();
         message.warning("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        try {
+          // đã thử refresh và thất bại
+          await callLogout(); // gọi server để xóa cookie httpOnly (axiosNoAuth)
+        } catch (logoutErr) {
+          // logout request có thể lỗi (network) -> log nhưng vẫn tiếp tục
+          console.error("Server logout failed:", logoutErr);
+        } finally {
+          clearAuth(); // xóa token / user khỏi FE
+          window.location.href = "/"; // điều hướng về trang chủ
+        }
       }
     }
-
     // Các lỗi còn lại để page tự handle (400, 403, 404,...)
     return Promise.reject(error);
   }

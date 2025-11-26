@@ -21,6 +21,11 @@ export const callGetRoleById = (id: number) => {
   return axiosClient.get<IBackendRes<IRole>>(`/role/${id}`);
 };
 
+/** Lấy tất cả role không phân trang */
+export const callGetAllRolesList = () => {
+  return axiosClient.get<IBackendRes<IRole[]>>("/role/all");
+};
+
 /** Lấy danh sách role (phân trang & filter) */
 export const callGetAllRoles = (params?: {
   page?: number;

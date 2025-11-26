@@ -286,7 +286,7 @@ export default function TranslateBlock({
 
         const cur = (block.sourceText ?? "").trim();
         if (!cur) {
-            toast.info("Không có nội dung nguồn để phân tích ngữ pháp.");
+            toast.info("Không có nội dung để phân tích ngữ pháp.");
             return;
         }
 

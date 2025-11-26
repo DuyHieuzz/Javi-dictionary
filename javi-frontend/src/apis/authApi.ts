@@ -1,5 +1,6 @@
 import axiosClient from "./axiosClient";
 import { ILoginResponse, IResetPassRequest } from "../types/backend";
+import { axiosNoAuth } from "./axiosNoAuth";
 
 /** Đăng ký tài khoản */
 export const callRegister = (email: string, password: string, confirmPassword: string) => {
@@ -23,7 +24,7 @@ export const callLoginWithGoogle = (code: string) => {
 /** Refresh access token */
 
 export const callRefreshToken = () => {
-  return axiosClient.post<ILoginResponse>("/auth/refresh", {});
+  return axiosNoAuth.post<ILoginResponse>("/auth/refresh", {});
 };
 
 
@@ -34,7 +35,7 @@ export const callRefreshToken = () => {
 
 /** Đăng xuất */
 export const callLogout = () => {
-  return axiosClient.post<{ message: string }>("/auth/logout", {});
+  return axiosNoAuth.post<{ message: string }>("/auth/logout", {});
 };
 
 /** Xác minh email người dùng */

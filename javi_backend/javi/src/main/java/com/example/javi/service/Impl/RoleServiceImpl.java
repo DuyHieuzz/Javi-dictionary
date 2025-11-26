@@ -104,6 +104,11 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public List<Role> getAllRoles() {
+        return roleRepository.findAll();
+    }
+
+    @Override
     public Page<Role> getAllRolesByFilter(Specification<Role> spec, Pageable pageable) {
         return roleRepository.findAll(spec, pageable);
     }

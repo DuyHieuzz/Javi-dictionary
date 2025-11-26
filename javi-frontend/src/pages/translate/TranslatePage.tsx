@@ -12,6 +12,8 @@ import {
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { MdHistory } from "react-icons/md";
+import { useAuthStore } from "@/stores/useAuthStore";
+import no_history from "@/assets/no-history.png";
 
 const makeId = () => Math.random().toString(36).slice(2, 10);
 
@@ -29,6 +31,8 @@ export default function TranslatePage() {
             grammar: null,
         },
     ]);
+    // Lấy token trực tiếp từ Zustand store
+    const token = useAuthStore((state) => state.token);
 
     const [historyList, setHistoryList] = useState<any[]>([]);
     const [historyPage, setHistoryPage] = useState(0);
@@ -117,8 +121,12 @@ export default function TranslatePage() {
     );
 
     useEffect(() => {
+        if (!token) {
+            return;
+        }
+        // Nếu đã có token thì gọi fetch lịch sử bình thường
         fetchHistoryPage(0, true);
-    }, []);
+    }, [token]); // chỉ chạy lại khi token thay đổi
 
     useEffect(() => {
         const el = historyRef.current;
@@ -355,6 +363,13 @@ export default function TranslatePage() {
 
     const onDeleteSelected = async () => {
         if (!selectedIds.length) return;
+
+        // Nếu chưa đăng nhập thì không gọi API xóa
+        if (!token) {
+            toast.warning("Vui lòng đăng nhập để xóa lịch sử.");
+            return;
+        }
+
         try {
             await callDeleteSelectedTranslateHistory(selectedIds);
             setHistoryList((prev) =>
@@ -370,6 +385,12 @@ export default function TranslatePage() {
     };
 
     const onDeleteAll = async () => {
+        // Nếu chưa đăng nhập thì không gọi API xóa
+        if (!token) {
+            toast.warning("Vui lòng đăng nhập để xóa lịch sử.");
+            return;
+        }
+
         try {
             await callDeleteAllTranslateHistory();
             setHistoryList([]);
@@ -396,14 +417,12 @@ export default function TranslatePage() {
                 return v;
             }
 
-            // case: epoch millis (number)
             if (typeof v === "number") {
                 const d = dayjs(v);
                 if (d.isValid()) return d.format("DD/MM/YYYY HH:mm");
                 return String(v);
             }
 
-            // case: array like [y,m,d,hh,mm,ss,...]
             if (Array.isArray(v)) {
                 const [y, m, d, hh = 0, mm = 0, ss = 0] = v.map((x) =>
                     Number(x)
@@ -433,7 +452,7 @@ export default function TranslatePage() {
     };
 
     return (
-        <div className="w-full px-2 pb-20">
+        <div className="w-full px-2 pb-20 pt-3">
             <div className="space-y-6">
                 {renderedBlocks.map((b) => (
                     <div key={b.id}>
@@ -468,51 +487,54 @@ export default function TranslatePage() {
                         <MdHistory className="text-xl mr-[2px]" />
                         Lịch sử
                     </h2>
-                    <div className="flex items-center gap-2">
-                        {!deleteMode ? (
-                            <button
-                                onClick={() => {
-                                    setDeleteMode(true);
-                                    setSelectedIds([]);
-                                }}
-                                className="px-3 py-1 rounded-md bg-red-600 text-white"
-                            >
-                                Xóa
-                            </button>
-                        ) : (
-                            <>
+                    {/* Hiển thị nhóm nút Xóa / Làm mới CHỈ khi đã đăng nhập */}
+                    {token && (
+                        <div className="flex items-center gap-2">
+                            {!deleteMode ? (
                                 <button
                                     onClick={() => {
-                                        setDeleteMode(false);
+                                        setDeleteMode(true);
                                         setSelectedIds([]);
                                     }}
-                                    className="px-3 py-1 rounded-md bg-gray-200 text-gray-700"
+                                    className="px-3 py-1 rounded-md bg-red-600 text-white"
                                 >
-                                    Hủy
+                                    Xóa
                                 </button>
-                                <button
-                                    onClick={onDeleteSelected}
-                                    disabled={!selectedIds.length}
-                                    className="px-3 py-1 rounded-md bg-red-600 text-white disabled:opacity-60"
-                                >
-                                    Xóa đã chọn
-                                </button>
-                                <button
-                                    onClick={onDeleteAll}
-                                    className="px-3 py-1 rounded-md bg-red-500 text-white"
-                                >
-                                    Xóa tất cả
-                                </button>
-                            </>
-                        )}
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            setDeleteMode(false);
+                                            setSelectedIds([]);
+                                        }}
+                                        className="px-3 py-1 rounded-md bg-gray-200 text-gray-700"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={onDeleteSelected}
+                                        disabled={!selectedIds.length}
+                                        className="px-3 py-1 rounded-md bg-red-600 text-white disabled:opacity-60"
+                                    >
+                                        Xóa đã chọn
+                                    </button>
+                                    <button
+                                        onClick={onDeleteAll}
+                                        className="px-3 py-1 rounded-md bg-red-500 text-white"
+                                    >
+                                        Xóa tất cả
+                                    </button>
+                                </>
+                            )}
 
-                        <button
-                            onClick={() => fetchHistoryPage(0, true)}
-                            className="px-3 py-1 rounded-md bg-white border"
-                        >
-                            Làm mới
-                        </button>
-                    </div>
+                            <button
+                                onClick={() => fetchHistoryPage(0, true)}
+                                className="px-3 py-1 rounded-md bg-white border"
+                            >
+                                Làm mới
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div
@@ -524,8 +546,15 @@ export default function TranslatePage() {
                             Đang tải...
                         </div>
                     ) : historyList.length === 0 ? (
-                        <div className="py-10 text-center text-gray-500">
-                            Chưa có lịch sử
+                        <div className="flex flex-col justify-center items-center py-5">
+                            <img
+                                className="w-[50px] h-[50px]"
+                                src={no_history}
+                                alt="no-history"
+                            />
+                            <div className="mt-2 text-center text-gray-500">
+                                Chưa có lịch sử
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-2">

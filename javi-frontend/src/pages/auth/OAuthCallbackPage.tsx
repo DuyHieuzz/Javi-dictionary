@@ -11,18 +11,27 @@ export default function OAuthCallbackPage() {
     useEffect(() => {
         const init = async () => {
             try {
-                // const refreshToken = getParam("refreshToken");
-                const res = await callRefreshToken(); // cookie refresh_token đã có
-                console.log(res);
+                // Gọi API refresh/exchange nếu server đã set cookie refresh_token
+                const res = await callRefreshToken();
                 setAuth(res.data);
                 toast.success("Đăng nhập Google thành công!");
-                navigate("/search");
+
+                // Lấy redirect lưu ở localStorage
+                const redirect = localStorage.getItem("javi_oauth_redirect");
+                localStorage.removeItem("javi_oauth_redirect");
+
+                // Bảo vệ open-redirect: chỉ cho redirect internal path bắt đầu bằng '/'
+                const isSafe =
+                    typeof redirect === "string" && redirect.startsWith("/");
+
+                navigate(isSafe ? redirect : "/search", { replace: true });
             } catch (e) {
                 toast.error("Không thể đăng nhập Google. Vui lòng thử lại!");
-                navigate("/login");
+                navigate("/login", { replace: true });
             }
         };
         init();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

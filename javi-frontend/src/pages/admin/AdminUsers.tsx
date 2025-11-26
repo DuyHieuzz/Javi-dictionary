@@ -7,7 +7,7 @@ import {
     callUpgradePremium,
     callGetUserById,
 } from "@/apis/userApi";
-import { callGetAllRoles } from "@/apis/roleApi";
+import { callGetAllRolesList } from "@/apis/roleApi";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 import {
@@ -128,10 +128,31 @@ export default function AdminUsers() {
         return parts.join(" and ");
     };
 
+    // Load toàn bộ role để hiển thị trong filter
+    useEffect(() => {
+        (async () => {
+            try {
+                const res: any = await callGetAllRolesList(); // <-- dùng API lấy tất cả role (không phân trang)
+                const payload = res?.data?.result ?? res?.data ?? res;
+                // payload có thể là mảng role trực tiếp hoặc { result: [...] }
+                const list = Array.isArray(payload)
+                    ? payload
+                    : payload?.content ?? payload;
+                const options =
+                    Array.isArray(list) && list.length > 0
+                        ? list.map((r: any) => ({ label: r.name, value: r.id }))
+                        : [];
+                setRolesOptions(options);
+            } catch (err) {
+                console.warn("Load roles for filter failed", err);
+                setRolesOptions([]);
+            }
+        })();
+    }, []);
+
     // load users
     useEffect(() => {
         loadUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, size, searchValues]);
 
     async function loadUsers() {
@@ -411,15 +432,19 @@ export default function AdminUsers() {
         // Nếu người tạo có quyền gán role thì load danh sách role để chọn
         if (canAssignRole) {
             try {
-                const res = await callGetAllRoles();
+                // dùng API lấy tất cả role không phân trang
+                const res: any = await callGetAllRolesList();
+                const payload = res?.data?.result ?? res?.data ?? res;
+                const list = Array.isArray(payload)
+                    ? payload
+                    : payload?.content ?? payload;
                 const options =
-                    res.data?.result?.content?.map((r: any) => ({
-                        label: r.name,
-                        value: r.id,
-                    })) || [];
+                    Array.isArray(list) && list.length > 0
+                        ? list.map((r: any) => ({ label: r.name, value: r.id }))
+                        : [];
                 setRolesOptions(options);
             } catch (err) {
-                console.warn("Load roles failed", err);
+                console.warn("Tải vai trò thất bại", err);
                 setRolesOptions([]);
             }
         } else {
@@ -535,17 +560,22 @@ export default function AdminUsers() {
 
     // ======== JSX =========
     return (
-        <div className="py-4">
+        <div className="py-4 px-2">
             {/* Thanh tìm kiếm tách riêng, nằm trên cùng */}
             <AdminSearchBar
                 keywordPlaceholder="Tìm theo tên, username hoặc email"
                 showLevelFilter={true}
                 showStatusFilter={true}
                 initialValues={searchValues}
+                roleOptions={rolesOptions}
                 onSearch={(values) => {
                     // // khi search mới thì quay về trang 1
                     setPage(1);
                     setSearchValues(values);
+                }}
+                onReset={() => {
+                    setPage(1);
+                    setSearchValues({});
                 }}
             />
 
@@ -632,7 +662,7 @@ export default function AdminUsers() {
                 <Form layout="vertical" form={createForm}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Form.Item
-                            name="fullName"
+                            name="Họ và tên"
                             label="Họ và tên"
                             rules={[
                                 {
@@ -645,7 +675,7 @@ export default function AdminUsers() {
                         </Form.Item>
 
                         <Form.Item
-                            name="username"
+                            name="Tên đăng nhập"
                             label="Tên đăng nhập"
                             rules={[
                                 {

@@ -48,8 +48,8 @@ api:
 
 jwt:
   signerKey: "TRrx3ZoD9xgevlM73MU8/ay9VO+8RJ7NjvFh5Ab0xoTsKzuPYwCOKDZugGYsVxroYRfP94DH6jBxBhFyBPaQQQ==" #base64
-  valid-duration: 3600 # in second
-  refreshable-duration: 36000 # in seconds
+  valid-duration: 900 # in second (15 phút)
+  refreshable-duration: 1209600 # in seconds (14 ngày)
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}

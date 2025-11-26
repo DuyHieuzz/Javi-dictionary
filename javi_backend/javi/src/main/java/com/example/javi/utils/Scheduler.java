@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.entity.AccountType;
 import com.example.javi.entity.Users;
+import com.example.javi.repository.TokenRepository;
 import com.example.javi.repository.UsersRepository;
 import com.example.javi.repository.VerificationTokenRepository;
 
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Scheduler {
     UsersRepository usersRepository;
     VerificationTokenRepository verificationTokenRepository;
+    TokenRepository tokenRepository;
 
     // Chạy mỗi ngày lúc 3 giờ sáng
     @Scheduled(cron = "0 0 3 * * *")
@@ -50,5 +52,16 @@ public class Scheduler {
         verificationTokenRepository.deleteAllByExpirationDateBefore(LocalDateTime.now());
         int afterCount = (int) verificationTokenRepository.count();
         log.info("[TOKEN CLEANUP] Đã dọn token hết hạn. Trước: {}, Sau: {}", beforeCount, afterCount);
+    }
+    /**
+     * Chạy mỗi ngày lúc 03:00 sáng,
+     * Xóa token có expirationDate trước (now - 10 days).
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void cleanupExpiredAccessTokens() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(10);
+        int deleted = tokenRepository.deleteAllByExpirationDateBefore(threshold);
+        log.info("[TOKEN CLEANUP] Đã xóa {} token đã hết hạn hơn 10 ngày (ngưỡng: {}).", deleted, threshold);
     }
 }
