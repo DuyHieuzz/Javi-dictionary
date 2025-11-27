@@ -445,9 +445,11 @@ export default function AdminPermission() {
             {/* MODAL CREATE / EDIT */}
             <Modal
                 title={
-                    mode === "create"
-                        ? "Tạo Permission"
-                        : "Chỉnh sửa Permission"
+                    <span className="text-[16px] font-normal">
+                        {mode === "create"
+                            ? "Tạo quyền mới"
+                            : "Chỉnh sửa quyền"}
+                    </span>
                 }
                 open={modalOpen}
                 onCancel={() => {

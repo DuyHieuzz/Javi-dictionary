@@ -108,6 +108,7 @@ public enum ErrorCode {
     SYSTEM_ROLE_CANNOT_RENAME(1053, "Role hệ thống, không thể đổi tên", HttpStatus.BAD_REQUEST),
     ROLE_IN_USE(1054, "Role đang được sử dụng bởi người dùng khác", HttpStatus.BAD_REQUEST),
     NO_PERMISSION_TO_UPDATE_ROLE(1083, "Bạn không có quyền để update role", HttpStatus.FORBIDDEN),
+    ROLE_CANNOT_REMOVE_SYSTEM_PERMISSION_FROM_ADMIN(1095, "Không thể gỡ quyền hệ thống khỏi vai trò ADMIN", HttpStatus.BAD_REQUEST),
 
     // PERMISSION
     PERMISSION_HAS_NO_NAME(1049, "Tên của quyền không được để trống", HttpStatus.BAD_REQUEST),
@@ -137,6 +138,7 @@ public enum ErrorCode {
     REQUIRE_PREMIUM(1077, "Bạn cần nâng cấp tài khoản lên premium để thực hiện chức năng này", HttpStatus.FORBIDDEN),
     INVALID_ENGINE(1078, "Engin bạn truyền xuống không đúng", HttpStatus.BAD_REQUEST),
     ;
+
     // spotless:on
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

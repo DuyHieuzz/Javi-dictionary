@@ -20,6 +20,10 @@ export interface IRole {
   description: string;
   permissions: IPermission[];
   systemRole: boolean;
+  createdAt?: any | null;
+  updatedAt?: any | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
 }
 
 /** Payload tạo hoặc cập nhật Role */

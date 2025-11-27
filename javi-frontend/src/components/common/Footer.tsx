@@ -53,7 +53,11 @@ export default function Footer() {
                         <h3 className="text-base my-[12px]">Mạng xã hội</h3>
                         <ul className="flex gap-4 mb-4">
                             <li>
-                                <a href="!">
+                                <a
+                                    href="https://www.facebook.com/duyhieu.nguyen.98434"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     <img
                                         src={facebook}
                                         alt="FACEBOOK"
@@ -62,7 +66,11 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a
+                                    href="https://www.tiktok.com/@pantheon.ndh"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     <img
                                         src={tiktok}
                                         alt="TIKTOK"
@@ -71,7 +79,11 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a
+                                    href="https://zalo.me/0976024780"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     <img
                                         src={zalo}
                                         alt="ZALO"
@@ -80,7 +92,11 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a
+                                    href="https://www.instagram.com/dhieu.ndh/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     <img
                                         src={instagram}
                                         alt="INSTAGRAM"
@@ -89,7 +105,11 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a
+                                    href="https://www.youtube.com/@duyhieunguyen3890"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     <img
                                         src={youtube}
                                         alt="YOUTUBE"
@@ -98,7 +118,11 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a
+                                    href="https://m.me/duyhieu.nguyen.98434"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     <img
                                         src={messenger}
                                         alt="MESSENGER"
@@ -107,7 +131,7 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a href="#" onClick={(e) => e.preventDefault()}>
                                     <img
                                         src={line}
                                         alt="LINE"
@@ -122,7 +146,7 @@ export default function Footer() {
                         <h3 className="text-base my-[12px]">Tiện ích</h3>
                         <ul className="flex gap-4 mb-4">
                             <li>
-                                <a href="!">
+                                <a href="#" onClick={(e) => e.preventDefault()}>
                                     <img
                                         src={chrome}
                                         alt="CHROME"
@@ -131,7 +155,7 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a href="#" onClick={(e) => e.preventDefault()}>
                                     <img
                                         src={safari}
                                         alt="SAFARI"
@@ -140,7 +164,7 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="!">
+                                <a href="#" onClick={(e) => e.preventDefault()}>
                                     <img
                                         src={firefox}
                                         alt="FIREFOX"

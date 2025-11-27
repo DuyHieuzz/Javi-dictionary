@@ -50,9 +50,9 @@ const WORD_TYPE_OPTIONS = [
     { value: "CONJUNCTION", label: "Liên từ" },
     { value: "INTERJECTION", label: "Thán từ" },
     { value: "VERB", label: "Động từ" },
-    { value: "VERB_GROUP_1", label: "Động từ nhóm 1 (Godan)" },
-    { value: "VERB_GROUP_2", label: "Động từ nhóm 2 (Ichidan)" },
-    { value: "VERB_GROUP_3", label: "Động từ nhóm 3 (Bất quy tắc)" },
+    { value: "VERB_GROUP_1", label: "Động từ nhóm 1" },
+    { value: "VERB_GROUP_2", label: "Động từ nhóm 2" },
+    { value: "VERB_GROUP_3", label: "Động từ nhóm 3" },
     { value: "AUXILIARY_VERB", label: "Trợ động từ" },
     { value: "IDIOM", label: "Thành ngữ" },
     { value: "PHRASE", label: "Cụm từ" },
@@ -245,6 +245,10 @@ function VocabFormModal({
             confirmLoading={loading}
             width={900}
             className="with-padding-modal"
+            cancelButtonProps={{
+                className:
+                    "!text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-red-500",
+            }}
         >
             <Form form={form} layout="vertical">
                 {/* Hàng trên: từ, loại, level (giữ nguyên) */}

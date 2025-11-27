@@ -145,7 +145,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                         <img
                             src={javi}
                             alt="Javi logo"
-                            className="w-[80px] h-[46px] object-cover"
+                            className="w-[100px] h-[46px] object-cover"
                         />
                     </div>
                 </Link>

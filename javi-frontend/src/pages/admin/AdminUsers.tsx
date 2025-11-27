@@ -299,9 +299,9 @@ export default function AdminUsers() {
                 dataIndex: "email",
                 key: "email",
                 render: (email: string, record: any) => (
-                    <div>
+                    <div className="flex items-center gap-2">
                         <div style={{ fontSize: 14 }}>{email}</div>
-                        <div style={{ marginTop: 6 }}>
+                        <div>
                             {record.verified ? (
                                 <Tag color="green">verified</Tag>
                             ) : (
@@ -310,7 +310,6 @@ export default function AdminUsers() {
                         </div>
                     </div>
                 ),
-                responsive: ["sm"],
             },
             {
                 title: "Trình độ",
@@ -602,7 +601,7 @@ export default function AdminUsers() {
                         loading={loading}
                         columns={columns}
                         dataSource={data}
-                        scroll={{ x: 900 }}
+                        scroll={{ x: 1200 }}
                         pagination={{
                             current: page,
                             pageSize: size,
@@ -656,8 +655,12 @@ export default function AdminUsers() {
                 okText="Tạo"
                 cancelText="Hủy"
                 confirmLoading={creating}
-                width={750}
+                width={900}
                 className="with-padding-modal"
+                cancelButtonProps={{
+                    className:
+                        "!text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-red-500",
+                }}
             >
                 <Form layout="vertical" form={createForm}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -712,6 +715,7 @@ export default function AdminUsers() {
                             <DatePicker
                                 style={{ width: "100%" }}
                                 format="DD-MM-YYYY"
+                                placeholder="Chọn ngày sinh"
                             />
                         </Form.Item>
 
@@ -772,10 +776,7 @@ export default function AdminUsers() {
 
                         {/* Nếu có quyền set premium thì hiển thị select premium */}
                         {canSetPremium && (
-                            <Form.Item
-                                name="premiumType"
-                                label="Gói Premium (tuỳ chọn)"
-                            >
+                            <Form.Item name="premiumType" label="Gói Premium">
                                 <Select
                                     allowClear
                                     options={[

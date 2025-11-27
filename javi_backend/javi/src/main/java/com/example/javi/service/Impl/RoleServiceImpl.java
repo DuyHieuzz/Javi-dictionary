@@ -69,6 +69,32 @@ public class RoleServiceImpl implements RoleService {
             List<Permission> dbPermissions = this.permissionRepository.findByIdIn(reqPermissions);
             // Cập nhật Permissions vào DTO Request trước khi mapping
             request.setPermissions(dbPermissions);
+
+            // --- BỔ SUNG: kiểm tra không cho gỡ quyền hệ thống khỏi vai trò ADMIN ---
+            // Lấy id hiện có trên DB
+            List<Long> existingPermIds = roleToUpdate.getPermissions() == null
+                    ? List.of()
+                    : roleToUpdate.getPermissions().stream()
+                            .map(Permission::getId)
+                            .collect(Collectors.toList());
+
+            // Tập id mới từ request (sau khi đã load dbPermissions)
+            List<Long> newPermIds =
+                    dbPermissions.stream().map(Permission::getId).collect(Collectors.toList());
+
+            // Tập id bị xóa = existing - new
+            List<Long> removedIds = existingPermIds.stream()
+                    .filter(idPerm -> !newPermIds.contains(idPerm))
+                    .collect(Collectors.toList());
+
+            if (!removedIds.isEmpty() && "ADMIN".equalsIgnoreCase(roleToUpdate.getName())) {
+                // load removed permissions để kiểm tra flag systemPermission
+                List<Permission> removedPerms = this.permissionRepository.findByIdIn(removedIds);
+                boolean hasSystemRemoved = removedPerms.stream().anyMatch(Permission::isSystemPermission);
+                if (hasSystemRemoved) {
+                    throw new AppException(ErrorCode.ROLE_CANNOT_REMOVE_SYSTEM_PERMISSION_FROM_ADMIN);
+                }
+            }
         }
 
         // Cập nhật Entity từ Request DTO

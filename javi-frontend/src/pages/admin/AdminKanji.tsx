@@ -939,14 +939,10 @@ export default function AdminKanji() {
                 confirmLoading={formLoading}
                 width={900}
                 className="with-padding-modal"
-                cancelButtonProps={
-                    formMode === "edit"
-                        ? {
-                              className:
-                                  "!text-red-600 hover:!text-white hover:!bg-red-500",
-                          }
-                        : undefined
-                }
+                cancelButtonProps={{
+                    className:
+                        "!text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-red-500",
+                }}
             >
                 <Form form={form} layout="vertical">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

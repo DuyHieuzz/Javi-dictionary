@@ -5,6 +5,7 @@ import Footer from "../components/common/Footer";
 import { Outlet } from "react-router-dom";
 import { useGlobalErrorStore } from "@/stores/useGlobalErrorStore";
 import ServerError from "@/components/common/ServerError";
+import ChatWidget from "@/components/common/ChatWidget";
 
 export default function MainLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +39,8 @@ export default function MainLayout() {
                     <Footer />
                 </div>
             </div>
+            {/* Chat widget toàn cục (luôn fixed trên màn hình) */}
+            <ChatWidget />
         </div>
     );
 }

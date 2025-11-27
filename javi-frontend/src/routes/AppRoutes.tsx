@@ -28,6 +28,7 @@ import AdminKanji from "@/pages/admin/AdminKanji";
 import AdminGrammar from "@/pages/admin/AdminGrammar";
 import JlptPage from "@/pages/jlpt/JlptPage";
 import AdminPermissions from "@/pages/admin/AdminPermissions";
+import AdminRoles from "@/pages/admin/AdminRoles";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -153,16 +154,16 @@ export default function App() {
                         </ProtectedRoute>
                     ),
                 },
-                // {
-                //     path: "admin/roles",
-                //     element: (
-                //         <ProtectedRoute>
-                //             <RequirePermission required={["MANAGE_ROLE"]}>
-                //                 <AdminRoles />
-                //             </RequirePermission>
-                //         </ProtectedRoute>
-                //     ),
-                // },
+                {
+                    path: "admin/roles",
+                    element: (
+                        <ProtectedRoute>
+                            <RequirePermission required={["MANAGE_ROLE"]}>
+                                <AdminRoles />
+                            </RequirePermission>
+                        </ProtectedRoute>
+                    ),
+                },
                 {
                     path: "admin/permissions",
                     element: (

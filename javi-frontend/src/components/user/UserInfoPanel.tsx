@@ -283,8 +283,12 @@ export default function UserInfoPanel({
             onOk={handleSubmit}
             okText="Lưu thay đổi"
             cancelText="Hủy"
-            width={750}
+            width={900}
             className="with-padding-modal"
+            cancelButtonProps={{
+                className:
+                    "!text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-red-500",
+            }}
         >
             <Form layout="vertical" form={form}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -345,7 +349,7 @@ export default function UserInfoPanel({
                         <Form.Item name="premiumType" label="Gói Premium">
                             <Select
                                 allowClear
-                                placeholder="Chọn gói nâng cấp (tuỳ chọn)"
+                                placeholder="Chọn gói nâng cấp"
                                 options={[
                                     { label: "1 tháng", value: "MONTHLY_1" },
                                     { label: "3 tháng", value: "MONTHLY_3" },
