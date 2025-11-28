@@ -38,25 +38,31 @@ export default function AppHeader({ onMenuClick }: HeaderProps) {
         }
     };
 
-    const currentTitle =
-        {
-            "/": "Chào ngày mới",
-            "/login": "Chào ngày mới",
-            "/register": "Chào ngày mới",
-            "/search/word": "Tra cứu",
-            "/search/kanji": "Tra cứu",
-            "/search/grammar": "Tra cứu",
-            "/translate": "Dịch",
-            "/jlpt": "JLPT",
-            "/intro": "Giới thiệu",
-            "/premium": "Nâng cấp",
-            "/admin/users": "Quản lý người dùng",
-            "/admin/word": "Quản lý từ vựng",
-            "/admin/kanji": "Quản lý kanji",
-            "/admin/grammar": "Quản lý ngữ pháp",
-            "/admin/roles": "Quản lý vai trò",
-            "/admin/permissions": "Quản lý quyền",
-        }[location.pathname] || "Javi Dictionary";
+    let currentTitle = {
+        "/": "Chào ngày mới",
+        "/login": "Chào ngày mới",
+        "/register": "Chào ngày mới",
+        "/search/word": "Tra cứu",
+        "/search/kanji": "Tra cứu",
+        "/search/grammar": "Tra cứu",
+        "/translate": "Dịch",
+        "/jlpt": "JLPT",
+        "/intro": "Giới thiệu",
+        "/premium": "Nâng cấp",
+        "/admin/users": "Quản lý người dùng",
+        "/admin/word": "Quản lý từ vựng",
+        "/admin/kanji": "Quản lý kanji",
+        "/admin/grammar": "Quản lý ngữ pháp",
+        "/admin/roles": "Quản lý vai trò",
+        "/admin/permissions": "Quản lý quyền",
+        "/users/my-info": "Trang cá nhân",
+    }[location.pathname];
+
+    if (!currentTitle && location.pathname.startsWith("/users/profile/")) {
+        currentTitle = "Trang cá nhân";
+    }
+
+    if (!currentTitle) currentTitle = "Javi Dictionary";
 
     const displayName = user?.username || user?.fullName || "Người dùng";
     const displayId = user?.id ?? "?";

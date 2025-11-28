@@ -1,4 +1,3 @@
-// src/pages/user/UserDetailPage.tsx
 import { useState, useEffect } from "react";
 import UserSidebar from "@/components/user/UserSidebar";
 import UserInfoPanel from "@/components/user/UserInfoPanel";
@@ -67,7 +66,6 @@ export default function UserDetailPage() {
                 setLoading(false);
             }
         })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [username, state.adminView, state.userId]);
 
     if (loading) {
@@ -108,8 +106,8 @@ export default function UserDetailPage() {
         (!isPublic && currentUser?.id === user?.id);
 
     return (
-        <div className="flex flex-col lg:flex-row gap-4">
-            <div className="w-full lg:w-[25%] px-2 lg:px-0">
+        <div className="flex flex-col lg:flex-row gap-4 p-2">
+            <div className="w-full lg:w-[25%] ">
                 <UserSidebar
                     user={user}
                     activeTab={activeTab}
@@ -119,10 +117,10 @@ export default function UserDetailPage() {
                 />
             </div>
 
-            <div className="w-full lg:w-[75%] px-2 lg:px-0">
+            <div className="w-full lg:w-[75%] ">
                 {/*
                   Lưu ý:
-                  - Nếu admin view (state.adminView) thì chúng ta đã fetch user bằng id (callGetUserById),
+                  - Nếu admin view (state.adminView) thì đã fetch user bằng id (callGetUserById),
                     do đó user chứa đầy đủ role + permissions.
                   - Nếu public profile (truy cập trực tiếp) thì vẫn dùng callGetPublicUserProfile để
                     chỉ trả data hạn chế.

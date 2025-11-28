@@ -114,3 +114,42 @@ select:-webkit-autofill:focus {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ===============================
+   Class RENDER CHUNG CHO NỘI DUNG REACTQUILL
+   =============================== */
+
+/* Đảm bảo ul/ol hiển thị bullet, ngay cả khi container bị clamp/overflow */
+.ql-render ul,
+.ql-render ol {
+  list-style-type: disc;           /* disc cho ul; ol sẽ được đổi lại phía dưới */
+  list-style-position: inside;     /* để bullet nằm trong box, không bị cắt */
+  margin: 0.25rem 0;
+  padding-left: 0.9rem;
+}
+
+/* Nếu là ordered list (ol), dùng số thay vì disc */
+.ql-render ol {
+  list-style-type: decimal;
+}
+
+/* Override khi nội dung ReactQuill bị reset list-style (thường do .ql-editor) */
+.ql-render .ql-editor ul,
+.ql-render .ql-editor ol {
+  list-style-position: inside !important;
+  margin: 0.25rem 0 !important;
+  padding-left: 0.9rem !important;
+}
+
+.ql-render .ql-editor ul {
+  list-style-type: disc !important;
+}
+
+.ql-render .ql-editor ol {
+  list-style-type: decimal !important;
+}
+
+/* Khoảng cách giữa các dòng li (hữu ích khi clamp) */
+.ql-render li {
+  margin-bottom: 0.2rem;
+}

@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
-
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
     Table,
     Button,
@@ -104,6 +103,11 @@ export default function AdminKanji() {
     const typingDebounceRef = useRef<number | null>(null);
 
     const MAX_GIF_SIZE = 10 * 1024 * 1024;
+
+    // === THAY ĐỔI CHÍNH: state để điều khiển ReactQuill (controlled) ===
+    // Dùng controlled editor để tránh race / uncontrolled -> controlled issues
+    const [meaningState, setMeaningState] = useState<string>("");
+    // ==================================================================
 
     useEffect(() => {
         loadKanji();
@@ -219,14 +223,13 @@ export default function AdminKanji() {
                     const safeHtml = m ? DOMPurify.sanitize(m) : "";
                     return (
                         <div
-                            className="text-sm meaning-clamp whitespace-pre-wrap break-words truncate "
+                            className="text-sm meaning-clamp whitespace-normal break-words ql-render"
                             dangerouslySetInnerHTML={{
                                 __html:
                                     safeHtml ||
                                     `<span class="text-gray-400">—</span>`,
                             }}
                         />
-                        // meaning-clamp được css trong index.css để giữ logic viết như nào hiển thị như vậy
                     );
                 },
             },
@@ -311,10 +314,11 @@ export default function AdminKanji() {
                 ),
             },
         ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [canEdit, canDelete]
     );
 
-    // === Search area ===
+    // === Search area handlers ===
     const handleSearchSubmit = (values: KanjiSearchValues) => {
         setPage(1);
         setSearchValues(values || {});
@@ -331,6 +335,10 @@ export default function AdminKanji() {
         setEditingKanji(null);
         setCommunityDetail(null);
         form.resetFields();
+
+        // reset editor state khi tạo mới
+        setMeaningState("");
+
         setSelectedGifFile(null);
         setSelectedGifPreview(null);
         setFormOpen(true);
@@ -343,6 +351,7 @@ export default function AdminKanji() {
             setFormOpen(true);
             setEditingKanji(record);
 
+            // gán values vào form trước
             form.setFieldsValue({
                 characterName: record.characterName,
                 sinoViName: record.sinoViName,
@@ -350,20 +359,38 @@ export default function AdminKanji() {
                 level: record.level,
             });
 
+            // đồng bộ editor state ngay sau setFieldsValue (fix hiển thị lần đầu)
+            setMeaningState(record.meaning || "");
+
             setSelectedGifFile(null);
-            setSelectedGifPreview(null);
+            setSelectedGifPreview(record.gifUrl || null);
 
             try {
+                // gọi detail (nếu cần nhiều thông tin)
                 const resp = await callGetKanjiDetail(record.characterName, {
                     saveHistory: false,
-                });
+                } as any);
                 const b = (resp?.data ||
                     resp) as IBackendRes<IKanjiDetailResponse>;
                 const det =
                     (b.result as IKanjiDetailResponse) ||
                     (b.data as IKanjiDetailResponse) ||
                     (b as any);
-                setCommunityDetail(det ?? null);
+                if (det) {
+                    setCommunityDetail(det ?? null);
+                    // đồng bộ nếu API trả nghĩa khác
+                    if (det.meaning) {
+                        // cập nhật cả form và editor (ăn chắc)
+                        form.setFieldsValue({ meaning: det.meaning });
+                        setMeaningState(det.meaning || "");
+                    }
+                    if ((det as any).gifUrl) {
+                        setSelectedGifPreview((det as any).gifUrl);
+                        setSelectedGifFile(null);
+                    }
+                } else {
+                    setCommunityDetail(null);
+                }
             } catch (e) {
                 setCommunityDetail(null);
             }
@@ -407,7 +434,7 @@ export default function AdminKanji() {
         try {
             const resp = await callGetKanjiDetail(character, {
                 saveHistory: false,
-            });
+            } as any);
             const b = (resp?.data || resp) as IBackendRes<IKanjiDetailResponse>;
             const det =
                 (b.result as IKanjiDetailResponse) ||
@@ -420,6 +447,9 @@ export default function AdminKanji() {
                     meaning: det.meaning || "",
                     level: det.level || undefined,
                 });
+
+                // đồng bộ editor state khi auto-fill tìm thấy
+                setMeaningState(det.meaning || "");
 
                 setCommunityDetail(det);
 
@@ -455,7 +485,7 @@ export default function AdminKanji() {
         }
     };
 
-    // handleSubmit (giữ nguyên logic đã gửi trước)
+    // handleSubmit (giữ nguyên logic chức năng, chỉ dùng form values như trước)
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields();
@@ -500,7 +530,6 @@ export default function AdminKanji() {
                         if (selectedGifFile!.size > MAX_GIF_SIZE) {
                             throw new Error("File GIF phải nhỏ hơn 10MB");
                         }
-
                         await callUploadKanjiGif(
                             orig.characterName,
                             selectedGifFile!
@@ -746,7 +775,7 @@ export default function AdminKanji() {
             try {
                 const resp = await callGetKanjiDetail(character, {
                     saveHistory: false,
-                });
+                } as any);
                 const b = (resp?.data ||
                     resp) as IBackendRes<IKanjiDetailResponse>;
                 const foundDetail =
@@ -763,6 +792,8 @@ export default function AdminKanji() {
                     const currentMeaning = form.getFieldValue("meaning");
                     if (!currentMeaning && foundDetail.meaning) {
                         form.setFieldsValue({ meaning: foundDetail.meaning });
+                        // đồng bộ editor state khi auto-fill trong create form
+                        setMeaningState(foundDetail.meaning || "");
                     }
                 } else {
                     setCommunityDetail(null);
@@ -807,7 +838,7 @@ export default function AdminKanji() {
                             >
                                 <Input.Search
                                     allowClear
-                                    placeholder="Tìm theo ký tự, Hán-Việt..."
+                                    placeholder="Tìm theo ký tự hoặc tên Hán-Việt"
                                     autoComplete="off"
                                     onSearch={() => searchForm.submit()}
                                 />
@@ -932,6 +963,8 @@ export default function AdminKanji() {
                         setSelectedGifPreview(null);
                     }
                     setCommunityDetail(null);
+                    // reset editor state (an toàn)
+                    setMeaningState("");
                 }}
                 onOk={handleSubmit}
                 okText={formMode === "create" ? "Tạo" : "Lưu"}
@@ -946,8 +979,6 @@ export default function AdminKanji() {
             >
                 <Form form={form} layout="vertical">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Ký tự Kanji với icon kiểm tra ở trong input (suffix) */}
-
                         <Form.Item
                             name="characterName"
                             label="Ký tự Kanji"
@@ -962,7 +993,6 @@ export default function AdminKanji() {
                             <Input
                                 placeholder="Ví dụ: 水"
                                 size="middle"
-                                // ép chiều cao khớp với các input khác
                                 style={{ height: 32, paddingRight: 8 }}
                                 suffix={
                                     <Tooltip title="Kiểm tra Kanji">
@@ -972,7 +1002,6 @@ export default function AdminKanji() {
                                                 e.stopPropagation();
                                                 handleCheckCharacter();
                                             }}
-                                            // dùng icon từ react-icons, loading hiển thị nếu checkLoading true
                                             icon={
                                                 checkLoading ? (
                                                     <span className="inline-block w-4 h-4 border-2 border-gray-300 rounded-full animate-spin" />
@@ -985,12 +1014,14 @@ export default function AdminKanji() {
                                 }
                             />
                         </Form.Item>
+
                         <Form.Item name="sinoViName" label="Tên Hán Việt">
                             <Input
                                 placeholder="Ví dụ: THỦY"
                                 onChange={handleSinoInputChange}
                             />
                         </Form.Item>
+
                         <Form.Item
                             name="level"
                             label="Trình độ (JLPT)"
@@ -1043,8 +1074,25 @@ export default function AdminKanji() {
                         </Form.Item>
                     </div>
 
+                    {/* === CHỖ REACTQUILL: controlled bằng meaningState để tránh lỗi hiển thị lần đầu === */}
                     <Form.Item name="meaning" label="Nghĩa">
-                        <ReactQuill theme="snow" />
+                        <ReactQuill
+                            theme="snow"
+                            value={meaningState}
+                            onChange={(val: string) => {
+                                // cập nhật state editor và đồng bộ vào form
+                                setMeaningState(val);
+                                form.setFieldsValue({ meaning: val });
+                            }}
+                            modules={{
+                                toolbar: [
+                                    [{ header: [1, 2, false] }],
+                                    ["bold", "italic", "underline", "strike"],
+                                    [{ list: "ordered" }, { list: "bullet" }],
+                                    ["link", "image"],
+                                ],
+                            }}
+                        />
                     </Form.Item>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 items-start">

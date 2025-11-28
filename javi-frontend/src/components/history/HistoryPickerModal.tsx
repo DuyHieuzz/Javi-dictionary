@@ -5,7 +5,8 @@ import { FaSearch } from "react-icons/fa";
 import { callSearchKanji } from "@/apis/kanjiApi";
 import { callSearchVocabulary } from "@/apis/vocabularyApi";
 import { callSearchGrammars } from "@/apis/grammarApi";
-
+import type { IMeaning } from "@/types/backend";
+import DOMPurify from "dompurify";
 type TabKey = "KANJI" | "WORD" | "GRAMMAR";
 
 interface PickerSelectPayload {
@@ -28,13 +29,6 @@ interface Props {
     pageSize?: number;
 }
 
-const isSingleKanjiChar = (s?: string) => {
-    if (!s || typeof s !== "string") return false;
-    const trimmed = s.trim();
-    // basic CJK Unified Ideographs block
-    return /^[\u4E00-\u9FFF]$/.test(trimmed);
-};
-
 export default function HistoryPickerModal({
     open,
     keyword,
@@ -49,6 +43,14 @@ export default function HistoryPickerModal({
     const [kanjiList, setKanjiList] = useState<any[]>([]);
     const [vocabList, setVocabList] = useState<any[]>([]);
     const [grammarList, setGrammarList] = useState<any[]>([]);
+
+    function htmlToPlainText(html?: string): string {
+        if (!html) return "";
+        const safe = DOMPurify.sanitize(html);
+        const tmp = document.createElement("div");
+        tmp.innerHTML = safe;
+        return (tmp.textContent || "").replace(/\u00A0/g, "").trim();
+    }
 
     /**
      * fetchByType trả về số lượng kết quả mỗi loại để caller quyết định chuyển tab auto nếu cần.
@@ -67,12 +69,12 @@ export default function HistoryPickerModal({
         setLoading(true);
         try {
             if (type === "KANJI") {
+                // Chỉ cập nhật list Kanji, không xóa list khác ― tránh ghi đè khi user đã có kết quả từ lần fetch trước
                 const res = await callSearchKanji(k, { saveHistory: false });
                 const arr = res.data?.result ?? [];
                 const list = Array.isArray(arr) ? arr.slice(0, pageSize) : [];
                 setKanjiList(list);
-                setVocabList([]);
-                setGrammarList([]);
+                // không gọi setVocabList([]) hay setGrammarList([]) ở đây
                 return {
                     kanjiCount: list.length,
                     vocabCount: 0,
@@ -81,14 +83,13 @@ export default function HistoryPickerModal({
             }
 
             if (type === "WORD") {
+                // Chỉ cập nhật list Từ vựng, giữ nguyên list khác
                 const res = await callSearchVocabulary(k, {
                     saveHistory: false,
                 });
                 const arr = res.data?.result ?? [];
                 const list = Array.isArray(arr) ? arr.slice(0, pageSize) : [];
                 setVocabList(list);
-                setKanjiList([]);
-                setGrammarList([]);
                 return {
                     kanjiCount: 0,
                     vocabCount: list.length,
@@ -97,6 +98,7 @@ export default function HistoryPickerModal({
             }
 
             if (type === "GRAMMAR") {
+                // Chỉ cập nhật list Ngữ pháp, giữ nguyên list khác
                 const res = await callSearchGrammars({
                     keyword: k,
                     page: 1,
@@ -106,8 +108,6 @@ export default function HistoryPickerModal({
                 const content = res.data?.result?.content ?? [];
                 const list = Array.isArray(content) ? content : [];
                 setGrammarList(list);
-                setKanjiList([]);
-                setVocabList([]);
                 return {
                     kanjiCount: 0,
                     vocabCount: 0,
@@ -212,6 +212,21 @@ export default function HistoryPickerModal({
     }, [open, keyword, defaultTab]);
 
     const pickKanji = (k: any) => {
+        // Ưu tiên gửi character (ký tự Hán) về caller:
+        // - Nếu có characterName / character (string) -> dùng string đó làm id (vì SearchResultModal/BE đôi khi nhận characterName)
+        // - Nếu không có character string nhưng có id (number) -> vẫn gửi id (fallback)
+        const char = k?.characterName ?? k?.character;
+        if (char && String(char).trim() !== "") {
+            onSelect({
+                entityType: "KANJI",
+                id: String(char),
+                name: String(char),
+            });
+            onClose();
+            return;
+        }
+
+        // Nếu không có ký tự, nhưng có id number thì fallback gửi id
         if (k?.id || k?.id === 0) {
             onSelect({
                 entityType: "KANJI",
@@ -222,16 +237,7 @@ export default function HistoryPickerModal({
             return;
         }
 
-        if (k?.character || k?.characterName) {
-            onSelect({
-                entityType: "KANJI",
-                id: k.character ?? k.characterName,
-                name: k.characterName ?? k.character,
-            });
-            onClose();
-            return;
-        }
-
+        // Fallback: không có gì thì gửi tên từ keyword
         onSelect({
             entityType: "KANJI",
             id: undefined,
@@ -287,28 +293,32 @@ export default function HistoryPickerModal({
         if (!kanjiList.length)
             return (
                 <div className="p-6">
-                    <Empty description="Không tìm thấy chữ Hán" />
+                    <Empty description="Không tìm thấy chữ Hán tương ứng" />
                 </div>
             );
         return (
-            <div className="p-2">
+            <div className="">
                 {kanjiList.map((k) => (
                     <div
                         key={k.id ?? JSON.stringify(k)}
                         onClick={() => pickKanji(k)}
                         className="flex items-center justify-between gap-3 px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
                     >
-                        <div className="flex items-center gap-3">
-                            <div className="text-[20px]">
+                        <div className="flex items-center gap-5">
+                            <div className="text-[30px] text-[#3e67d6] font-mplus">
                                 {k.character ?? k.characterName}
                             </div>
                             <div className="text-sm text-gray-600">
                                 <div className="font-medium">
-                                    {k.sinoViName ?? ""}
+                                    {k.sinoViName && k.sinoViName.trim() !== ""
+                                        ? k.sinoViName
+                                        : "—"}
                                 </div>
                             </div>
                         </div>
-                        <div className="text-xs text-gray-400">Chi tiết</div>
+                        <div className="text-xs text-gray-400">
+                            Xem chi tiết
+                        </div>
                     </div>
                 ))}
             </div>
@@ -325,28 +335,48 @@ export default function HistoryPickerModal({
         if (!vocabList.length)
             return (
                 <div className="p-6">
-                    <Empty description="Không tìm thấy từ vựng" />
+                    <Empty description="Không tìm thấy từ vựng tương ứng" />
                 </div>
             );
+
         return (
-            <div className="p-2">
+            <div className="">
                 {vocabList.map((v) => (
                     <div
                         key={v.id ?? JSON.stringify(v)}
                         onClick={() => pickVocab(v)}
                         className="flex items-center justify-between gap-3 px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
                     >
-                        <div>
-                            <div className="font-medium text-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div
+                                className="font-normal text-[#3e67d6] text-xl mr-4 flex-shrink-0"
+                                style={{ minWidth: 120 }}
+                            >
                                 {v.word ?? v.surface}
                             </div>
-                            <div className="text-xs text-gray-500">
-                                {v.meanings?.[0]?.meaningVn ??
-                                    v.meaningPreview ??
-                                    ""}
+
+                            {/* Nghĩa: nếu có nhiều meanings thì join bằng newline và render bằng whitespace-pre-line */}
+                            <div className="text-sm text-gray-500 whitespace-pre-line break-words">
+                                {Array.isArray(v.meanings) &&
+                                v.meanings.length > 0
+                                    ? v.meanings
+                                          .map((m: IMeaning) => {
+                                              // chuyển HTML Quill sang plain text an toàn
+                                              const text = htmlToPlainText(
+                                                  m?.meaningVn ?? ""
+                                              );
+                                              return text ? `- ${text}` : null;
+                                          })
+                                          .filter(Boolean)
+                                          .join("\n")
+                                    : // nếu không có meanings array, fallback về preview (preview có thể đã là plain text)
+                                      v.meaningPreview ?? ""}
                             </div>
                         </div>
-                        <div className="text-xs text-gray-400">Chi tiết</div>
+
+                        <div className="text-xs text-gray-400">
+                            Xem chi tiết
+                        </div>
                     </div>
                 ))}
             </div>
@@ -363,11 +393,11 @@ export default function HistoryPickerModal({
         if (!grammarList.length)
             return (
                 <div className="p-6">
-                    <Empty description="Không tìm thấy ngữ pháp" />
+                    <Empty description="Không tìm thấy ngữ pháp tương ứng" />
                 </div>
             );
         return (
-            <div className="p-2">
+            <div className="">
                 {grammarList.map((g) => (
                     <div
                         key={g.id}
@@ -384,7 +414,9 @@ export default function HistoryPickerModal({
                                     (g.description ?? "").slice(0, 80)}
                             </div>
                         </div>
-                        <div className="text-xs text-gray-400">Chi tiết</div>
+                        <div className="text-xs text-gray-400">
+                            Xem chi tiết
+                        </div>
                     </div>
                 ))}
             </div>
@@ -397,43 +429,97 @@ export default function HistoryPickerModal({
             onCancel={onClose}
             footer={null}
             title={
-                <div className="flex items-center gap-2">
-                    <FaSearch /> <span>Tìm: "{keyword}"</span>
+                <div className="flex items-center gap-2 font-normal text-lg">
+                    <FaSearch />{" "}
+                    <span>Kết quả tìm kiếm từ khóa: "{keyword}"</span>
                 </div>
             }
             centered
             width={820}
-            bodyStyle={{ padding: 0 }}
-            className="rounded-2xl overflow-hidden with-padding-modal"
+            // Chỉnh bodyStyle: cao cố định, ẩn overflow bên ngoài – nội dung sẽ scroll bên trong tab panes
+            bodyStyle={{
+                padding: 0,
+                height: "60vh",
+                minHeight: 360,
+                maxHeight: 720,
+                overflow: "hidden",
+            }}
+            className="rounded-2xl overflow-hidden with-padding-modal "
             closable={true}
         >
-            <div className="p-0">
+            {/* Wrapper cho Tabs: dùng flex để tab headers hiển thị tự nhiên và nội dung chiếm phần còn lại */}
+            <div
+                style={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
                 <Tabs
                     activeKey={active}
                     onChange={(k) => {
                         const key = k as TabKey;
                         setActive(key);
-                        // fetch content for selected tab (pass current keyword)
-                        fetchByType(keyword, key);
+                        if (key === "KANJI") {
+                            if (!kanjiList || kanjiList.length === 0)
+                                fetchByType(keyword, "KANJI");
+                        } else if (key === "WORD") {
+                            if (!vocabList || vocabList.length === 0)
+                                fetchByType(keyword, "WORD");
+                        } else if (key === "GRAMMAR") {
+                            if (!grammarList || grammarList.length === 0)
+                                fetchByType(keyword, "GRAMMAR");
+                        }
                     }}
+                    style={{ flex: "0 0 auto" }} // tab header area, không giãn
                 >
                     <Tabs.TabPane
                         tab={`Chữ Hán (${kanjiList?.length ?? 0})`}
                         key="KANJI"
                     >
-                        {renderKanji()}
+                        {/* Nội dung tab: flex:1 để chiếm không gian còn lại, overflow:auto để scroll */}
+                        <div
+                            style={{
+                                height: "100%",
+                                flex: 1,
+                                overflow: "auto",
+                                padding: 12,
+                            }}
+                        >
+                            {renderKanji()}
+                        </div>
                     </Tabs.TabPane>
+
                     <Tabs.TabPane
                         tab={`Từ vựng (${vocabList?.length ?? 0})`}
                         key="WORD"
                     >
-                        {renderVocab()}
+                        <div
+                            style={{
+                                height: "100%",
+                                flex: 1,
+                                overflow: "auto",
+                                padding: 12,
+                            }}
+                        >
+                            {renderVocab()}
+                        </div>
                     </Tabs.TabPane>
+
                     <Tabs.TabPane
                         tab={`Ngữ pháp (${grammarList?.length ?? 0})`}
                         key="GRAMMAR"
                     >
-                        {renderGrammar()}
+                        <div
+                            style={{
+                                height: "100%",
+                                flex: 1,
+                                overflow: "auto",
+                                padding: 12,
+                            }}
+                        >
+                            {renderGrammar()}
+                        </div>
                     </Tabs.TabPane>
                 </Tabs>
             </div>

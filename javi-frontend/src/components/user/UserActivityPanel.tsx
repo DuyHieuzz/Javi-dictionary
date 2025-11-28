@@ -172,6 +172,20 @@ export default function UserActivityPanel({
         }
     };
 
+    // Map entity type sang tên tiếng Việt
+    const mapEntityTypeLabel = (type?: string) => {
+        switch ((type || "").toUpperCase()) {
+            case "WORD":
+                return "TỪ VỰNG";
+            case "KANJI":
+                return "KANJI";
+            case "GRAMMAR":
+                return "NGỮ PHÁP";
+            default:
+                return type || "";
+        }
+    };
+
     return (
         <>
             <div
@@ -202,7 +216,9 @@ export default function UserActivityPanel({
                                         <div className="flex items-center justify-between text-xs w-full">
                                             <div className="text-gray-400">
                                                 <span className="capitalize">
-                                                    {String(c.entityType ?? "")}
+                                                    {mapEntityTypeLabel(
+                                                        c.entityType
+                                                    )}
                                                 </span>
                                                 {entityName ? (
                                                     <span className="mx-1">

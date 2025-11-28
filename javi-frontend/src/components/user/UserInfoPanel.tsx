@@ -121,7 +121,159 @@ export default function UserInfoPanel({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [forceOpen, user?.id]);
 
+    // Hàm này dài do xử lý nhiều trường hợp: chỉ update info, chỉ block/unblock, cả 2, kiểm tra sửa field hay không, bảo vệ admin, check quyền quản lý role, chỉ upgrade premium
     const handleSubmit = async () => {
+        // ====== LẤY GIÁ TRỊ THÔ ======
+        const rawValues = form.getFieldsValue();
+
+        // trạng thái toggle
+        const isTryingToBlock =
+            rawValues.status !== undefined && rawValues.status === false;
+
+        const isTargetAdmin = user.role?.name === "ADMIN";
+
+        // PHÁT HIỆN CÓ SỬA THÔNG TIN HAY KHÔNG
+
+        // helper
+        const normalizeStr = (v: any) => {
+            if (v === null || v === undefined) return "";
+            return String(v).trim();
+        };
+
+        const normalizeDate = (d: any) => {
+            if (!d) return "";
+            try {
+                return dayjs(d).format("YYYY-MM-DD");
+            } catch {
+                return String(d);
+            }
+        };
+
+        const normalizeIntro = (v: any) => {
+            const s = (v ?? "").toString();
+            if (s === "<p><br></p>" || s === "<p></p>") return "";
+            return s.trim();
+        };
+
+        // Giá trị gốc (từ user BE trả về)
+        const origFullName = normalizeStr(user.fullName);
+        const origUsername = normalizeStr(user.username);
+        const origDob = normalizeDate(user.dateOfBirth);
+        const origLevel = normalizeStr(user.level);
+        const origRoleId = user.role?.id ?? null;
+        const origPremium = user.premiumType ?? null;
+        const origIntro = normalizeIntro(user.selfIntroduction);
+
+        // Giá trị hiện tại trên form
+        const newFullName = normalizeStr(rawValues.fullName);
+        const newUsername = normalizeStr(rawValues.username);
+        const newDob = normalizeDate(rawValues.dateOfBirth);
+        const newLevel = normalizeStr(rawValues.level);
+        const newRoleId = rawValues.role ?? null;
+        const newPremium = rawValues.premiumType ?? null;
+        const newIntro = normalizeIntro(intro);
+
+        // So sánh giá trị
+        const valueChanged =
+            newFullName !== origFullName ||
+            newUsername !== origUsername ||
+            newDob !== origDob ||
+            newLevel !== origLevel ||
+            newIntro !== origIntro ||
+            newRoleId !== origRoleId ||
+            newPremium !== origPremium;
+
+        // Kiểm tra người dùng có thực sự sửa field hay chưa
+        // Lưu ý: KHÔNG kiểm tra "status" vì toggle không tính là sửa info
+        const editedFields = form.isFieldsTouched(
+            [
+                "fullName",
+                "username",
+                "dateOfBirth",
+                "level",
+                "role",
+                "premiumType",
+            ],
+            false
+        );
+
+        // QUYẾT ĐỊNH CUỐI CÙNG: user có sửa thông tin?
+        const userEditedInfo = editedFields || valueChanged;
+
+        // NẾU KHÔNG SỬA THÔNG TIN → CHỈ BLOCK/UNBLOCK
+
+        if (!userEditedInfo) {
+            // chặn block admin
+            if (isTargetAdmin && isTryingToBlock) {
+                message.warning("Không thể khóa tài khoản ADMIN!");
+                return;
+            }
+
+            // BLOCK
+            if (
+                !isPublic &&
+                realCanManageUser &&
+                isTryingToBlock &&
+                user.status !== "BLOCKED"
+            ) {
+                try {
+                    const res = await callBlockUser(user.id);
+                    if (res.status === 200 || res.data?.statusCode === 1000) {
+                        message.success("Tài khoản đã bị khóa");
+
+                        if (isSelf) clearAuth();
+
+                        onUserUpdated?.({ ...user, status: "BLOCKED" });
+                        setIsModalOpen(false);
+                    } else {
+                        message.error(
+                            res.data?.message || "Không thể khóa tài khoản"
+                        );
+                    }
+                } catch (err: any) {
+                    const msg =
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "Máy chủ không phản hồi, vui lòng thử lại.";
+                    message.error(msg);
+                }
+                return;
+            }
+
+            // UNBLOCK
+            if (
+                !isPublic &&
+                realCanManageUser &&
+                rawValues.status === true &&
+                user.status === "BLOCKED"
+            ) {
+                try {
+                    const res = await callUnblockUser(user.id);
+                    if (res.status === 200 || res.data?.statusCode === 1000) {
+                        message.success("Tài khoản đã được mở khóa");
+                        onUserUpdated?.({ ...user, status: "ACTIVE" });
+                        setIsModalOpen(false);
+                    } else {
+                        message.error(
+                            res.data?.message || "Không thể mở khóa tài khoản"
+                        );
+                    }
+                } catch (err: any) {
+                    const msg =
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "Máy chủ không phản hồi, vui lòng thử lại.";
+                    message.error(msg);
+                }
+                return;
+            }
+
+            message.info("Không có thay đổi để lưu");
+            return;
+        }
+
+        //  user có sửa thông tin → VALIDATE & UPDATE → rồi block/unblock nếu có
+
         let values;
         try {
             values = await form.validateFields();
@@ -130,23 +282,15 @@ export default function UserInfoPanel({
             return;
         }
 
-        const isTargetAdmin = user.role?.name === "ADMIN";
-        const isTryingToBlock =
-            values.status !== undefined && values.status === false;
-        const isRoleChanged = values.role && values.role !== user.role?.id;
-        const isInfoChanged =
-            values.fullName !== user.fullName ||
-            values.level !== user.level ||
-            intro !== user.selfIntroduction;
-        const isPremiumChanged = !!values.premiumType;
+        // không đổi role, không block admin
+        const isRoleChanged = newRoleId !== origRoleId;
 
-        // không cho block hoặc đổi role của ADMIN
-        if (isTargetAdmin && isTryingToBlock) {
-            message.warning("Không thể khóa tài khoản ADMIN!");
-            return;
-        }
         if (isTargetAdmin && isRoleChanged) {
             message.warning("Không thể thay đổi vai trò ADMIN!");
+            return;
+        }
+        if (isTargetAdmin && isTryingToBlock) {
+            message.warning("Không thể khóa tài khoản ADMIN!");
             return;
         }
 
@@ -154,8 +298,8 @@ export default function UserInfoPanel({
             ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
             : null;
 
-        // cập nhật thông tin cơ bản (nếu có thay đổi và không phải view public)
-        if (!isPublic && (isInfoChanged || isRoleChanged)) {
+        // === UPDATE USER ===
+        if (!isPublic && (valueChanged || isRoleChanged)) {
             const payload = {
                 username: values.username,
                 fullName: values.fullName,
@@ -167,33 +311,34 @@ export default function UserInfoPanel({
 
             try {
                 const res = await callUpdateUserById(user.id, payload);
-
                 if (res.status === 200 || res.data?.statusCode === 1000) {
                     message.success("Cập nhật thông tin thành công!");
-                    if (isSelf) {
-                        if (res.data?.result) {
-                            setAuth({
-                                token: token!,
-                                tokenType: "Bearer",
-                                refresh_token: "",
-                                user: res.data.result,
-                            });
-                        }
+
+                    if (isSelf && res.data?.result) {
+                        setAuth({
+                            token: token!,
+                            tokenType: "Bearer",
+                            refresh_token: "",
+                            user: res.data.result,
+                        });
                     }
+
                     onUserUpdated?.(res.data.result);
                 } else {
                     message.error(res.data?.message || "Cập nhật thất bại!");
+                    return;
                 }
             } catch (err: any) {
                 const msg =
                     err?.response?.data?.message ||
                     err?.message ||
-                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
+                    "Máy chủ không phản hồi, vui lòng thử lại.";
                 message.error(msg);
+                return;
             }
         }
 
-        // block user nếu admin bật
+        // === BLOCK (nếu toggle block) ===
         if (
             !isPublic &&
             realCanManageUser &&
@@ -220,11 +365,11 @@ export default function UserInfoPanel({
             }
         }
 
-        // mở lại account nếu admin bật
+        // === UNBLOCK (nếu toggle unblock) ===
         if (
             !isPublic &&
             realCanManageUser &&
-            values.status === true &&
+            rawValues.status === true &&
             user.status === "BLOCKED"
         ) {
             try {
@@ -233,36 +378,13 @@ export default function UserInfoPanel({
                     message.success("Tài khoản đã được mở khóa");
                     onUserUpdated?.({ ...user, status: "ACTIVE" });
                 } else {
-                    message.error(
-                        res.data?.message || "Không thể mở khóa tài khoản"
-                    );
+                    message.error(res.data?.message || "Không thể mở khóa");
                 }
             } catch (err: any) {
                 const msg =
                     err?.response?.data?.message ||
                     err?.message ||
                     "Máy chủ không phản hồi, vui lòng thử lại.";
-                message.error(msg);
-            }
-        }
-
-        // nâng cấp premium (nếu admin thao tác)
-        if (!isPublic && realCanManageUser && isPremiumChanged) {
-            try {
-                const res = await callUpgradePremium(
-                    user.id,
-                    values.premiumType
-                );
-                if (res.status === 200 || res.data?.statusCode === 1000) {
-                    message.success("Nâng cấp Premium thành công!");
-                    onUserUpdated?.(res.data.result);
-                } else {
-                    message.error(res.data?.message || "Nâng cấp thất bại!");
-                }
-            } catch (err: any) {
-                const msg =
-                    err?.response?.data?.message ||
-                    "Không thể kết nối tới máy chủ.";
                 message.error(msg);
             }
         }
@@ -292,11 +414,7 @@ export default function UserInfoPanel({
         >
             <Form layout="vertical" form={form}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <Form.Item
-                        name="fullName"
-                        label="Họ và tên"
-                        rules={[{ required: true }]}
-                    >
+                    <Form.Item name="fullName" label="Họ và tên">
                         <Input placeholder="Nhập họ tên" disabled={isPublic} />
                     </Form.Item>
 
@@ -411,7 +529,7 @@ export default function UserInfoPanel({
         <div className="bg-white rounded-2xl shadow p-3">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <h3 className="text-base mb-2">Thông tin cá nhân</h3>
+                <h3 className="text-base">Thông tin cá nhân</h3>
                 {showEditButton && (
                     <button
                         onClick={handleOpenModal}
@@ -485,10 +603,10 @@ export default function UserInfoPanel({
             {/* CHANGED: hiển thị phần Vai trò & Quyền hạn nếu viewer có quyền quản lý user (realCanManageUser) */}
             {realCanManageUser && (
                 <>
-                    <h4 className="text-base text-[#3e67d6] mb-2 border-b border-gray-200 pb-3">
+                    <h4 className="text-base text-[#3e67d6] border-b border-gray-200 pb-3">
                         Vai trò & Quyền hạn
                     </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 text-gray-700">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 text-gray-700 mt-3">
                         <div>
                             <p className="font-normal text-[15px] mb-1">
                                 Role: <span>{user.role?.name}</span>

@@ -134,7 +134,7 @@ export default function KanjiDetail({ data }: Props) {
                         </Text>
                         {/* Văn bản nghĩa (render HTML an toàn, giữ khoảng trắng) */}
                         <div
-                            className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words"
+                            className="text-sm text-gray-700 leading-relaxed whitespace-normal break-words ql-render"
                             dangerouslySetInnerHTML={{
                                 __html:
                                     DOMPurify.sanitize(data?.meaning || "") ||

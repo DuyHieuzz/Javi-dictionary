@@ -17,7 +17,7 @@ export default function GrammarDetail({ data }: Props) {
                     </h1>
                     {/* Hiển thị meaning dưới dạng HTML đã sanitize (ReactQuill output) */}
                     <div
-                        className="text-gray-700 text-[15px] prose max-w-none"
+                        className="ql-render text-gray-700 text-[15px] prose max-w-none"
                         // prose giúp một số style mặc định cho HTML (tuỳ project nếu dùng Tailwind Typography)
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(data.meaning || ""),
@@ -32,7 +32,7 @@ export default function GrammarDetail({ data }: Props) {
                     <div className="text-lg">
                         <h3 className="text-[#3e67da] mb-3 mt-5">Cấu trúc:</h3>
                         <div
-                            className="border border-[#3e67d6] p-2 rounded-lg"
+                            className="ql-render border border-[#3e67d6] p-2 rounded-lg"
                             dangerouslySetInnerHTML={{
                                 __html: DOMPurify.sanitize(
                                     data.structure || ""
@@ -49,7 +49,7 @@ export default function GrammarDetail({ data }: Props) {
                             Nghĩa
                         </h3>
                         <div
-                            className="text-gray-700 leading-relaxed text-base"
+                            className="ql-render text-gray-700 leading-relaxed text-base"
                             dangerouslySetInnerHTML={{
                                 __html: DOMPurify.sanitize(
                                     data.usageNote || ""

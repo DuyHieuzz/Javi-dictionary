@@ -9,6 +9,7 @@ import { IVocabResponse, IMeaning, IMeaningExample } from "@/types/backend";
 import { callExplainVocabulary } from "@/apis/vocabularyApi";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "react-toastify";
+import DOMPurify from "dompurify";
 
 const wordTypeMap: Record<string, string> = {
     NOUN: "Danh từ",
@@ -140,15 +141,27 @@ export default function VocabularyDetail({ data }: Props) {
                 {Array.isArray(data.meanings) && data.meanings.length > 0 ? (
                     data.meanings.map((m: IMeaning, idx: number) => (
                         <div key={m.id ?? idx} className="mb-4">
-                            <h3 className="my-3 text-lg flex items-center gap-1">
-                                <PiDiamondFill className="text-[#3e67d6] text-[12px]" />{" "}
-                                {m.meaningVn}
+                            <h3 className="my-3 text-lg flex items-center gap-1 text-[#3e67d6]">
+                                <PiDiamondFill className="text-[12px] mt-1" />
+                                <span
+                                    className="ql-render"
+                                    dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                            m.meaningVn || ""
+                                        ),
+                                    }}
+                                />
                             </h3>
 
                             {m.description && (
-                                <p className="text-gray-600 ml-4 text-[15px] mb-2 whitespace-pre-line">
-                                    {m.description}
-                                </p>
+                                <div
+                                    className="ql-render text-gray-600 ml-4 text-[15px] mb-2"
+                                    dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                            m.description || ""
+                                        ),
+                                    }}
+                                />
                             )}
 
                             {Array.isArray(m.examples) &&

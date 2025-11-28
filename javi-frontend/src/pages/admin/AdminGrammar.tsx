@@ -166,7 +166,7 @@ export default function AdminGrammar() {
                             </div>
 
                             <div
-                                className="text-xs text-gray-600 meaning-clamp whitespace-pre-wrap break-words meaning-clamp-2-line"
+                                className="ql-render text-xs text-gray-600 meaning-clamp whitespace-normal break-words meaning-clamp-2-line"
                                 dangerouslySetInnerHTML={{
                                     __html:
                                         safeMeaning ||
@@ -187,7 +187,7 @@ export default function AdminGrammar() {
                     const safeHtml = m ? DOMPurify.sanitize(m) : "";
                     return (
                         <div
-                            className="text-sm meaning-clamp whitespace-pre-wrap break-words "
+                            className="ql-render text-sm meaning-clamp whitespace-normal break-words"
                             dangerouslySetInnerHTML={{
                                 __html:
                                     safeHtml ||
@@ -206,7 +206,7 @@ export default function AdminGrammar() {
                     const safeHtml = m ? DOMPurify.sanitize(m) : "";
                     return (
                         <div
-                            className="text-sm meaning-clamp whitespace-pre-wrap break-words "
+                            className="ql-render text-sm meaning-clamp whitespace-normal break-words"
                             dangerouslySetInnerHTML={{
                                 __html:
                                     safeHtml ||
@@ -444,7 +444,7 @@ export default function AdminGrammar() {
                             >
                                 <Input.Search
                                     allowClear
-                                    placeholder="Tìm theo mẫu / nghĩa..."
+                                    placeholder="Tìm theo mẫu ngữ pháp, nghĩa..."
                                     autoComplete="off"
                                     onSearch={() => searchForm.submit()}
                                 />

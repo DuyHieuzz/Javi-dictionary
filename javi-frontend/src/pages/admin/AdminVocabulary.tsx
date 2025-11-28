@@ -36,7 +36,33 @@ import type {
     IVocabUpdateRequest,
     IMeaning,
 } from "@/types/backend";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import DOMPurify from "dompurify";
 
+// Trả về null khi html rỗng (ví dụ "<p><br></p>"), hoặc trả về HTML đã sanitize nếu có nội dung
+function cleanEmptyHtml(html?: string): string | null {
+    if (!html) return null;
+    const safe = DOMPurify.sanitize(html);
+    const tmp = document.createElement("div");
+    tmp.innerHTML = safe;
+    const text = (tmp.textContent || "").replace(/\u00A0/g, "").trim();
+    if (text.length === 0) {
+        // nếu chỉ có media (img/video) bạn có thể giữ, ở đây ta coi là empty
+        const hasMedia = !!tmp.querySelector("img,video,audio,iframe");
+        if (!hasMedia) return null;
+    }
+    return safe;
+}
+
+// Lấy plain text từ HTML (dùng để kiểm tra rỗng khi render)
+function htmlToPlainText(html?: string): string {
+    if (!html) return "";
+    const safe = DOMPurify.sanitize(html);
+    const tmp = document.createElement("div");
+    tmp.innerHTML = safe;
+    return (tmp.textContent || "").replace(/\u00A0/g, "").trim();
+}
 const { Text } = Typography;
 
 // map WordType enum -> nhãn tiếng Việt
@@ -194,6 +220,20 @@ function VocabFormModal({
         try {
             const values = await form.validateFields();
 
+            const rawMeanings = values.meanings || [];
+
+            const processedMeanings = rawMeanings.map((m: any) => ({
+                // NOTE: Không gửi id trong body vì BE không chấp nhận field 'id' trong MeaningRequest
+                // hiện tại ở BE là xóa cũ và tạo mới khi cập nhật nên không cần truyền id, sau này nếu BE hỗ trợ cập nhật từng nghĩa và ví dụ thì sẽ cần truyền id
+                meaningVn: m.meaningVn ?? null,
+                description: cleanEmptyHtml(m.description as string),
+                examples:
+                    m.examples?.map((ex: any) => ({
+                        jaSentence: ex.jaSentence,
+                        viSentence: ex.viSentence,
+                    })) ?? [],
+            }));
+
             const payload: any = {
                 word: values.word,
                 wordType: values.wordType,
@@ -201,22 +241,12 @@ function VocabFormModal({
                 romaji: values.romaji?.trim() || null,
                 hiragana: values.hiragana?.trim() || null,
                 katakana: values.katakana?.trim() || null,
-                meanings:
-                    values.meanings?.map((m: any) => ({
-                        meaningVn: m.meaningVn,
-                        description: m.description,
-                        examples:
-                            m.examples?.map((ex: any) => ({
-                                jaSentence: ex.jaSentence,
-                                viSentence: ex.viSentence,
-                            })) ?? [],
-                    })) ?? [],
+                meanings: processedMeanings,
             };
 
             await onSubmit(payload);
         } catch (err: any) {
             if (err?.errorFields) {
-                // lỗi validate form, không toast thêm
                 return;
             }
             console.error("Lỗi xử lý form từ vựng:", err);
@@ -364,10 +394,7 @@ function VocabFormModal({
                                             },
                                         ]}
                                     >
-                                        <Input.TextArea
-                                            rows={2}
-                                            placeholder="Nhập nghĩa tiếng Việt"
-                                        />
+                                        <ReactQuill theme="snow" />
                                     </Form.Item>
 
                                     <Form.Item
@@ -375,10 +402,7 @@ function VocabFormModal({
                                         name={[field.name, "description"]}
                                         label="Mô tả thêm (tuỳ chọn)"
                                     >
-                                        <Input.TextArea
-                                            rows={2}
-                                            placeholder="Mô tả chi tiết hơn (nếu có)"
-                                        />
+                                        <ReactQuill theme="snow" />
                                     </Form.Item>
 
                                     <Form.List name={[field.name, "examples"]}>
@@ -682,22 +706,18 @@ export default function AdminVocabulary() {
                     if (!meanings || meanings.length === 0) {
                         return <span className="text-gray-400">—</span>;
                     }
-                    const firstTwo = meanings
-                        .slice(0, 2)
-                        .map((m) => m.meaningVn);
-                    const remain = meanings.length - firstTwo.length;
+
+                    // Lấy toàn bộ nghĩa (có thể lưu dưới dạng HTML); chuyển sang plain text,
+                    // trim, loại bỏ rỗng, và thêm "-"" vào đầu mỗi dòng
+                    const lines = meanings
+                        .map((m) => htmlToPlainText(m?.meaningVn ?? ""))
+                        .map((t) => t.trim())
+                        .filter(Boolean)
+                        .map((t) => `- ${t}`);
+
                     return (
-                        <div className="space-y-1 truncate">
-                            {firstTwo.map((m, idx) => (
-                                <div key={idx} className="text-sm">
-                                    - {m}
-                                </div>
-                            ))}
-                            {remain > 0 && (
-                                <div className="text-xs text-gray-500">
-                                    + {remain} nghĩa khác
-                                </div>
-                            )}
+                        <div className="text-sm text-gray-500 whitespace-pre-line break-words">
+                            {lines.join("\n")}
                         </div>
                     );
                 },

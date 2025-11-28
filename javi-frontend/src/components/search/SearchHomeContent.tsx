@@ -12,7 +12,7 @@ import { EntityType } from "@/types/backend";
 import { useNavigate } from "react-router-dom";
 
 /**
- * Search home content — giữ nguyên layout và style gốc,
+ * Search home content — trang chính khi vào /search
  * thêm modal lịch sử (HistoryModal) và picker modal khi click keyword không có entityId.
  */
 
