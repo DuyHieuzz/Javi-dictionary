@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
 import { FiX } from "react-icons/fi";
 import zaloImg from "@/assets/zalo.png";
 import messengerImg from "@/assets/messenger.png";
@@ -7,7 +9,19 @@ import { BsChatDotsFill } from "react-icons/bs";
 
 export default function ChatWidget() {
     const [open, setOpen] = useState(false);
+    const location = useLocation();
 
+    useEffect(() => {
+        // Khi vào trang /premium thì widget tự mở
+        // Giữ thêm /upgrade để tương thích với link cũ nếu cần
+        const path = location.pathname || "";
+        if (path.includes("/premium") || path.includes("/upgrade")) {
+            setOpen(true);
+        } else {
+            // Nếu muốn giữ widget mở khi rời khỏi trang premium, đổi dòng này thành: // no-op
+            setOpen(false);
+        }
+    }, [location.pathname]);
     const items = [
         {
             key: "zalo",

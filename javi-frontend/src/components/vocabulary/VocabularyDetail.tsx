@@ -124,7 +124,7 @@ export default function VocabularyDetail({ data }: Props) {
 
     return (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-3">
-            <h2 className="text-[36px] font-medium text-[#3e67d6] mb-[12px] font-mplus">
+            <h2 className="text-[36px] font-medium text-[#3e67d6] font-mplus">
                 {data.word}
             </h2>
             {data.hiragana && (

@@ -47,6 +47,13 @@ body,
   font-family: "M PLUS 1p", sans-serif !important;
 }
 
+/* Utility class: font hệ điều hành (San Francisco / Segoe UI / Roboto…) */
+.font-system {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    "Noto Sans JP", Arial, sans-serif !important;
+}
+
+
 /* Override Chrome autofill background / text color */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -62,8 +69,28 @@ select:-webkit-autofill:focus {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
+/* Scrollbar ngang nhỏ – dùng chung cho mọi nơi */
+.scroll-x-thin::-webkit-scrollbar {
+  height: 8px;
+}
 
-/* Scrollbar nhỏ, đè lên nội dung */
+.scroll-x-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+.scroll-x-thin::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.35);
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0);
+}
+
+.scroll-x-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.35) transparent;
+}
+
+/* Scrollbar dọc nhỏ, đè lên nội dung */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -153,3 +180,21 @@ select:-webkit-autofill:focus {
 .ql-render li {
   margin-bottom: 0.2rem;
 }
+
+/* Bỏ padding phần nội dung */
+/* .faq-collapse .ant-collapse-content-box {
+  padding: 0 !important;
+} */
+
+/* Bỏ padding header (kích thước click area giữ nguyên) */
+.faq-collapse .ant-collapse-header {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Bỏ luôn padding wrapper của header nếu có */
+.faq-collapse .ant-collapse-header-text {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+

@@ -126,20 +126,15 @@ export default function UserInfoPanel({
         // ====== LẤY GIÁ TRỊ THÔ ======
         const rawValues = form.getFieldsValue();
 
-        // trạng thái toggle
-        const isTryingToBlock =
+        // trạng thái toggle (false = muốn block)
+        const wantsBlocked =
             rawValues.status !== undefined && rawValues.status === false;
-
+        const wantsUnblocked = rawValues.status === true;
         const isTargetAdmin = user.role?.name === "ADMIN";
 
-        // PHÁT HIỆN CÓ SỬA THÔNG TIN HAY KHÔNG
-
-        // helper
-        const normalizeStr = (v: any) => {
-            if (v === null || v === undefined) return "";
-            return String(v).trim();
-        };
-
+        // ===== helpers normalize =====
+        const normalizeStr = (v: any) =>
+            v === null || v === undefined ? "" : String(v).trim();
         const normalizeDate = (d: any) => {
             if (!d) return "";
             try {
@@ -148,14 +143,13 @@ export default function UserInfoPanel({
                 return String(d);
             }
         };
-
         const normalizeIntro = (v: any) => {
             const s = (v ?? "").toString();
             if (s === "<p><br></p>" || s === "<p></p>") return "";
             return s.trim();
         };
 
-        // Giá trị gốc (từ user BE trả về)
+        // ===== giá trị gốc từ user (BE) =====
         const origFullName = normalizeStr(user.fullName);
         const origUsername = normalizeStr(user.username);
         const origDob = normalizeDate(user.dateOfBirth);
@@ -164,65 +158,168 @@ export default function UserInfoPanel({
         const origPremium = user.premiumType ?? null;
         const origIntro = normalizeIntro(user.selfIntroduction);
 
-        // Giá trị hiện tại trên form
+        // ===== giá trị hiện tại trên form / intro =====
         const newFullName = normalizeStr(rawValues.fullName);
         const newUsername = normalizeStr(rawValues.username);
         const newDob = normalizeDate(rawValues.dateOfBirth);
         const newLevel = normalizeStr(rawValues.level);
         const newRoleId = rawValues.role ?? null;
+        // premium: nếu admin không chọn gì => rawValues.premiumType có thể undefined
         const newPremium = rawValues.premiumType ?? null;
         const newIntro = normalizeIntro(intro);
 
-        // So sánh giá trị
-        const valueChanged =
+        // ===== so sánh "chỉ info/role (không tính premium)" =====
+        const infoValueChanged =
             newFullName !== origFullName ||
             newUsername !== origUsername ||
             newDob !== origDob ||
             newLevel !== origLevel ||
-            newIntro !== origIntro ||
-            newRoleId !== origRoleId ||
-            newPremium !== origPremium;
+            newIntro !== origIntro;
 
-        // Kiểm tra người dùng có thực sự sửa field hay chưa
-        // Lưu ý: KHÔNG kiểm tra "status" vì toggle không tính là sửa info
-        const editedFields = form.isFieldsTouched(
-            [
-                "fullName",
-                "username",
-                "dateOfBirth",
-                "level",
-                "role",
-                "premiumType",
-            ],
+        const isRoleChanged = newRoleId !== origRoleId;
+
+        // premium changed?
+        const isPremiumChanged =
+            newPremium !== origPremium && newPremium !== null;
+
+        // Kiểm tra user có thao tác trên các field thông tin (không tính status)
+        // (chỉ detect chỉnh sửa thực sự trên các field info - không bao gồm premiumType ở đây)
+        const editedInfoFields = form.isFieldsTouched(
+            ["fullName", "username", "dateOfBirth", "level", "role"],
             false
         );
 
-        // QUYẾT ĐỊNH CUỐI CÙNG: user có sửa thông tin?
-        const userEditedInfo = editedFields || valueChanged;
+        // Quyết định: user có sửa phần thông tin/role (ngoại trừ premium) không?
+        const userEditedInfoOrRole =
+            editedInfoFields || infoValueChanged || isRoleChanged;
 
-        // NẾU KHÔNG SỬA THÔNG TIN → CHỈ BLOCK/UNBLOCK
-
-        if (!userEditedInfo) {
+        // ===== CASE A: KHÔNG sửa info/role (chỉ có thể là: không thay gì, hoặc chỉ thay premium) =====
+        if (!userEditedInfoOrRole) {
+            // --- START replacement: xử lý đúng cho các case premium / toggle / premium+toggle ---
             // chặn block admin
-            if (isTargetAdmin && isTryingToBlock) {
+            if (isTargetAdmin && wantsBlocked) {
                 message.warning("Không thể khóa tài khoản ADMIN!");
                 return;
             }
 
-            // BLOCK
-            if (
-                !isPublic &&
-                realCanManageUser &&
-                isTryingToBlock &&
-                user.status !== "BLOCKED"
-            ) {
+            // Nếu không có quyền quản lý hoặc public -> đóng modal
+            if (isPublic || !realCanManageUser) {
+                setIsModalOpen(false);
+                return;
+            }
+
+            // CASE: premium + toggle cùng thay đổi -> upgrade trước rồi block/unblock
+            if (isPremiumChanged && (wantsBlocked || wantsUnblocked)) {
+                // 1) upgrade
+                try {
+                    const res = await callUpgradePremium(user.id, newPremium);
+                    if (res.status === 200 || res.data?.statusCode === 1000) {
+                        message.success("Nâng cấp Premium thành công!");
+                        onUserUpdated?.(res.data?.result ?? res.data);
+                    } else {
+                        message.error(
+                            res.data?.message || "Không thể nâng cấp Premium"
+                        );
+                        // nếu upgrade thất bại thì dừng, không tiếp tục block/unblock
+                        return;
+                    }
+                } catch (err: any) {
+                    const msg =
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "Máy chủ không phản hồi, vui lòng thử lại.";
+                    message.error(msg);
+                    return;
+                }
+
+                // 2) sau upgrade: thực hiện block hoặc unblock theo toggle
+                if (wantsBlocked && user.status !== "BLOCKED") {
+                    try {
+                        const res2 = await callBlockUser(user.id);
+                        if (
+                            res2.status === 200 ||
+                            res2.data?.statusCode === 1000
+                        ) {
+                            message.success("Tài khoản đã bị khóa");
+                            if (isSelf) clearAuth();
+                            onUserUpdated?.({ ...user, status: "BLOCKED" });
+                            setIsModalOpen(false);
+                        } else {
+                            message.error(
+                                res2.data?.message || "Không thể khóa tài khoản"
+                            );
+                        }
+                    } catch (err: any) {
+                        const msg =
+                            err?.response?.data?.message ||
+                            err?.message ||
+                            "Máy chủ không phản hồi, vui lòng thử lại.";
+                        message.error(msg);
+                    }
+                    return;
+                }
+
+                if (wantsUnblocked && user.status === "BLOCKED") {
+                    try {
+                        const res2 = await callUnblockUser(user.id);
+                        if (
+                            res2.status === 200 ||
+                            res2.data?.statusCode === 1000
+                        ) {
+                            message.success("Tài khoản đã được mở khóa");
+                            onUserUpdated?.({ ...user, status: "ACTIVE" });
+                            setIsModalOpen(false);
+                        } else {
+                            message.error(
+                                res2.data?.message ||
+                                    "Không thể mở khóa tài khoản"
+                            );
+                        }
+                    } catch (err: any) {
+                        const msg =
+                            err?.response?.data?.message ||
+                            err?.message ||
+                            "Máy chủ không phản hồi, vui lòng thử lại.";
+                        message.error(msg);
+                    }
+                    return;
+                }
+
+                // nếu tới đây nghĩa là không cần block/unblock (vd. toggle không thực sự thay đổi)
+                message.info("Không có thay đổi để lưu");
+                return;
+            }
+
+            // CASE: chỉ premium (không toggle, không info) => chỉ upgrade
+            if (isPremiumChanged) {
+                try {
+                    const res = await callUpgradePremium(user.id, newPremium);
+                    if (res.status === 200 || res.data?.statusCode === 1000) {
+                        message.success("Nâng cấp Premium thành công!");
+                        onUserUpdated?.(res.data?.result ?? res.data);
+                        setIsModalOpen(false);
+                    } else {
+                        message.error(
+                            res.data?.message || "Không thể nâng cấp Premium"
+                        );
+                    }
+                } catch (err: any) {
+                    const msg =
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "Máy chủ không phản hồi, vui lòng thử lại.";
+                    message.error(msg);
+                }
+                return;
+            }
+
+            // CASE: chỉ toggle (không premium, không info) => chỉ block/unblock
+            if (wantsBlocked && user.status !== "BLOCKED") {
                 try {
                     const res = await callBlockUser(user.id);
                     if (res.status === 200 || res.data?.statusCode === 1000) {
                         message.success("Tài khoản đã bị khóa");
-
                         if (isSelf) clearAuth();
-
                         onUserUpdated?.({ ...user, status: "BLOCKED" });
                         setIsModalOpen(false);
                     } else {
@@ -240,13 +337,7 @@ export default function UserInfoPanel({
                 return;
             }
 
-            // UNBLOCK
-            if (
-                !isPublic &&
-                realCanManageUser &&
-                rawValues.status === true &&
-                user.status === "BLOCKED"
-            ) {
+            if (wantsUnblocked && user.status === "BLOCKED") {
                 try {
                     const res = await callUnblockUser(user.id);
                     if (res.status === 200 || res.data?.statusCode === 1000) {
@@ -270,11 +361,12 @@ export default function UserInfoPanel({
 
             message.info("Không có thay đổi để lưu");
             return;
+            // --- END replacement ---
         }
 
-        //  user có sửa thông tin → VALIDATE & UPDATE → rồi block/unblock nếu có
-
-        let values;
+        // ===== CASE B: user sửa info/role (có thể kèm premium & toggle) =====
+        // Validate form (giữ nguyên behavior cũ)
+        let values: any;
         try {
             values = await form.validateFields();
         } catch {
@@ -282,28 +374,24 @@ export default function UserInfoPanel({
             return;
         }
 
-        // không đổi role, không block admin
-        const isRoleChanged = newRoleId !== origRoleId;
-
+        // bảo vệ admin: không đổi role của ADMIN, không block admin
         if (isTargetAdmin && isRoleChanged) {
             message.warning("Không thể thay đổi vai trò ADMIN!");
             return;
         }
-        if (isTargetAdmin && isTryingToBlock) {
+        if (isTargetAdmin && wantsBlocked) {
             message.warning("Không thể khóa tài khoản ADMIN!");
             return;
         }
 
-        const formattedDob = values.dateOfBirth
-            ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
-            : null;
-
-        // === UPDATE USER ===
-        if (!isPublic && (valueChanged || isRoleChanged)) {
+        // Nếu cần update (info hoặc role)
+        if (!isPublic && (infoValueChanged || isRoleChanged)) {
             const payload = {
                 username: values.username,
                 fullName: values.fullName,
-                dateOfBirth: formattedDob,
+                dateOfBirth: values.dateOfBirth
+                    ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
+                    : null,
                 level: values.level,
                 selfIntroduction: intro,
                 roleId: values.role,
@@ -313,7 +401,6 @@ export default function UserInfoPanel({
                 const res = await callUpdateUserById(user.id, payload);
                 if (res.status === 200 || res.data?.statusCode === 1000) {
                     message.success("Cập nhật thông tin thành công!");
-
                     if (isSelf && res.data?.result) {
                         setAuth({
                             token: token!,
@@ -322,7 +409,6 @@ export default function UserInfoPanel({
                             user: res.data.result,
                         });
                     }
-
                     onUserUpdated?.(res.data.result);
                 } else {
                     message.error(res.data?.message || "Cập nhật thất bại!");
@@ -332,17 +418,39 @@ export default function UserInfoPanel({
                 const msg =
                     err?.response?.data?.message ||
                     err?.message ||
-                    "Máy chủ không phản hồi, vui lòng thử lại.";
+                    "Máy chủ không phản hồi, vui lòng thử lại sau.";
                 message.error(msg);
                 return;
             }
         }
 
-        // === BLOCK (nếu toggle block) ===
+        // ===== Sau update (nếu có): NÂNG CẤP PREMIUM nếu admin đã chọn gói mới =====
+        if (!isPublic && realCanManageUser && isPremiumChanged) {
+            try {
+                const res = await callUpgradePremium(user.id, newPremium);
+                if (res.status === 200 || res.data?.statusCode === 1000) {
+                    message.success("Nâng cấp Premium thành công!");
+                    onUserUpdated?.(res.data?.result ?? res.data);
+                } else {
+                    message.error(
+                        res.data?.message || "Không thể nâng cấp Premium"
+                    );
+                }
+            } catch (err: any) {
+                const msg =
+                    err?.response?.data?.message ||
+                    err?.message ||
+                    "Máy chủ không phản hồi, vui lòng thử lại.";
+                message.error(msg);
+                // Lưu ý: vẫn tiếp tục để thực hiện block/unblock nếu có (theo yêu cầu thứ tự)
+            }
+        }
+
+        // ===== Sau update + upgrade: xử lý block/unblock nếu toggle =====
         if (
             !isPublic &&
             realCanManageUser &&
-            isTryingToBlock &&
+            wantsBlocked &&
             user.status !== "BLOCKED"
         ) {
             try {
@@ -365,11 +473,10 @@ export default function UserInfoPanel({
             }
         }
 
-        // === UNBLOCK (nếu toggle unblock) ===
         if (
             !isPublic &&
             realCanManageUser &&
-            rawValues.status === true &&
+            wantsUnblocked &&
             user.status === "BLOCKED"
         ) {
             try {
@@ -378,7 +485,9 @@ export default function UserInfoPanel({
                     message.success("Tài khoản đã được mở khóa");
                     onUserUpdated?.({ ...user, status: "ACTIVE" });
                 } else {
-                    message.error(res.data?.message || "Không thể mở khóa");
+                    message.error(
+                        res.data?.message || "Không thể mở khóa tài khoản"
+                    );
                 }
             } catch (err: any) {
                 const msg =
