@@ -185,7 +185,7 @@ public class GrammarServiceImpl implements GrammarService {
         }
 
         // Không có cache → truy DB
-        Specification<Grammar> spec = GrammarSpecification.buildSpecification(request.getKeyword(), request.getLevel());
+        Specification<Grammar> spec = GrammarSpecification.buildSpecification(keyword, request.getLevel());
 
         Page<Grammar> grammarPage = grammarRepository.findAll(spec, pageable);
         Page<GrammarResponse> responsePage = grammarPage.map(grammarMapper::toGrammarResponse);

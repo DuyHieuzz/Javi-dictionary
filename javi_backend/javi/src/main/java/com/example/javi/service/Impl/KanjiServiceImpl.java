@@ -195,7 +195,7 @@ public class KanjiServiceImpl implements KanjiService {
 
         // Kiểm tra cache trước
         List<KanjiResponse> cached = kanjiCacheService.getKanjiByKeyword(q);
-        if (cached != null && !cached.isEmpty()) {
+        if (cached != null) {
             log.info("[CACHE HIT] Kanji keyword '{}'", q);
             return cached;
         }
@@ -258,9 +258,8 @@ public class KanjiServiceImpl implements KanjiService {
                 .toList());
 
         // Lưu cache nếu có kết quả
-        if (!results.isEmpty()) {
-            kanjiCacheService.saveKanjiByKeyword(q, results);
-        }
+        kanjiCacheService.saveKanjiByKeyword(q, results);
+
         return results;
     }
 

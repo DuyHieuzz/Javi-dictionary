@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.dto.request.RoleRequest;
 import com.example.javi.entity.Permission;
@@ -34,6 +35,7 @@ public class RoleServiceImpl implements RoleService {
     RoleMapper roleMapper;
 
     @Override
+    @Transactional
     public Role createRole(RoleRequest request) {
         if (roleRepository.findByName(request.getName()).isPresent()) {
             throw new AppException(ErrorCode.ROLE_NAME_ALREADY_EXISTING);
@@ -52,6 +54,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional
     public Role updateRole(Long id, RoleRequest request) {
         Role roleToUpdate = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
@@ -104,6 +107,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional
     public void deleteRole(Long id) {
         Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 

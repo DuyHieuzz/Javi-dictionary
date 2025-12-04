@@ -10,6 +10,7 @@ import { callExplainVocabulary } from "@/apis/vocabularyApi";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
+import { MdStar } from "react-icons/md";
 
 const wordTypeMap: Record<string, string> = {
     NOUN: "Danh từ",
@@ -127,13 +128,34 @@ export default function VocabularyDetail({ data }: Props) {
             <h2 className="text-[36px] font-medium text-[#3e67d6] font-mplus">
                 {data.word}
             </h2>
-            {data.hiragana && (
-                <p className="mb-2 text-4 text-gray-700">{data.hiragana}</p>
-            )}
+            <div className="flex item-center gap-3 mb-2">
+                {data.hiragana && (
+                    <p className="text-base text-gray-700">{data.hiragana}</p>
+                )}
+
+                {/* Hiển thị tên Hán-Việt của các chữ Kanji nếu có */}
+                {Array.isArray(data.kanjis) && data.kanjis.length > 0 && (
+                    <p className="text-base text-gray-600 mb-2">
+                        {/*Lấy tên hán-việt đầu tiên nếu có nhiều tên (tách bởi dấu , 、 hoặc fullwidth comma). Nếu không có sinoViName thì hiện '-' cho chữ đó.*/}
+                        「{" "}
+                        {data.kanjis
+                            .map((k) => {
+                                const raw = k.sinoViName;
+                                if (!raw) return "-";
+                                // tách theo chữ phẩy (bình thường, fullwidth, hoặc dấu Nhật)
+                                const first = raw.split(/[,\uFF0C、]/)[0];
+                                return first ? first.trim() : "-";
+                            })
+                            .join(" ")}{" "}
+                        」
+                    </p>
+                )}
+            </div>
 
             {data.wordType && (
-                <div className="py-[10px] px-4 text-lg text-[#ad6800] bg-gradient-to-r from-[#ffeecc] to-[#fffdf7] rounded-lg">
-                    ☆ {wordTypeMap[data.wordType] ?? "Khác"}
+                <div className="p-3 text-lg text-[#ad6800] bg-gradient-to-r from-[#ffeecc] to-[#fffdf7] rounded-lg">
+                    <MdStar className="inline-block mr-1 mb-1" />
+                    {wordTypeMap[data.wordType] ?? "Khác"}
                 </div>
             )}
 
@@ -141,8 +163,8 @@ export default function VocabularyDetail({ data }: Props) {
                 {Array.isArray(data.meanings) && data.meanings.length > 0 ? (
                     data.meanings.map((m: IMeaning, idx: number) => (
                         <div key={m.id ?? idx} className="mb-4">
-                            <h3 className="my-3 text-lg flex items-center gap-1 text-[#3e67d6]">
-                                <PiDiamondFill className="text-[12px] mt-1" />
+                            <h3 className="my-3 text-lg flex items-start gap-1 text-[#3e67d6]">
+                                <PiDiamondFill className="text-[12px] mt-2 flex-shrink-0" />
                                 <span
                                     className="ql-render"
                                     dangerouslySetInnerHTML={{

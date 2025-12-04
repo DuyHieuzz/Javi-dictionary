@@ -256,7 +256,7 @@ export default function AdminPermission() {
                 ),
             },
             {
-                title: "Quyền hệ thống",
+                title: "Loại quyền",
                 dataIndex: "systemPermission",
                 key: "systemPermission",
                 width: 160,

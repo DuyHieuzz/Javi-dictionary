@@ -2,6 +2,9 @@ package com.example.javi.entity;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,8 +29,10 @@ public class CommentReaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     Comment comment;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "reaction_type", nullable = false)
     ReactionType reactionType;
 }

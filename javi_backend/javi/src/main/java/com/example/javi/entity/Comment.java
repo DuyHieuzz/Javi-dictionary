@@ -1,5 +1,8 @@
 package com.example.javi.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -21,6 +24,9 @@ public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     Users user;
+
+    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY)
+    private List<CommentReaction> reactions = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "entity_type", nullable = false)

@@ -101,7 +101,7 @@ public class GrammarController {
             historySearchService.saveHistoryByKeyword(user, request.getKeyword(), EntityType.GRAMMAR);
         }
         return ApiResponse.<Page<GrammarResponse>>builder()
-                .message("Tìm kiếm mẫu ngữ pháp thành công.")
+                .message("Lấy ngữ pháp thành công.")
                 .result(responsePage)
                 .build();
     }
@@ -112,7 +112,7 @@ public class GrammarController {
             @RequestParam(required = false) String filter,
             @PageableDefault(size = 20, sort = "grammarId", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.<Page<GrammarResponse>>builder()
-                .message("Lấy danh sách Ngữ pháp thành công")
+                .message("Lấy danh sách ngữ pháp thành công")
                 .result(grammarService.getAllGrammarByFilter(spec, pageable, filter))
                 .build();
     }

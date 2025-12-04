@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.javi.dto.request.PermissionRequest;
 import com.example.javi.entity.Permission;
@@ -29,6 +30,7 @@ public class PermissionServiceImpl implements PermissionService {
     PermissionMapper permissionMapper;
 
     @Override
+    @Transactional
     public Permission createPermission(PermissionRequest request) {
         if (permissionRepository.existsByName(request.getName())) {
             throw new AppException(ErrorCode.PERMISSION_NAME_ALREADY_EXISTING);
@@ -38,6 +40,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional
     public Permission updatePermission(Long id, PermissionRequest request) {
         Permission permission =
                 permissionRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
@@ -49,10 +52,12 @@ public class PermissionServiceImpl implements PermissionService {
         }
 
         permissionMapper.updatePermission(request, permission);
+
         return permissionRepository.save(permission);
     }
 
     @Override
+    @Transactional
     public void deletePermission(Long id) {
         Permission permission =
                 permissionRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));

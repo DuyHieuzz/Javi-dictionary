@@ -18,7 +18,7 @@ export default function KanjiList({
                 <span className="text-[#3e67d6]">{keyword}</span>
             </h3>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
                 {kanjis.length === 0 ? (
                     <p className="text-gray-500 text-sm italic py-4">
                         Không có kết quả nào phù hợp.
@@ -32,7 +32,7 @@ export default function KanjiList({
                                 ${
                                     selectedId === item.characterName
                                         ? "bg-[#f1f5fd]"
-                                        : "hover:bg-[#e2ebfa] bg-white"
+                                        : "bg-white"
                                 }`}
                         >
                             <h1 className="text-xl font-medium text-[#3e67d6] mb-1">

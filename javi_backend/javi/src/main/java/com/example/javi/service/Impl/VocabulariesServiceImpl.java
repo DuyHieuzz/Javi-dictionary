@@ -259,7 +259,9 @@ public class VocabulariesServiceImpl implements VocabulariesService {
                 return resultList;
             }
 
-            throw new AppException(ErrorCode.WORD_NOT_FOUND);
+            vocabulariesCacheService.saveSearch(normalized, List.of());
+            log.info("[CACHE SAVE_EMPTY] vocab keyword:{}", normalized);
+            return List.of();
         }
 
         // Không có Kanji (là Hiragana/Tiếng Việt), tìm kiếm MỜ
@@ -267,7 +269,9 @@ public class VocabulariesServiceImpl implements VocabulariesService {
         List<Vocabularies> fuzzyResults = vocabulariesRepository.findFuzzySearch(normalized);
 
         if (fuzzyResults.isEmpty()) {
-            throw new AppException(ErrorCode.WORD_NOT_FOUND);
+            vocabulariesCacheService.saveSearch(normalized, List.of());
+            log.info("[CACHE SAVE_EMPTY] vocab keyword:{}", normalized);
+            return List.of();
         }
 
         resultList = fuzzyResults.stream().map(vocabulariesMapper::toDto).collect(Collectors.toList());

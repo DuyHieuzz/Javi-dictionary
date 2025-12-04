@@ -309,7 +309,7 @@ export default function AdminRole() {
                 ),
             },
             {
-                title: "Role hệ thống",
+                title: "Loại vai trò",
                 dataIndex: "systemRole",
                 key: "systemRole",
                 width: 160,
@@ -493,7 +493,7 @@ export default function AdminRole() {
                             {/* --- filter bằng Select multiple như bạn yêu cầu --- */}
                             <Form.Item
                                 name="permission"
-                                label="Loại quyền"
+                                label="Loại vai trò"
                                 className="mb-0"
                             >
                                 <Select

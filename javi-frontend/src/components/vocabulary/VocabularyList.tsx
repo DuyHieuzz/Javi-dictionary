@@ -1,10 +1,13 @@
 import { Button } from "antd";
+
 import {
     IKanjiDetailResponse,
     IVocabResponse,
     IMeaning,
 } from "@/types/backend";
+
 import { RotateCcw } from "lucide-react";
+
 import { useEffect, useRef } from "react";
 
 interface Props {
@@ -25,6 +28,17 @@ export default function VocabularyList({
     onViewKanjiDetail,
 }: Props) {
     const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+
+    // helper: chuyển HTML -> text thuần (loại bỏ thẻ)
+    // dùng để tránh in thẻ ReactQuill ra giao diện
+    const extractTextFromHtml = (html?: string | null) => {
+        if (!html) return "";
+        // tạo element tạm và lấy textContent
+        const div = document.createElement("div");
+        div.innerHTML = html;
+        return div.textContent?.trim() ?? "";
+    };
+
     // khi kanjiDetails thay đổi -> thử autoplay các video (muted)
     useEffect(() => {
         kanjiDetails.forEach((k, idx) => {
@@ -38,6 +52,7 @@ export default function VocabularyList({
             }
         });
     }, [kanjiDetails]);
+
     return (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-3 flex flex-col">
             <h3 className="text-gray-800 mb-3 text-[15px]">
@@ -46,19 +61,34 @@ export default function VocabularyList({
             </h3>
 
             {/* ==== DANH SÁCH TỪ VỰNG ==== */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
                 {vocabularies.length === 0 ? (
                     <p className="text-gray-500 text-sm italic py-4">
                         Không có kết quả nào phù hợp.
                     </p>
                 ) : (
                     vocabularies.map((item) => {
-                        const meaningText = Array.isArray(item.meanings)
-                            ? (item.meanings as IMeaning[])
-                                  .map((m) => m.meaningVn)
-                                  .filter(Boolean)
-                                  .join(", ")
-                            : "";
+                        // loại bỏ thẻ HTML (ReactQuill output)
+                        // nối các nghĩa bằng "; "
+                        // loại bỏ giá trị rỗng và duplicate
+                        const rawMeanings =
+                            Array.isArray(item.meanings) &&
+                            item.meanings.length > 0
+                                ? (item.meanings as IMeaning[])
+                                : [];
+
+                        const meaningTexts = rawMeanings
+                            .map((m) => extractTextFromHtml(m.meaningVn))
+                            .map((t) => t.trim())
+                            .filter(Boolean);
+
+                        // loại bỏ duplicate (giữ thứ tự)
+                        const deduped: string[] = [];
+                        meaningTexts.forEach((t) => {
+                            if (!deduped.includes(t)) deduped.push(t);
+                        });
+
+                        const meaningText = deduped.join("; ");
 
                         return (
                             <div
@@ -67,7 +97,7 @@ export default function VocabularyList({
                                 className={`p-3 rounded-lg cursor-pointer transition-all ${
                                     selectedId === item.word
                                         ? "bg-[#f1f5fd]"
-                                        : "hover:bg-[#e2ebfa] bg-white"
+                                        : "bg-white"
                                 }`}
                             >
                                 <div>
@@ -83,10 +113,10 @@ export default function VocabularyList({
                                         </p>
                                     )}
 
-                                    {/* Nghĩa */}
+                                    {/* Nghĩa (đã strip HTML, nối bằng ';', clamp 2 dòng) */}
                                     <p
-                                        className="text-[14px] text-gray-700 line-clamp-1 mt-1"
-                                        title={meaningText}
+                                        className="text-[14px] text-gray-700 meaning-clamp-2-line mt-1"
+                                        title={meaningText || "Không có nghĩa"}
                                     >
                                         {meaningText || "Không có nghĩa"}
                                     </p>
@@ -99,15 +129,16 @@ export default function VocabularyList({
 
             {/* ==== DANH SÁCH KANJI CỦA TỪ ==== */}
             {kanjiDetails && kanjiDetails.length > 0 && (
-                <div className="mt-6 border-t border-gray-200 pt-4">
-                    <h4 className="text-gray-700 mb-3 font-medium text-[15px]">
-                        Các chữ Kanji của {selectedId}:
+                <div className="border-t border-gray-200 pt-3">
+                    <h4 className="text-gray-700 mb-3 font-normal text-[15px]">
+                        Các chữ Kanji của{" "}
+                        <span className="text-[#3e67d6]">{selectedId}</span>
                     </h4>
-                    <div className="flex flex-col gap-5">
+                    <div className="flex flex-col">
                         {kanjiDetails.map((k, idx) => (
                             <div
                                 key={idx}
-                                className="border border-gray-200 rounded-xl p-3 shadow-sm"
+                                className="border-b border-gray-200 p-3 last:border-b-0 last:rounded-b-2xl last:pb-0"
                             >
                                 <div className="flex items-start gap-3">
                                     {/* GIF hoặc Video minh họa */}
@@ -168,20 +199,64 @@ export default function VocabularyList({
 
                                     {/* Thông tin Kanji */}
                                     <div className="flex-1">
-                                        <p className="text-[18px] font-semibold text-[#3e67d6] mb-1">
-                                            {k.characterName} 「{k.sinoViName}」
+                                        <p className="text-[18px] font-medium text-[#3e67d6] mb-1">
+                                            {k.characterName}{" "}
+                                            <span className="text-base font-normal text-gray-800">
+                                                「{k.sinoViName}」
+                                            </span>
                                         </p>
 
-                                        {k.kunyomi?.length > 0 && (
-                                            <p className="text-sm text-gray-700 mb-1">
-                                                訓: {k.kunyomi.join("・")}
-                                            </p>
-                                        )}
-                                        {k.onyomi?.length > 0 && (
-                                            <p className="text-sm text-gray-700">
-                                                音: {k.onyomi.join("・")}
-                                            </p>
-                                        )}
+                                        {/* --- Kun readings --- */}
+                                        <div className="flex items-start text-sm text-gray-700 gap-2">
+                                            <span className="text-gray-800 pt-[2px] flex-shrink-0">
+                                                訓 :
+                                            </span>
+
+                                            <div className="">
+                                                {k.kunyomi &&
+                                                k.kunyomi.length > 0 ? (
+                                                    k.kunyomi.map((r, i) => (
+                                                        <span key={i}>
+                                                            {r}
+                                                            {i <
+                                                                k.kunyomi
+                                                                    .length -
+                                                                    1 && "・"}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* --- On readings --- */}
+                                        <div className="flex items-start text-sm text-gray-700 gap-2 mt-1">
+                                            <span className="text-gray-800 pt-[2px] flex-shrink-0">
+                                                音 :
+                                            </span>
+
+                                            <div className="">
+                                                {k.onyomi &&
+                                                k.onyomi.length > 0 ? (
+                                                    k.onyomi.map((r, i) => (
+                                                        <span key={i}>
+                                                            {r}
+                                                            {i <
+                                                                k.onyomi
+                                                                    .length -
+                                                                    1 && "・"}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
 
                                         <Button
                                             size="small"

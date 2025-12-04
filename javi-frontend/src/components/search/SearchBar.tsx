@@ -17,7 +17,7 @@ export default function SearchBar({
     const location = useLocation();
     const navigate = useNavigate();
 
-    // 🧠 Đồng bộ input khi URL thay đổi
+    // Đồng bộ input khi URL thay đổi
     useEffect(() => {
         if (paramKeyword !== undefined) setKeyword(paramKeyword);
     }, [paramKeyword]);
@@ -28,15 +28,105 @@ export default function SearchBar({
         grammar: "Cấu trúc ngữ pháp",
     };
 
-    // 🧠 Chuyển Romaji → Kana
+    // Chuyển Romaji → Kana
+    // Chuyển Romaji → Kana (cải tiến để tránh convert nhầm từ tiếng Việt / Hán-Việt)
+    // Chỉ sửa logic: không thay đổi layout/className/DOM
     const convertInput = (value: string): string => {
         const trimmed = value.trim();
         if (!trimmed) return "";
 
+        // Nếu chuỗi chứa ký tự Unicode ngoài ASCII (ví dụ có dấu tiếng Việt),
+        // coi như người dùng đang nhập tiếng Việt → không convert.
+        if (/[^\x00-\x7F]/.test(trimmed)) {
+            return trimmed;
+        }
+
+        const low = trimmed.toLowerCase();
+
+        // Danh sách từ tiếng Việt / Hán-Việt phổ biến tạm thời không convert.
+        // Mở rộng được tuỳ chỉnh sau khi thu thập thêm case thực tế.
+        const vietnameseBlacklist = new Set([
+            "sinh",
+            "hoc",
+            "nhat",
+            "viet",
+            "ngay",
+            "tam",
+            "linh",
+            "hoa",
+            "an",
+            // thêm từ khác nếu cần
+        ]);
+
+        if (vietnameseBlacklist.has(low)) {
+            return trimmed;
+        }
+
+        // Pattern romaji đầy đủ:
+        // - Các phụ âm kép/âm bật: ch, sh, ts, ky, gy, ny, hy, by, py, my, ry, ...
+        // - Các tổ hợp 'y' như kya/kyu/kyo, gya/gyu/gyo, ...
+        // - Tất cả cặp phụ âm + nguyên âm cơ bản: ka/ki/ku/ke/ko, sa/shi/su/se/so, ta/chi/tsu/te/to, ba/bi/...
+        // - Nguyên âm dài / đôi: aa ii uu ee oo ou
+        // - Double consonant (geminate) như 'kk', 'tt'... được coi là hợp lệ (ra tsu nhỏ)
+        // - Kết thúc bằng âm mũi 'n'
+        const romajiStrongPattern = new RegExp(
+            [
+                // cụm 'y' (kya, gya, sha, cha, nya, hya, bya, pya, mya, rya, ...)
+                "(kya|kyu|kyo)",
+                "(gya|gyu|gyo)",
+                "(sha|shu|sho)",
+                "(cha|chu|cho)",
+                "(ja|ju|jo|ji)",
+                "(nya|nyu|nyo)",
+                "(hya|hyu|hyo)",
+                "(bya|byu|byo)",
+                "(pya|pyu|pyo)",
+                "(mya|myu|myo)",
+                "(rya|ryu|ryo)",
+                // các âm đặc biệt
+                "tsu",
+                "shi",
+                "chi",
+                "fu",
+                "ji",
+                // nguyên âm dài / đôi (oo, ou, aa...)
+                "(aa|ii|uu|ee|oo|ou)",
+                // tất cả cặp phụ âm + nguyên âm cơ bản: k,g,s,z,t,d,n,h,b,p,m,y,r,w,v,f,c,l + nguyên âm
+                // (bao gồm cả 'shi','chi' đã liệt kê ở trên)
+                "(?:ch|sh|ts|[kgstzdbhpnmfrvwycl])(?:a|i|u|e|o)",
+                // âm mũi 'n' kết thúc
+                "n\\b",
+                // geminate double consonant (ví dụ 'kk', 'tt'...) xuất hiện trước nguyên âm hoặc 'y'
+                "(?:kk|tt|pp|ss|mm|nn|rr|gg|bb|dd)(?:[aeiouy])",
+            ].join("|"),
+            "i"
+        );
+
+        // Yêu cầu ít nhất 2 ký tự và khớp pattern romaji mạnh,
+        // hoặc nếu người dùng gõ TOÀN CHỮ HOA (ý muốn katakana)
+        const isLikelyRomaji =
+            (low.length >= 2 && romajiStrongPattern.test(low)) ||
+            /^[A-Z\s]+$/.test(trimmed);
+
+        if (!isLikelyRomaji) {
+            // Nếu không đủ tin cậy là romaji thì không convert.
+            return trimmed;
+        }
+
+        // Nếu là romaji tin cậy:
         if (wanakana.isRomaji(trimmed)) {
-            if (/^[A-Z\s]+$/.test(trimmed)) {
-                return wanakana.toKatakana(trimmed.toLowerCase());
+            // Chuẩn hoá một số ký tự trước khi convert
+            const normalized = trimmed
+                .replace(/ー/g, "-")
+                .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212−–—]/g, "-"); // các gạch khác -> minus
+
+            // Nếu toàn chữ HOA + space + '-' thì coi là muốn Katakana
+            if (/^[A-Z\s-]+$/.test(normalized)) {
+                // Chuyển sang katakana (wanakana hoạt động tốt với lowercase romaji)
+                return wanakana.toKatakana(normalized.toLowerCase());
             }
+
+            // Mặc định -> Hiragana (giữ hành vi cũ)
             return wanakana.toHiragana(trimmed);
         }
 
@@ -51,10 +141,10 @@ export default function SearchBar({
 
         if (!converted.trim()) return;
 
-        // ✅ gọi onSubmit nếu có (để logic ngoài vẫn hoạt động)
+        // gọi onSubmit nếu có (để logic ngoài vẫn hoạt động)
         if (onSubmit) onSubmit(converted.trim());
 
-        // ✅ ép Router cập nhật URL kể cả khi giống path cũ
+        // ép Router cập nhật URL kể cả khi giống path cũ
         const newPath = `/search/${activeTab}/${encodeURIComponent(
             converted.trim()
         )}`;

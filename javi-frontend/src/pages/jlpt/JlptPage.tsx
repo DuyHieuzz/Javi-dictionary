@@ -305,6 +305,43 @@ const JlptPage: React.FC = () => {
         setter(false);
     };
 
+    // Chuyển HTML (vd "<p>...</p>") thành plain text an toàn và trim.
+    // Ví dụ: "<p>Lên xe; lên tàu; đi (tàu, xe)</p>" -> "Lên xe; lên tàu; đi (tàu, xe)"
+    const stripHtmlToText = (html?: string): string => {
+        if (!html) return "";
+        try {
+            const div = document.createElement("div");
+            // sanitize trước để loại bỏ tag/script nguy hiểm
+            div.innerHTML = DOMPurify.sanitize(html);
+            return (div.textContent || div.innerText || "").trim();
+        } catch (e) {
+            // fallback: xóa tag bằng regex (ít an toàn hơn)
+            return html.replace(/<[^>]+>/g, "").trim();
+        }
+    };
+
+    // Nối tất cả meanings bằng dấu ";" an toàn.
+    const joinMeanings = (meanings?: Array<{ meaningVn?: string }>): string => {
+        if (!Array.isArray(meanings) || meanings.length === 0) return "";
+        const parts = meanings
+            .map((m) => stripHtmlToText(m?.meaningVn ?? ""))
+            .filter(Boolean);
+        return parts.join("; ");
+    };
+
+    // Trả về từ đầu tiên của tên Hán-Việt.
+    // Ví dụ: "NGỮ, NGỨ" -> "NGỮ"
+    // - Nếu chuỗi null/undefined -> trả ""
+    // - Nếu không tìm được token nào rõ ràng thì trả nguyên chuỗi (trim)
+    const getFirstSino = (s?: string): string => {
+        if (!s) return "";
+        // tách theo dấu phẩy trước, lấy phần trước dấu phẩy
+        const firstPart = s.split(",")[0] ?? s;
+        // tách theo whitespace để lấy từ đầu (tránh chuỗi "NGỮ NGỨ" hay "NGỮ, NGỨ")
+        const toks = firstPart.trim().split(/\s+/).filter(Boolean);
+        return toks[0] ?? firstPart.trim();
+    };
+
     // Render Kanji grid item (chữ + hán-vi)
     const renderKanjiGridItem = (k: IKanjiResponse) => {
         // Lưu ý: ẩn/hiện từng phần theo showVocab / showReading
@@ -323,8 +360,8 @@ const JlptPage: React.FC = () => {
 
                 {/* tên Hán-Việt: chỉ hiển thị khi showReading === true */}
                 {showReading && (
-                    <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wider">
-                        {k.sinoViName}
+                    <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wider text-center">
+                        {getFirstSino(k.sinoViName)}
                     </div>
                 )}
             </div>
@@ -352,19 +389,17 @@ const JlptPage: React.FC = () => {
                     </div>
                 )}
                 {showMeaning && (
-                    <div
-                        className="text-sm text-gray-700 meaning-clamp-2-line whitespace-pre-wrap break-words"
-                        // sanitize trước khi render
-                        dangerouslySetInnerHTML={{
-                            __html:
-                                (v.meanings?.[0]?.meaningVn ??
-                                    v.meanings
-                                        ?.map((m) => m.meaningVn)
-                                        .join("; ") ??
-                                    "") ||
-                                `<span class="text-gray-400">—</span>`,
-                        }}
-                    />
+                    <div className="text-sm text-gray-700 meaning-clamp-2-line whitespace-pre-wrap break-words">
+                        {(() => {
+                            const joined = joinMeanings(v.meanings);
+                            return joined ? (
+                                // hiển thị plain text các nghĩa nối bằng ";"
+                                joined
+                            ) : (
+                                <span className="text-gray-400">—</span>
+                            );
+                        })()}
+                    </div>
                 )}
             </div>
         </Card>

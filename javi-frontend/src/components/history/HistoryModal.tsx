@@ -428,12 +428,14 @@ export default function HistoryModal({
         id?: number | string;
         name?: string;
     }) => {
+        // Nếu payload có id => mở modal chi tiết, GIỮ nguyên picker/history mở.
         if (
             payload.id !== undefined &&
             payload.id !== null &&
             String(payload.id).trim() !== ""
         ) {
-            setPickerOpen(false);
+            // KHÔNG đóng picker/history ở đây.
+            // Chỉ thiết lập dữ liệu để mở SearchResultModal phía trên.
             setDetailEntityType(payload.entityType);
             setDetailEntityIdOrName(payload.id as number | string);
             setDetailOpen(true);
@@ -442,10 +444,13 @@ export default function HistoryModal({
 
         const q = payload.name ?? "";
         if (!q) {
+            // Nếu không có tên để search thì chỉ đóng picker.
             setPickerOpen(false);
             return;
         }
 
+        // Nếu payload chỉ có name (user muốn điều hướng tới trang Search),
+        // đóng picker + đóng HistoryModal rồi điều hướng.
         setPickerOpen(false);
         onClose();
         const params = new URLSearchParams();
@@ -655,8 +660,13 @@ export default function HistoryModal({
                                         key={it.id}
                                         className="flex items-center gap-3 px-3 py-2 border-b hover:bg-gray-50 cursor-pointer"
                                         onClick={() => {
-                                            if (!deleteMode)
-                                                openDetailFromHistory(it);
+                                            // Nếu đang ở chế độ xoá mà click cả dòng sẽ toggle chọn/bỏ chọn
+                                            if (deleteMode) {
+                                                toggleSelect(it.id);
+                                                return;
+                                            }
+                                            // Ngược lại, mở modal chi tiết
+                                            openDetailFromHistory(it);
                                         }}
                                     >
                                         {deleteMode && (
@@ -766,34 +776,35 @@ export default function HistoryModal({
                                             className="flex items-start gap-3 py-2 px-3 border-b hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                                             onClick={() => onClickComment(c)}
                                         >
-                                            {/* Ẩn avatar để giao diện gọn */}
                                             <div className="flex-1">
-                                                <div className="text-xs text-gray-400 ">
-                                                    <span>
-                                                        {entityTypeLabel(
-                                                            c.entityType
-                                                        )}
-                                                    </span>
-                                                    {entityName ? (
-                                                        <span className="mx-1">
-                                                            :
+                                                <div className="flex items-start justify-between w-full">
+                                                    <div className="text-xs text-gray-400">
+                                                        <span>
+                                                            {entityTypeLabel(
+                                                                c.entityType
+                                                            )}
                                                         </span>
-                                                    ) : null}
-                                                    {entityName ? (
-                                                        <span className="font-medium text-[15px] text-gray-600">
-                                                            {entityName}
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                                <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
-                                                    {c.content}
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <div className="text-xs text-gray-400 mt-1">
+                                                        {entityName ? (
+                                                            <span className="mx-1">
+                                                                :
+                                                            </span>
+                                                        ) : null}
+                                                        {entityName ? (
+                                                            <span className="font-medium text-[15px] text-gray-600">
+                                                                {entityName}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <div className="text-xs text-gray-400 ml-3 shrink-0 whitespace-nowrap">
                                                         {formatCommentDateOnly(
                                                             commentDate
                                                         )}
                                                     </div>
+                                                </div>
+
+                                                <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
+                                                    {c.content}
                                                 </div>
                                             </div>
                                         </div>
@@ -849,32 +860,34 @@ export default function HistoryModal({
                                             onClick={() => onClickComment(c)}
                                         >
                                             <div className="flex-1">
-                                                <div className="text-xs text-gray-400 ">
-                                                    <span>
-                                                        {entityTypeLabel(
-                                                            c.entityType
-                                                        )}
-                                                    </span>
-                                                    {entityName ? (
-                                                        <span className="mx-1">
-                                                            :
+                                                <div className="flex items-start justify-between w-full">
+                                                    <div className="text-xs text-gray-400">
+                                                        <span>
+                                                            {entityTypeLabel(
+                                                                c.entityType
+                                                            )}
                                                         </span>
-                                                    ) : null}
-                                                    {entityName ? (
-                                                        <span className="font-medium text-[15px] text-gray-600">
-                                                            {entityName}
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                                <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
-                                                    {c.content}
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <div className="text-xs text-gray-400 mt-1">
+                                                        {entityName ? (
+                                                            <span className="mx-1">
+                                                                :
+                                                            </span>
+                                                        ) : null}
+                                                        {entityName ? (
+                                                            <span className="font-medium text-[15px] text-gray-600">
+                                                                {entityName}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <div className="text-xs text-gray-400 ml-3 shrink-0 whitespace-nowrap">
                                                         {formatCommentDateOnly(
                                                             commentDate
                                                         )}
                                                     </div>
+                                                </div>
+
+                                                <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
+                                                    {c.content}
                                                 </div>
                                             </div>
                                         </div>

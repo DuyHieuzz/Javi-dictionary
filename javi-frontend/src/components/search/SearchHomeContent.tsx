@@ -109,8 +109,6 @@ export default function SearchHomeContent() {
         id?: number | string;
         name?: string;
     }) => {
-        setPickerOpen(false);
-
         if (
             payload.id !== undefined &&
             payload.id !== null &&

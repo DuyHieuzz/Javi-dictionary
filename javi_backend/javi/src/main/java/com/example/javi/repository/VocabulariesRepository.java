@@ -20,6 +20,7 @@ public interface VocabulariesRepository
     @Query("SELECT DISTINCT v FROM Vocabularies v " + "LEFT JOIN v.meanings m "
             + "WHERE "
             + "   UPPER(v.hiragana) LIKE CONCAT('%', UPPER(:keyword), '%') OR "
+            + "   UPPER(v.katakana) LIKE CONCAT('%', UPPER(:keyword), '%') OR "
             + "   UPPER(m.meaningVn) LIKE CONCAT('%', UPPER(:keyword), '%')")
     List<Vocabularies> findFuzzySearch(String keyword);
 }

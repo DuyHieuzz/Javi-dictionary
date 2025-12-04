@@ -13,10 +13,14 @@ export const callUpdateVocabulary = (id: number, body: IVocabUpdateRequest) => {
 
 /** Tìm kiếm từ vựng theo keyword */
 export const callSearchVocabulary = (keyword: string, opts?: { saveHistory?: boolean }) => {
-  return axiosClient.get<IBackendRes<IVocabResponse[]>>(`/vocab/search/${encodeURIComponent(keyword)}`, {
-    params: { saveHistory: opts?.saveHistory ?? false },
+  return axiosClient.get(`/vocab/search`, {
+    params: {
+      keyword,
+      saveHistory: opts?.saveHistory ?? false,
+    },
   });
 };
+
 
 /** Lấy chi tiết từ vựng theo từ (word) */
 export const callGetVocabularyByWord = (word: string, opts?: { saveHistory?: boolean }) => {

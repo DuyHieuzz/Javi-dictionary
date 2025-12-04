@@ -35,12 +35,12 @@ axiosClient.interceptors.response.use(
   async (error) => {
     // tạm thời comment để code tiếp
     // PHÁT HIỆN SERVER DOWN / MẤT KẾT NỐI
-    // if (!error.response || (error.response.status >= 500 && error.response.status <= 599)) {
-    //   const { setServerDown } = useGlobalErrorStore.getState();
-    //   setServerDown(true); // hiển thị <ServerError /> toàn cục
-    //   message.error("Máy chủ đang gặp sự cố, vui lòng thử lại sau!");
-    //   return Promise.reject(error);
-    // }
+    if (!error.response || (error.response.status >= 500 && error.response.status <= 599)) {
+      const { setServerDown } = useGlobalErrorStore.getState();
+      setServerDown(true); // hiển thị <ServerError /> toàn cục
+      message.error("Máy chủ đang gặp sự cố, vui lòng thử lại sau!");
+      return Promise.reject(error);
+    }
 
     const status = error.response?.status;
 

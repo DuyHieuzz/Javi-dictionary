@@ -1,12 +1,11 @@
 import { Modal, Spin, Tabs, Empty } from "antd";
 import { useEffect, useState } from "react";
-import { FaSearch } from "react-icons/fa";
-
 import { callSearchKanji } from "@/apis/kanjiApi";
 import { callSearchVocabulary } from "@/apis/vocabularyApi";
 import { callSearchGrammars } from "@/apis/grammarApi";
 import type { IMeaning } from "@/types/backend";
 import DOMPurify from "dompurify";
+import { IoSearchOutline } from "react-icons/io5";
 type TabKey = "KANJI" | "WORD" | "GRAMMAR";
 
 interface PickerSelectPayload {
@@ -222,7 +221,6 @@ export default function HistoryPickerModal({
                 id: String(char),
                 name: String(char),
             });
-            onClose();
             return;
         }
 
@@ -233,7 +231,6 @@ export default function HistoryPickerModal({
                 id: k.id,
                 name: k.characterName ?? k.character,
             });
-            onClose();
             return;
         }
 
@@ -243,7 +240,6 @@ export default function HistoryPickerModal({
             id: undefined,
             name: k?.characterName ?? k?.character ?? keyword,
         });
-        onClose();
     };
 
     const pickVocab = (v: any) => {
@@ -253,7 +249,6 @@ export default function HistoryPickerModal({
                 id: v.id,
                 name: v.word ?? v.surface,
             });
-            onClose();
             return;
         }
 
@@ -262,7 +257,6 @@ export default function HistoryPickerModal({
             id: undefined,
             name: v.word ?? v.surface ?? keyword,
         });
-        onClose();
     };
 
     const pickGrammar = (g: any) => {
@@ -272,7 +266,6 @@ export default function HistoryPickerModal({
                 id: g.id,
                 name: g.title ?? g.pattern,
             });
-            onClose();
             return;
         }
         onSelect({
@@ -280,7 +273,6 @@ export default function HistoryPickerModal({
             id: undefined,
             name: g.title ?? g.pattern ?? keyword,
         });
-        onClose();
     };
 
     const renderKanji = () => {
@@ -316,7 +308,7 @@ export default function HistoryPickerModal({
                                 </div>
                             </div>
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-400 flex-shrink-0 hover:underline">
                             Xem chi tiết
                         </div>
                     </div>
@@ -374,7 +366,7 @@ export default function HistoryPickerModal({
                             </div>
                         </div>
 
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-400 flex-shrink-0 hover:underline">
                             Xem chi tiết
                         </div>
                     </div>
@@ -414,7 +406,7 @@ export default function HistoryPickerModal({
                                     (g.description ?? "").slice(0, 80)}
                             </div>
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-400 flex-shrink-0 hover:underline">
                             Xem chi tiết
                         </div>
                     </div>
@@ -430,8 +422,8 @@ export default function HistoryPickerModal({
             footer={null}
             title={
                 <div className="flex items-center gap-2 font-normal text-lg">
-                    <FaSearch />{" "}
-                    <span>Kết quả tìm kiếm từ khóa: "{keyword}"</span>
+                    <IoSearchOutline className="text-2xl" />
+                    <span>Kết quả tìm kiếm từ khóa: {keyword}</span>
                 </div>
             }
             centered
@@ -483,7 +475,6 @@ export default function HistoryPickerModal({
                                 height: "100%",
                                 flex: 1,
                                 overflow: "auto",
-                                padding: 12,
                             }}
                         >
                             {renderKanji()}
@@ -499,7 +490,6 @@ export default function HistoryPickerModal({
                                 height: "100%",
                                 flex: 1,
                                 overflow: "auto",
-                                padding: 12,
                             }}
                         >
                             {renderVocab()}
@@ -515,7 +505,6 @@ export default function HistoryPickerModal({
                                 height: "100%",
                                 flex: 1,
                                 overflow: "auto",
-                                padding: 12,
                             }}
                         >
                             {renderGrammar()}

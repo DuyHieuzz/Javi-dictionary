@@ -52,8 +52,8 @@ export default function RecentComments() {
         t === "WORD" ? "từ vựng" : t === "KANJI" ? "hán tự" : "ngữ pháp";
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm py-3 pl-3 flex flex-col">
-            <h2 className="flex items-center gap-2 text-base text-center pb-3 border-b border-gray-300">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm py-3 pl-3 flex flex-col">
+            <h2 className="flex items-center gap-2 text-base text-center pb-3 mr-3 border-b border-gray-300">
                 <GoCommentDiscussion className="text-lg" /> Bình luận gần đây
             </h2>
 
@@ -129,7 +129,7 @@ export default function RecentComments() {
             </div>
 
             {/* Nút xem thêm tách đáy */}
-            <div className="border-t border-gray-200 text-center bg-white">
+            <div className="mr-3 border-t border-gray-200 text-center bg-white">
                 <button
                     onClick={() => hasMore && load(page)}
                     disabled={!hasMore || loading}

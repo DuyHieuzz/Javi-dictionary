@@ -55,44 +55,51 @@ export default function GrammarList({
             </div>
 
             {grammars.length === 0 ? (
-                <Empty description="Không tìm thấy ngữ pháp" className="mt-6" />
+                <Empty
+                    description="Không tìm thấy ngữ pháp"
+                    className="mt-6 mb-4"
+                />
             ) : (
                 <div className="max-h-[70vh] overflow-y-auto p-3">
                     {grammars.map((g) => (
                         <div
                             key={g.id}
                             onClick={() => onSelect(g.id)}
-                            className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition rounded-2xl ${
+                            className={`p-3 cursor-pointer transition rounded-lg ${
                                 selectedId === g.id ? "bg-[#f1f5fd]" : ""
                             }`}
                         >
-                            <div className="flex flex-col items-start gap-2 mb-2">
-                                <span
-                                    className={`text-xs font-bold text-white rounded-full px-2 py-0.5 ${
-                                        g.level === "N1"
-                                            ? "bg-blue-600"
-                                            : g.level === "N2"
-                                            ? "bg-green-600"
-                                            : g.level === "N3"
-                                            ? "bg-yellow-500"
-                                            : g.level === "N4"
-                                            ? "bg-red-500"
-                                            : "bg-purple-700"
-                                    }`}
-                                >
-                                    {g.level}
-                                </span>
-                                <span className="text-base">
-                                    {g.pattern.trim()}
-                                </span>
-                            </div>
+                            <div className="">
+                                <div className="flex flex-col items-start gap-2 mb-2">
+                                    <span
+                                        className={`text-xs font-bold text-white rounded-full px-2 py-0.5 ${
+                                            g.level === "N1"
+                                                ? "bg-blue-600"
+                                                : g.level === "N2"
+                                                ? "bg-green-600"
+                                                : g.level === "N3"
+                                                ? "bg-yellow-500"
+                                                : g.level === "N4"
+                                                ? "bg-red-500"
+                                                : "bg-purple-700"
+                                        }`}
+                                    >
+                                        {g.level}
+                                    </span>
+                                    <span className="text-base">
+                                        {g.pattern.trim()}
+                                    </span>
+                                </div>
 
-                            <div
-                                className="text-gray-600 text-sm line-clamp-2"
-                                dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(g.meaning || ""),
-                                }}
-                            />
+                                <div
+                                    className="text-gray-600 text-sm line-clamp-2"
+                                    dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                            g.meaning || ""
+                                        ),
+                                    }}
+                                />
+                            </div>
                         </div>
                     ))}
                 </div>

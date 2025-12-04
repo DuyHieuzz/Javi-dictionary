@@ -72,9 +72,9 @@ public class VocabulariesController {
                 .build();
     }
 
-    @GetMapping("/search/{keyword}")
+    @GetMapping("/search")
     public ApiResponse<List<VocabResponse>> searchVocabularies(
-            @PathVariable String keyword,
+            @RequestParam String keyword,
             @RequestParam(defaultValue = "true") boolean saveHistory,
             Authentication authentication) {
         List<VocabResponse> results = vocabulariesService.searchVocabularies(keyword);
