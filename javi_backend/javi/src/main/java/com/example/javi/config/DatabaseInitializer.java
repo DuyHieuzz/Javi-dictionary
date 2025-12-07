@@ -48,7 +48,6 @@ public class DatabaseInitializer implements ApplicationRunner {
             arr.add(new Permission("CREATE_KANJI", "Cho phép tạo kanji mới", true));
             arr.add(new Permission("UPDATE_KANJI", "Cho phép cập nhật mẫu kanji", true));
             arr.add(new Permission("DELETE_KANJI", "Cho phép xóa kanji", true));
-            arr.add(new Permission("USE_EXPLAIN_VOCABULARY", "Cho phép sử dụng Ai giải thích từ vựng", true));
             arr.add(new Permission("CREATE_COMMENT", "Cho phép bình luận", true));
             arr.add(new Permission("UPDATE_COMMENT", "Cho phép cập nhật bình luận", true));
             arr.add(new Permission("DELETE_COMMENT", "Cho phép xóa bình luận", true));

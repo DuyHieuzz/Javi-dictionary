@@ -12,6 +12,7 @@ type Props = {
     onSwap: () => void;
     onDelete?: () => void;
     onCheckGrammar: () => Promise<void>;
+    onClearSnapshot?: () => void;
     isPremium: boolean;
     fillKey?: string | number;
 };
@@ -24,6 +25,7 @@ export default function TranslateBlock({
     onSwap,
     onDelete,
     onCheckGrammar,
+    onClearSnapshot,
     isPremium,
     fillKey,
 }: Props) {
@@ -54,19 +56,22 @@ export default function TranslateBlock({
     const handleFileSelected = async (file?: File | null) => {
         if (!file) return;
 
-        onChange({ file });
+        // Cập nhật file vào parent ngay
+        onChange?.({ file });
 
+        // Nếu không phải premium thì thoát sớm — KHÔNG gọi API, KHÔNG gọi onTranslate
         if (!isPremium) {
             toast.info("Dịch ảnh chỉ dành cho tài khoản Premium");
             return;
         }
 
-        try {
-            setTimeout(() => {
-                handleTranslateClick();
-            }, 80);
-        } catch (err) {
-            console.error("Error scheduling translate after file select", err);
+        // Gọi onTranslate(file) trực tiếp để tránh race khi state parent chưa cập nhật kịp
+        if (onTranslate) {
+            try {
+                await onTranslate(file); // <-- Truyền file trực tiếp
+            } catch (err) {
+                console.error("Lỗi khi gọi onTranslate(file):", err);
+            }
         }
     };
 
@@ -79,6 +84,9 @@ export default function TranslateBlock({
         });
         // khi xóa nội dung, coi như chưa phân tích
         lastCheckedSnapshotRef.current = null;
+
+        // Thông báo lên parent để reset snapshot (per-block) — KHÔNG thay đổi layout
+        onClearSnapshot?.();
     };
 
     const renderGrammarInner = (g?: IGrammarCheckResult | null) => {
@@ -247,9 +255,16 @@ export default function TranslateBlock({
     const handleTranslateClick = async () => {
         const current = (block.sourceText ?? "").trim();
 
-        if (!current && !block.file) {
-            toast.info("Không có nội dung để dịch.");
-            return;
+        // Nếu không có text & không có file thì mới chặn
+        // Còn THẢ CHO QUA khi current rỗng nhưng block.file vẫn còn (dịch ảnh)
+        if (!current) {
+            // Nếu vẫn còn file (người dùng vừa chọn ảnh) → cho phép dịch
+            if (block.file) {
+                // current sẽ được BE lấp đầy sau OCR → không chặn
+            } else {
+                toast.info("Không có nội dung để dịch.");
+                return;
+            }
         }
 
         const now = Date.now();

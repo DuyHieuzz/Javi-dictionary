@@ -30,6 +30,8 @@ import JlptPage from "@/pages/jlpt/JlptPage";
 import AdminPermissions from "@/pages/admin/AdminPermissions";
 import AdminRoles from "@/pages/admin/AdminRoles";
 import UpgradePage from "@/pages/premium/UpgradePage";
+import ConfirmPremiumPage from "@/pages/premium/ConfirmPremiumPage";
+import BankPaymentConfirmPage from "@/pages/premium/BankPaymentConfirmPage";
 
 export default function App() {
     const router = createBrowserRouter([
@@ -79,6 +81,11 @@ export default function App() {
                 { path: "translate", element: <TranslatePage /> },
                 { path: "/jlpt", element: <JlptPage /> },
                 { path: "/premium", element: <UpgradePage /> },
+                { path: "/premium/confirm", element: <ConfirmPremiumPage /> },
+                {
+                    path: "/premium/bank-confirm",
+                    element: <BankPaymentConfirmPage />,
+                },
                 { path: "/users/my-info", element: <UserDetailPage /> },
                 { path: "intro", element: <IntroPage /> },
                 {

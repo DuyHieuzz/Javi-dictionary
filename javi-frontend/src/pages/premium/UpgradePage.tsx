@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { List, Typography, Collapse } from "antd";
 import { IoIosCheckmarkCircle } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
 import avatarDefault from "@/assets/avatar.png";
 import bg_1_month from "@/assets/bg-1-month.png";
 import bg_3_month from "@/assets/bg-3-month.png";
@@ -148,6 +149,7 @@ export default function UpgradePage(): JSX.Element {
         PLANS.find((p) => p.highlight)?.id ?? PLANS[0].id
     );
     const scrollRef = useRef<HTMLDivElement | null>(null);
+    const navigate = useNavigate();
 
     // Auto-center: chính xác theo offsetLeft của phần tử highlight (hoạt động trên mobile)
     useEffect(() => {
@@ -282,7 +284,13 @@ export default function UpgradePage(): JSX.Element {
                                         }
                                     >
                                         <div
-                                            onClick={() => setSelected(plan.id)}
+                                            onClick={() => {
+                                                // GỌI NAVIGATE SANG MÀN CONFIRM KHI NHẤN GÓI
+                                                setSelected(plan.id);
+                                                navigate("/premium/confirm", {
+                                                    state: { plan },
+                                                });
+                                            }}
                                             className={`relative rounded-xl overflow-visible flex flex-col cursor-pointer font-normal`}
                                         >
                                             <div className="mx-auto rounded-lg overflow-hidden relative">

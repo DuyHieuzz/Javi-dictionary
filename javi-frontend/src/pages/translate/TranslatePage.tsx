@@ -51,8 +51,11 @@ export default function TranslatePage() {
     const [fillKeys, setFillKeys] = useState<Record<string, number>>({});
 
     const isProcessingRef = useRef(false);
-    const previousTextRef = useRef("");
-    const previousEngineRef = useRef("");
+
+    // snapshot per-block: lưu text/engine lần dịch gần nhất theo block id
+    const previousTextRefPerBlock = useRef<Record<string, string>>({});
+    const previousEngineRefPerBlock = useRef<Record<string, string>>({});
+    const lastTranslateAtRefPerBlock = useRef<Record<string, number>>({});
 
     const fetchHistoryPage = useCallback(
         async (pageToLoad = 0, reset = false) => {
@@ -181,6 +184,11 @@ export default function TranslatePage() {
             delete copy[id];
             return copy;
         });
+
+        // cleanup snapshot per-block
+        delete previousTextRefPerBlock.current[id];
+        delete previousEngineRefPerBlock.current[id];
+        delete lastTranslateAtRefPerBlock.current[id];
     }, []);
 
     // ----- translate handler (text or image) -----
@@ -195,14 +203,24 @@ export default function TranslatePage() {
             const currentText = (blk.sourceText ?? "").trim();
             const currentEngine = blk.engine ?? "GOOGLE";
 
-            // Ngăn dịch lại khi nội dung không thay đổi
+            // Lấy snapshot cho block này (fallback "")
+            const prevTextForBlock = previousTextRefPerBlock.current[id] ?? "";
+            const prevEngineForBlock =
+                previousEngineRefPerBlock.current[id] ?? "";
+
+            // Nếu không có file được truyền (file param undefined) và cũng không có blk.file
+            // và nội dung giống snapshot trước -> chặn (đã dịch rồi)
             if (
-                currentText === previousTextRef.current &&
-                currentEngine === previousEngineRef.current
+                typeof file === "undefined" &&
+                !blk.file &&
+                currentText === prevTextForBlock &&
+                currentEngine === prevEngineForBlock
             ) {
                 toast.info("Văn bản chưa thay đổi — đã dịch trước đó.");
                 return;
             }
+
+            // Nếu không có file param nhưng blk.file tồn tại, we may still use image branch below
 
             isProcessingRef.current = true;
             updateBlock(id, { loading: true });
@@ -216,9 +234,11 @@ export default function TranslatePage() {
                 // - Nếu có blk.file NHƯNG người dùng đã chỉnh sửa sourceText → dùng nhánh dịch văn bản (và xóa file)
                 // - Nếu không có file → dịch văn bản bình thường
                 const shouldUseImageBranch =
+                    // Nếu hàm được gọi với param file (khi chọn ảnh) => bắt buộc sử dụng image branch
                     typeof file !== "undefined"
                         ? true
-                        : !!blk.file && currentText === previousTextRef.current;
+                        : // Nếu không có param file, nhưng block đang có blk.file AND user chưa chỉnh sourceText so với snapshot
+                          !!blk.file && currentText === prevTextForBlock;
 
                 if (
                     !!blk.file &&
@@ -294,8 +314,10 @@ export default function TranslatePage() {
                     updateBlock(id, { translatedText: translated });
                 }
 
-                previousTextRef.current = currentText;
-                previousEngineRef.current = currentEngine;
+                // sau khi dịch thành công -> lưu snapshot per-block
+                previousTextRefPerBlock.current[id] = currentText;
+                previousEngineRefPerBlock.current[id] = currentEngine;
+                lastTranslateAtRefPerBlock.current[id] = Date.now();
 
                 setFillKeys((prev) => ({ ...prev, [id]: Date.now() }));
 
@@ -344,7 +366,11 @@ export default function TranslatePage() {
                 sourceText: blk.translatedText ?? "",
                 translatedText: blk.sourceText ?? "",
             });
-            previousTextRef.current = "";
+            // reset snapshot cho block này khi đổi chiều dịch
+            previousTextRefPerBlock.current[id] = "";
+            previousEngineRefPerBlock.current[id] = "";
+            lastTranslateAtRefPerBlock.current[id] = 0;
+
             setFillKeys((prev) => ({ ...prev, [id]: Date.now() }));
         },
         [blocks, updateBlock]
@@ -466,6 +492,11 @@ export default function TranslatePage() {
                             onCheckGrammar={() => handleCheckGrammar(b.id)}
                             isPremium={true}
                             fillKey={fillKeys[b.id]}
+                            onClearSnapshot={() => {
+                                previousTextRefPerBlock.current[b.id] = "";
+                                previousEngineRefPerBlock.current[b.id] = "";
+                                lastTranslateAtRefPerBlock.current[b.id] = 0;
+                            }}
                         />
                     </div>
                 ))}
@@ -487,7 +518,7 @@ export default function TranslatePage() {
                         <MdHistory className="text-xl mr-[2px]" />
                         Lịch sử
                     </h2>
-                    {/* Hiển thị nhóm nút Xóa / Làm mới CHỈ khi đã đăng nhập */}
+                    {/* Hiển thị nhóm nút Xóa CHỈ khi đã đăng nhập */}
                     {token && (
                         <div className="flex items-center gap-2">
                             {!deleteMode ? (
@@ -498,7 +529,7 @@ export default function TranslatePage() {
                                     }}
                                     className="px-3 py-1 rounded-md bg-red-600 text-white"
                                 >
-                                    Xóa
+                                    Xóa lịch sử
                                 </button>
                             ) : (
                                 <>
@@ -526,13 +557,6 @@ export default function TranslatePage() {
                                     </button>
                                 </>
                             )}
-
-                            <button
-                                onClick={() => fetchHistoryPage(0, true)}
-                                className="px-3 py-1 rounded-md bg-white border"
-                            >
-                                Làm mới
-                            </button>
                         </div>
                     )}
                 </div>
@@ -612,6 +636,20 @@ export default function TranslatePage() {
                                                 ...prev,
                                                 [id]: Date.now(),
                                             }));
+                                            // đồng bộ snapshot per-block ở parent để ngăn gọi API không cần thiết
+                                            previousTextRefPerBlock.current[
+                                                id
+                                            ] = String(
+                                                sourceTextVal ?? ""
+                                            ).trim();
+                                            previousEngineRefPerBlock.current[
+                                                id
+                                            ] = String(
+                                                source.engine ?? "GOOGLE"
+                                            );
+                                            lastTranslateAtRefPerBlock.current[
+                                                id
+                                            ] = Date.now();
                                         }}
                                         onKeyDown={(e) => {
                                             if (
@@ -664,6 +702,21 @@ export default function TranslatePage() {
                                                         ...prev,
                                                         [id]: Date.now(),
                                                     }));
+                                                    // đồng bộ snapshot per-block ở parent để ngăn gọi API không cần thiết
+                                                    previousTextRefPerBlock.current[
+                                                        id
+                                                    ] = String(
+                                                        sourceTextVal ?? ""
+                                                    ).trim();
+                                                    previousEngineRefPerBlock.current[
+                                                        id
+                                                    ] = String(
+                                                        source.engine ??
+                                                            "GOOGLE"
+                                                    );
+                                                    lastTranslateAtRefPerBlock.current[
+                                                        id
+                                                    ] = Date.now();
                                                 }
                                             }
                                         }}
