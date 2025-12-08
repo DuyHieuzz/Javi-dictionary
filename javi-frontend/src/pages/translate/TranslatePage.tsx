@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import { MdHistory } from "react-icons/md";
 import { useAuthStore } from "@/stores/useAuthStore";
 import no_history from "@/assets/no-history.png";
+import RequireLoginModal from "@/components/common/RequireLoginModal";
 
 const makeId = () => Math.random().toString(36).slice(2, 10);
 
@@ -33,6 +34,10 @@ export default function TranslatePage() {
     ]);
     // Lấy token trực tiếp từ Zustand store
     const token = useAuthStore((state) => state.token);
+
+    const [requireLoginFor, setRequireLoginFor] = useState<
+        "AI" | "GRAMMAR" | null
+    >(null);
 
     const [historyList, setHistoryList] = useState<any[]>([]);
     const [historyPage, setHistoryPage] = useState(0);
@@ -198,6 +203,13 @@ export default function TranslatePage() {
             const blk = blocks.find((b) => b.id === id);
             if (!blk) return;
 
+            // Nếu user chưa đăng nhập mà chọn engine AI -> mở modal yêu cầu đăng nhập
+            // Không gọi API, không thay đổi logic khác.
+            if (blk.engine === "AI" && !token) {
+                setRequireLoginFor("AI");
+                return;
+            }
+
             if (isProcessingRef.current) return;
 
             const currentText = (blk.sourceText ?? "").trim();
@@ -322,7 +334,15 @@ export default function TranslatePage() {
                 setFillKeys((prev) => ({ ...prev, [id]: Date.now() }));
 
                 try {
-                    await fetchHistoryPage(0, true);
+                    // Chỉ đồng bộ lịch sử nếu user đã đăng nhập (token tồn tại)
+                    // Tránh gọi API history khi chưa login để không kích luồng 401/refresh.
+                    if (token) {
+                        try {
+                            await fetchHistoryPage(0, true);
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
                 } catch (e) {
                     // ignore
                 }
@@ -333,7 +353,7 @@ export default function TranslatePage() {
                 isProcessingRef.current = false;
             }
         },
-        [blocks, updateBlock, fetchHistoryPage]
+        [blocks, updateBlock, fetchHistoryPage, token]
     );
 
     // ----- kiểm tra ngữ pháp -----
@@ -341,6 +361,11 @@ export default function TranslatePage() {
         async (id: string) => {
             const blk = blocks.find((b) => b.id === id);
             if (!blk) return;
+            // Nếu chưa đăng nhập -> mở modal yêu cầu đăng nhập
+            if (!token) {
+                setRequireLoginFor("GRAMMAR");
+                return;
+            }
             try {
                 const res = await callCheckGrammar({
                     sourceText: blk.sourceText ?? "",
@@ -352,7 +377,7 @@ export default function TranslatePage() {
                 toast.error("Kiểm tra ngữ pháp thất bại");
             }
         },
-        [blocks, updateBlock]
+        [blocks, updateBlock, token]
     );
 
     // ----- swap source/target -----
@@ -800,6 +825,23 @@ export default function TranslatePage() {
                     )}
                 </div>
             </div>
+            {/* Modal yêu cầu đăng nhập — message tuỳ theo hành động */}
+            <RequireLoginModal
+                open={requireLoginFor !== null}
+                onClose={() => setRequireLoginFor(null)}
+                message={
+                    requireLoginFor === "GRAMMAR" ? (
+                        <>
+                            Vui lòng đăng nhập để sử dụng chức năng Phân tích
+                            ngữ pháp.
+                        </>
+                    ) : (
+                        <>
+                            Vui lòng đăng nhập để sử dụng chức năng Dịch với AI.
+                        </>
+                    )
+                }
+            />
         </div>
     );
 }

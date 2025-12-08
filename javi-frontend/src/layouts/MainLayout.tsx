@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../components/common/Sidebar";
 import AppHeader from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -10,6 +10,7 @@ import SelectionSearchButton from "@/components/common/SelectionSearchButton";
 import HistoryPickerModal from "@/components/history/HistoryPickerModal";
 import SearchResultModal from "@/components/search/SearchResultModal";
 import type { EntityType } from "@/types/backend";
+import IntroModal from "@/components/common/IntroModal";
 
 export default function MainLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function MainLayout() {
     const [pickerKeyword, setPickerKeyword] = useState<string | undefined>(
         undefined
     );
+    const [introOpen, setIntroOpen] = useState(false);
     // state để mở modal chi tiết (SearchResultModal)
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailEntityType, setDetailEntityType] =
@@ -41,6 +43,10 @@ export default function MainLayout() {
         setPickerKeyword(text);
         setPickerOpen(true);
     };
+
+    useEffect(() => {
+        if (!localStorage.getItem("javi_seen_intro_v1")) setIntroOpen(true);
+    }, []);
 
     return (
         <div className="bg-[#f7f8fa] font-sans min-h-screen m-0 object-cover overflow-y-overlay">
@@ -119,6 +125,8 @@ export default function MainLayout() {
                 entityType={detailEntityType}
                 entityId={detailEntityId ?? ""}
             />
+
+            <IntroModal open={introOpen} onClose={() => setIntroOpen(false)} />
         </div>
     );
 }

@@ -106,8 +106,9 @@ export default function TranslateBlock({
                             <div className="font-medium text-green-700">
                                 Kiểm tra ngữ pháp
                             </div>
-                            <div className="text-sm text-green-600">
-                                Đoạn văn hoàn chỉnh — không cần sửa.
+                            <div className="text-sm text-green-600 mt-1">
+                                Đoạn văn đúng văn phong ngữ pháp — không cần
+                                sửa.
                             </div>
                         </div>
                         <div className="text-sm text-green-700">
