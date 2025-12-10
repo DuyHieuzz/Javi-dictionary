@@ -24,7 +24,11 @@ export default function OAuthCallbackPage() {
                 const isSafe =
                     typeof redirect === "string" && redirect.startsWith("/");
 
-                navigate(isSafe ? redirect : "/search", { replace: true });
+                if (!isSafe || redirect.startsWith("/login")) {
+                    navigate("/search", { replace: true });
+                } else {
+                    navigate(redirect, { replace: true });
+                }
             } catch (e) {
                 toast.error("Không thể đăng nhập Google. Vui lòng thử lại!");
                 navigate("/login", { replace: true });

@@ -6,6 +6,7 @@ import { IKanjiResponse, IKanjiDetailResponse } from "@/types/backend";
 import KanjiList from "@/components/kanji/KanjiList";
 import KanjiDetail from "@/components/kanji/KanjiDetail";
 import SearchSection from "@/components/search/SearchSection";
+import { LoadingOutlined } from "@ant-design/icons";
 
 export default function KanjiResult() {
     const { keyword } = useParams<{ keyword: string }>();
@@ -88,7 +89,10 @@ export default function KanjiResult() {
                 <div className="w-full md:w-[25%]">
                     {loadingList ? (
                         <div className="flex justify-center items-center py-10">
-                            <Spin />
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
                         </div>
                     ) : (
                         <KanjiList
@@ -104,7 +108,10 @@ export default function KanjiResult() {
                 <div className="w-full md:w-[75%]">
                     {loadingDetail ? (
                         <div className="flex justify-center items-center py-10">
-                            <Spin />
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
                         </div>
                     ) : kanjiDetail ? (
                         <KanjiDetail data={kanjiDetail} />

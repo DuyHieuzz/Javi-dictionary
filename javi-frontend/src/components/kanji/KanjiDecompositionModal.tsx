@@ -6,6 +6,7 @@ import {
     IKanjiComponentNode,
     IKanjiDecompositionResult,
 } from "@/types/backend";
+import { LoadingOutlined } from "@ant-design/icons";
 
 interface Props {
     open: boolean;
@@ -111,7 +112,7 @@ export default function KanjiDecompositionModal({
                 width={800}
             >
                 <div className="flex justify-center py-10">
-                    <Spin size="large" />
+                    <Spin indicator={<LoadingOutlined spin />} size="large" />
                 </div>
             </Modal>
         );

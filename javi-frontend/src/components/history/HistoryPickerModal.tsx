@@ -6,6 +6,7 @@ import { callSearchGrammars } from "@/apis/grammarApi";
 import type { IMeaning } from "@/types/backend";
 import DOMPurify from "dompurify";
 import { IoSearchOutline } from "react-icons/io5";
+import { LoadingOutlined } from "@ant-design/icons";
 type TabKey = "KANJI" | "WORD" | "GRAMMAR";
 
 interface PickerSelectPayload {
@@ -100,7 +101,7 @@ export default function HistoryPickerModal({
                 // Chỉ cập nhật list Ngữ pháp, giữ nguyên list khác
                 const res = await callSearchGrammars({
                     keyword: k,
-                    page: 1,
+                    page: 0,
                     size: pageSize,
                     saveHistory: false,
                 });
@@ -120,7 +121,7 @@ export default function HistoryPickerModal({
                 callSearchVocabulary(k, { saveHistory: false }),
                 callSearchGrammars({
                     keyword: k,
-                    page: 1,
+                    page: 0,
                     size: pageSize,
                     saveHistory: false,
                 }),
@@ -279,7 +280,7 @@ export default function HistoryPickerModal({
         if (loading)
             return (
                 <div className="py-8 flex justify-center">
-                    <Spin />
+                    <Spin indicator={<LoadingOutlined spin />} size="large" />
                 </div>
             );
         if (!kanjiList.length)
@@ -321,7 +322,7 @@ export default function HistoryPickerModal({
         if (loading)
             return (
                 <div className="py-8 flex justify-center">
-                    <Spin />
+                    <Spin indicator={<LoadingOutlined spin />} size="large" />
                 </div>
             );
         if (!vocabList.length)
@@ -379,7 +380,7 @@ export default function HistoryPickerModal({
         if (loading)
             return (
                 <div className="py-8 flex justify-center">
-                    <Spin />
+                    <Spin indicator={<LoadingOutlined spin />} size="large" />
                 </div>
             );
         if (!grammarList.length)
@@ -397,13 +398,25 @@ export default function HistoryPickerModal({
                         className="flex items-center justify-between gap-3 px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
                     >
                         <div>
-                            <div className="font-medium text-sm">
+                            <div className="font-medium text-lg text-[#3e67d6] mb-1">
                                 {g.pattern ?? g.title}
                             </div>
-                            <div className="text-xs text-gray-500">
-                                {g.meaning ??
-                                    g.shortMeaning ??
-                                    (g.description ?? "").slice(0, 80)}
+                            <div className="text-sm text-gray-500 whitespace-pre-line break-words">
+                                {(() => {
+                                    // Lấy nội dung raw (có thể là HTML từ Quill)
+                                    const raw =
+                                        g.meaning ??
+                                        g.shortMeaning ??
+                                        g.description ??
+                                        "";
+                                    // Chuyển HTML Quill sang plain text an toàn
+                                    const text = htmlToPlainText(raw);
+                                    // Rút gọn cho preview: 120 ký tự (bạn có thể chỉnh)
+                                    if (!text) return "";
+                                    return text.length > 120
+                                        ? text.slice(0, 120).trim() + "..."
+                                        : text;
+                                })()}
                             </div>
                         </div>
                         <div className="text-xs text-gray-400 flex-shrink-0 hover:underline">

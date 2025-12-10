@@ -10,6 +10,9 @@ import SearchResultModal from "@/components/search/SearchResultModal";
 import HistoryPickerModal from "@/components/history/HistoryPickerModal";
 import { EntityType } from "@/types/backend";
 import { useNavigate } from "react-router-dom";
+import RequireLoginModal from "../common/RequireLoginModal";
+import { Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 
 /**
  * Search home content — trang chính khi vào /search
@@ -39,6 +42,8 @@ export default function SearchHomeContent() {
     const [detailEntityType, setDetailEntityType] =
         useState<EntityType>("WORD");
     const [detailEntityId, setDetailEntityId] = useState<number | string>(0);
+
+    const [loginRequiredOpen, setLoginRequiredOpen] = useState(false);
 
     const navigate = useNavigate();
 
@@ -159,6 +164,10 @@ export default function SearchHomeContent() {
                         </p>
                     )}
                     <p className="mb-[6px] leading-relaxed">
+                        - Bạn có thể tra cứu nhanh trong Javi bằng cách bôi đen
+                        từ cần tra.
+                    </p>
+                    <p className="mb-[6px] leading-relaxed">
                         - Javi có thể chuyển romaji sang hiragana/katakana tự
                         động khi bạn nhập từ khóa.
                     </p>
@@ -182,15 +191,29 @@ export default function SearchHomeContent() {
                         <button
                             className="hover:underline text-[14px]"
                             onClick={() => {
-                                if (isLoggedIn) openHistoryModal();
+                                if (!isLoggedIn) {
+                                    setLoginRequiredOpen(true);
+                                    return;
+                                }
+                                openHistoryModal();
                             }}
                         >
                             Xem thêm
                         </button>
                     </div>
 
-                    {/* Chưa đăng nhập → luôn hiện block “Chưa có lịch sử” */}
-                    {!isLoggedIn && (
+                    {/* loading thì hiện vòng tròn Spin */}
+                    {loading && (
+                        <div className="flex justify-center py-6">
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
+                        </div>
+                    )}
+
+                    {/* Chưa đăng nhập */}
+                    {!loading && !isLoggedIn && (
                         <div className="flex flex-col justify-center items-center py-4 border border-dashed border-gray-300 rounded-lg">
                             <img
                                 className="w-[50px] h-[50px]"
@@ -203,8 +226,8 @@ export default function SearchHomeContent() {
                         </div>
                     )}
 
-                    {/* Đã đăng nhập nhưng chưa có lịch sử → hiện “Chưa có lịch sử” */}
-                    {isLoggedIn && history.length === 0 && (
+                    {/* Đã đăng nhập nhưng chưa có lịch sử */}
+                    {!loading && isLoggedIn && history.length === 0 && (
                         <div className="flex flex-col justify-center items-center py-4 border border-dashed border-gray-300 rounded-lg">
                             <img
                                 className="w-[50px] h-[50px]"
@@ -218,7 +241,7 @@ export default function SearchHomeContent() {
                     )}
 
                     {/* Đã đăng nhập và có lịch sử */}
-                    {isLoggedIn && history.length > 0 && (
+                    {!loading && isLoggedIn && history.length > 0 && (
                         <div className="flex flex-wrap justify-start items-center py-4 border border-dashed border-gray-300 rounded-lg">
                             {history.map((h, idx) => (
                                 <button
@@ -300,6 +323,13 @@ export default function SearchHomeContent() {
                 onClose={() => setDetailOpen(false)}
                 entityType={detailEntityType}
                 entityId={detailEntityId}
+            />
+
+            {/* Modal yêu cầu đăng nhập để xem lịch sử */}
+            <RequireLoginModal
+                open={loginRequiredOpen}
+                onClose={() => setLoginRequiredOpen(false)}
+                message="Bạn cần đăng nhập để xem toàn bộ lịch sử tra cứu."
             />
         </div>
     );

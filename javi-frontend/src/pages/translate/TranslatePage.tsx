@@ -136,20 +136,34 @@ export default function TranslatePage() {
         fetchHistoryPage(0, true);
     }, [token]); // chỉ chạy lại khi token thay đổi
 
+    // Thay thế: lắng nghe scroll trên window thay vì element (không đổi logic dịch)
+    // Lý do: trang của bạn scroll toàn trang, không phải một container có overflow riêng,
+    // vậy listener gắn vào historyRef sẽ không được trigger khi user scroll toàn trang.
     useEffect(() => {
-        const el = historyRef.current;
-        if (!el) return;
-        const onScroll = () => {
+        // Hàm xử lý scroll toàn trang
+        const onWindowScroll = () => {
+            // Nếu đã hết trang hoặc đang tải trang tiếp theo thì không gọi
             if (!historyHasMore || historyLoadingMoreRef.current) return;
-            const threshold = 260;
-            const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+
+            const threshold = 260; // pixel tới đáy thì gọi load tiếp
+            const remaining =
+                document.documentElement.scrollHeight -
+                window.scrollY -
+                window.innerHeight;
+
+            // Nếu khoảng cách đến đáy < threshold => tải trang kế tiếp
             if (remaining < threshold) {
                 const nextPage = historyPage + 1;
                 fetchHistoryPage(nextPage, false);
             }
         };
-        el.addEventListener("scroll", onScroll);
-        return () => el.removeEventListener("scroll", onScroll);
+
+        // passive để performance tốt hơn
+        window.addEventListener("scroll", onWindowScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener("scroll", onWindowScroll);
+        };
     }, [historyHasMore, historyPage, fetchHistoryPage]);
 
     // ----- block helpers -----

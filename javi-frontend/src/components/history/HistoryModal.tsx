@@ -27,6 +27,7 @@ import HistoryPickerModal from "@/components/history/HistoryPickerModal";
 import dayjs from "dayjs";
 import { GoComment } from "react-icons/go";
 import { IoIosHeartEmpty } from "react-icons/io";
+import { LoadingOutlined } from "@ant-design/icons";
 
 /**
  * HistoryModal
@@ -651,7 +652,10 @@ export default function HistoryModal({
                     >
                         {loading ? (
                             <div className="flex justify-center items-center py-16">
-                                <Spin />
+                                <Spin
+                                    indicator={<LoadingOutlined spin />}
+                                    size="large"
+                                />
                             </div>
                         ) : (
                             <div>
@@ -731,7 +735,10 @@ export default function HistoryModal({
 
                                 {loadingMore && (
                                     <div className="py-4 text-center">
-                                        <Spin />
+                                        <Spin
+                                            indicator={<LoadingOutlined spin />}
+                                            size="large"
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -749,7 +756,10 @@ export default function HistoryModal({
                     >
                         {commentsLoading ? (
                             <div className="py-8 flex justify-center">
-                                <Spin />
+                                <Spin
+                                    indicator={<LoadingOutlined spin />}
+                                    size="large"
+                                />
                             </div>
                         ) : comments.length === 0 ? (
                             <div className="p-6">
@@ -832,7 +842,10 @@ export default function HistoryModal({
                     >
                         {commentsLoading ? (
                             <div className="py-8 flex justify-center">
-                                <Spin />
+                                <Spin
+                                    indicator={<LoadingOutlined spin />}
+                                    size="large"
+                                />
                             </div>
                         ) : comments.length === 0 ? (
                             <div className="p-6">

@@ -1,7 +1,5 @@
 package com.example.javi.service.Impl;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -234,7 +232,8 @@ public class GrammarServiceImpl implements GrammarService {
     private String normalizeKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) return "_";
         // Trim + lowercase + URL encode (để tránh dấu ':' hay khoảng trắng)
-        return URLEncoder.encode(keyword.trim().toLowerCase(), StandardCharsets.UTF_8);
+        //        return URLEncoder.encode(keyword.trim().toLowerCase(), StandardCharsets.UTF_8);
+        return keyword.trim().toLowerCase();
     }
 
     /**

@@ -21,7 +21,10 @@ import {
 import { callGetVocabularyPage } from "@/apis/vocabularyApi";
 import { callGetKanjiPage } from "@/apis/kanjiApi";
 import { callGetGrammarsByFilter } from "@/apis/grammarApi";
-import { SwapOutlined as ShuffleOutlined } from "@ant-design/icons";
+import {
+    LoadingOutlined,
+    SwapOutlined as ShuffleOutlined,
+} from "@ant-design/icons";
 import DOMPurify from "dompurify";
 import { useLocation } from "react-router-dom";
 
@@ -594,7 +597,10 @@ const JlptPage: React.FC = () => {
 
                             {loading ? (
                                 <div className="flex justify-center py-20">
-                                    <Spin />
+                                    <Spin
+                                        indicator={<LoadingOutlined spin />}
+                                        size="large"
+                                    />
                                 </div>
                             ) : (
                                 <>

@@ -101,8 +101,22 @@ export default function LoginPage() {
                     // }}
                     onClick={() => {
                         // lưu redirect về sau khi OAuth xong
-                        const redirect =
-                            location.pathname + location.search + location.hash;
+                        // Lấy từ state nếu có (ưu tiên)
+                        // vì RequireLoginModal đã truyền state.from
+                        const stateFrom = (location.state as any)?.from;
+
+                        let redirect = stateFrom
+                            ? stateFrom
+                            : location.pathname +
+                              location.search +
+                              location.hash;
+
+                        // Không cho phép lưu /login làm redirect
+                        if (redirect.startsWith("/login")) {
+                            redirect = "/search";
+                        }
+
+                        // Lưu redirect chính xác để OAuthCallback dùng
                         localStorage.setItem("javi_oauth_redirect", redirect);
 
                         // redirect sang backend OAuth (endpoint hiện tại)

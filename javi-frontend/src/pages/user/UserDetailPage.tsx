@@ -11,6 +11,7 @@ import {
 import { Spin } from "antd";
 import { useParams, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { LoadingOutlined } from "@ant-design/icons";
 
 export default function UserDetailPage() {
     const { username } = useParams<{ username?: string }>();
@@ -71,7 +72,7 @@ export default function UserDetailPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[70vh]">
-                <Spin size="large" />
+                <Spin indicator={<LoadingOutlined spin />} size="large" />
             </div>
         );
     }

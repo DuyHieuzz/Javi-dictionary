@@ -15,6 +15,7 @@ import VocabularyList from "@/components/vocabulary/VocabularyList";
 import VocabularyDetail from "@/components/vocabulary/VocabularyDetail";
 import SearchSection from "@/components/search/SearchSection";
 import { AxiosResponse } from "axios";
+import { LoadingOutlined } from "@ant-design/icons";
 
 export default function VocabularyResult() {
     const { keyword } = useParams<{ keyword: string }>();
@@ -133,7 +134,10 @@ export default function VocabularyResult() {
                 <div className="w-full md:w-[25%]">
                     {loadingList ? (
                         <div className="flex justify-center items-center py-10">
-                            <Spin />
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
                         </div>
                     ) : (
                         <VocabularyList
@@ -151,7 +155,10 @@ export default function VocabularyResult() {
                 <div className="w-full md:w-[75%]">
                     {loadingDetail ? (
                         <div className="flex justify-center items-center py-10">
-                            <Spin />
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
                         </div>
                     ) : vocabDetail ? (
                         <VocabularyDetail data={vocabDetail} />

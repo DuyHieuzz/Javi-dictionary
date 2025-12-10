@@ -8,6 +8,7 @@ import {
 import { ICommentResponse } from "@/types/backend";
 import SearchResultModal from "@/components/search/SearchResultModal";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { LoadingOutlined } from "@ant-design/icons";
 
 interface Props {
     pageSize?: number;
@@ -194,7 +195,10 @@ export default function UserActivityPanel({
             >
                 {loading && items.length === 0 ? (
                     <div className="py-8 flex justify-center">
-                        <Spin />
+                        <Spin
+                            indicator={<LoadingOutlined spin />}
+                            size="large"
+                        />
                     </div>
                 ) : items.length === 0 ? (
                     <div className="p-6">
@@ -247,7 +251,10 @@ export default function UserActivityPanel({
 
                         {loadingMore && (
                             <div className="py-4 text-center">
-                                <Spin />
+                                <Spin
+                                    indicator={<LoadingOutlined spin />}
+                                    size="large"
+                                />
                             </div>
                         )}
                     </div>

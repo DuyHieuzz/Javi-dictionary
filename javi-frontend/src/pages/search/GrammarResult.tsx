@@ -6,6 +6,7 @@ import { IGrammarResponse, IPageResponse } from "@/types/backend";
 import GrammarList from "@/components/grammar/GrammarList";
 import GrammarDetail from "@/components/grammar/GrammarDetail";
 import SearchSection from "@/components/search/SearchSection";
+import { LoadingOutlined } from "@ant-design/icons";
 
 export default function GrammarResult() {
     const { keyword } = useParams<{ keyword: string }>();
@@ -178,7 +179,10 @@ export default function GrammarResult() {
                     {loadingList && grammarList.length === 0 ? (
                         // load lần đầu: show full spinner
                         <div className="flex justify-center items-center py-10">
-                            <Spin />
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
                         </div>
                     ) : (
                         <>
@@ -197,7 +201,10 @@ export default function GrammarResult() {
                             {/* nếu đang load thêm (append) hiển thị loader nhỏ */}
                             {loadingList && grammarList.length > 0 && (
                                 <div className="text-center py-3">
-                                    <Spin size="small" />
+                                    <Spin
+                                        indicator={<LoadingOutlined spin />}
+                                        size="large"
+                                    />
                                 </div>
                             )}
                         </>
@@ -208,7 +215,10 @@ export default function GrammarResult() {
                 <div className="w-full md:w-[70%]">
                     {loadingDetail ? (
                         <div className="flex justify-center items-center py-10">
-                            <Spin />
+                            <Spin
+                                indicator={<LoadingOutlined spin />}
+                                size="large"
+                            />
                         </div>
                     ) : grammarDetail ? (
                         <GrammarDetail data={grammarDetail} />

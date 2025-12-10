@@ -6,6 +6,7 @@ import { IGrammarResponse, IPageResponse } from "@/types/backend";
 import { useSearchParams } from "react-router-dom";
 import GrammarDetail from "@/components/grammar/GrammarDetail";
 import DOMPurify from "dompurify";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const levelOptions: {
     label: string;
@@ -115,7 +116,10 @@ export default function GrammarSearchHome() {
 
                 {loading && grammars.length === 0 ? (
                     <div className="flex justify-center py-20">
-                        <Spin />
+                        <Spin
+                            indicator={<LoadingOutlined spin />}
+                            size="large"
+                        />
                     </div>
                 ) : grammars.length === 0 ? (
                     <Empty
@@ -129,7 +133,10 @@ export default function GrammarSearchHome() {
                         hasMore={hasMore}
                         loader={
                             <div className="text-center py-3">
-                                <Spin size="small" />
+                                <Spin
+                                    indicator={<LoadingOutlined spin />}
+                                    size="small"
+                                />
                             </div>
                         }
                         scrollThreshold={0.9}
@@ -208,7 +215,10 @@ export default function GrammarSearchHome() {
             >
                 {loadingDetail ? (
                     <div className="flex justify-center items-center py-10">
-                        <Spin size="large" />
+                        <Spin
+                            indicator={<LoadingOutlined spin />}
+                            size="large"
+                        />
                     </div>
                 ) : selectedGrammar ? (
                     <GrammarDetail data={selectedGrammar} />

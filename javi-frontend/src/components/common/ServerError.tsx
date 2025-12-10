@@ -16,7 +16,7 @@ export default function ServerError({ onRetry }: { onRetry?: () => void }) {
             </h2>
             <p className="text-gray-500 mb-5">
                 Rất tiếc, hệ thống hiện không phản hồi. Vui lòng thử lại sau ít
-                phút.
+                phút hoặc đóng tab đi bật lại hoặc nhấn nút F5.
             </p>
             <button
                 onClick={onRetry || (() => window.location.reload())}

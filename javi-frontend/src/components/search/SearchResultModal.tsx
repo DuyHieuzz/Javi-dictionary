@@ -12,6 +12,7 @@ import {
 import GrammarDetail from "@/components/grammar/GrammarDetail";
 import KanjiDetail from "@/components/kanji/KanjiDetail";
 import VocabularyDetail from "@/components/vocabulary/VocabularyDetail";
+import { LoadingOutlined } from "@ant-design/icons";
 
 interface Props {
     open: boolean;
@@ -88,7 +89,7 @@ export default function SearchResultModal({
         >
             {loading ? (
                 <div className="flex justify-center items-center py-16">
-                    <Spin size="large" />
+                    <Spin indicator={<LoadingOutlined spin />} size="large" />
                 </div>
             ) : !data ? (
                 <p className="text-center text-gray-500 italic py-10">

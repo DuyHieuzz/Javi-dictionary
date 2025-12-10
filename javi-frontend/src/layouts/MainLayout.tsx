@@ -33,6 +33,10 @@ export default function MainLayout() {
 
     const { serverDown, setServerDown } = useGlobalErrorStore();
 
+    useEffect(() => {
+        if (!localStorage.getItem("javi_seen_intro_v1")) setIntroOpen(true);
+    }, []);
+
     // Bao giờ server lỗi hoặc không chạy sẽ render ra
     if (serverDown) {
         return <ServerError onRetry={() => setServerDown(false)} />;
@@ -43,10 +47,6 @@ export default function MainLayout() {
         setPickerKeyword(text);
         setPickerOpen(true);
     };
-
-    useEffect(() => {
-        if (!localStorage.getItem("javi_seen_intro_v1")) setIntroOpen(true);
-    }, []);
 
     return (
         <div className="bg-[#f7f8fa] font-sans min-h-screen m-0 object-cover overflow-y-overlay">
