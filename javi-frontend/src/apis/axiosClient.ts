@@ -10,7 +10,7 @@ import { callLogout } from "@/apis/authApi";
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  timeout: 10000, // tránh request treo
+  timeout: 60000, // tránh request treo
 });
 
 // Biến module-scoped dùng cho cơ chế single-flight refresh:

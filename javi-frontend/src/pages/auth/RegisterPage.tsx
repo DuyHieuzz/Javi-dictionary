@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 // import axiosClient from "../../apis/axiosClient"; <-- replaced by callRegister
@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 
 export default function RegisterPage() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +22,26 @@ export default function RegisterPage() {
         confirmPassword?: string;
         terms?: string;
     }>({});
+
+    const handleGoogleRegister = () => {
+        // Lấy from từ state nếu có (RequireLoginModal/other pages có thể truyền)
+        const stateFrom = (location.state as any)?.from;
+
+        let redirect = stateFrom
+            ? stateFrom
+            : location.pathname + location.search + location.hash;
+
+        // Nếu redirect trỏ về /login hoặc /register thì đổi sang /search (không muốn redirect về 2 route này)
+        if (redirect.startsWith("/login") || redirect.startsWith("/register")) {
+            redirect = "/search";
+        }
+
+        // Lưu redirect để OAuthCallbackPage dùng sau khi exchange token
+        localStorage.setItem("javi_oauth_redirect", redirect);
+
+        // Redirect sang backend OAuth endpoint (giữ nguyên endpoint của bạn)
+        window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+    };
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -94,12 +115,6 @@ export default function RegisterPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleGoogleRegister = () => {
-        window.location.href = `${
-            import.meta.env.VITE_API_URL
-        }/oauth2/authorize/google`;
     };
 
     return (

@@ -266,7 +266,7 @@ export default function UpgradePage(): JSX.Element {
                 <div className="lg:col-span-3">
                     <div className="w-full overflow-hidden">
                         <div className="w-[200px] md:w-[300px] h-[42px] mx-auto flex items-center justify-center text-center text-xl font-medium mb-5 rounded-full bg-[#f1f5fd] shadow-md text-[#3e67d6] border border-[#3e67d6]">
-                            Premium
+                            Javi Premium
                         </div>
                         <div
                             ref={scrollRef}

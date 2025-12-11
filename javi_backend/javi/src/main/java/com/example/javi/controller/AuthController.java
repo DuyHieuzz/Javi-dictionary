@@ -45,6 +45,10 @@ public class AuthController {
     CookieService cookieService;
     GoogleService googleService;
 
+    @Value("${app.frontend.base-url}")
+    @NonFinal
+    String FRONTEND_BASE_URL;
+
     @NonFinal
     @Value("${jwt.refreshable-duration}")
     int refreshableDuration;
@@ -92,7 +96,7 @@ public class AuthController {
 
         // Redirect FE (sau khi login xong)
         response.sendRedirect(
-                "http://localhost:5173/oauth2/callback/google?refreshToken=" + loginResponse.getRefreshToken());
+                FRONTEND_BASE_URL + "/oauth2/callback/google?refreshToken=" + loginResponse.getRefreshToken());
     }
 
     @PostMapping("/refresh")

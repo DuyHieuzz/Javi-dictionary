@@ -18,17 +18,17 @@ export default function Footer() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start text-left pb-4">
                 {/* Cột 1: Thông tin */}
                 <div>
-                    <div className="flex items-center gap-2 mt-[12px]">
+                    <div className="flex items-center gap-2">
                         <img
                             src={blueJavi}
                             alt="Javi"
-                            className="w-[100px] h-[60px] object-cover"
+                            className="w-[120px] h-[60px] object-cover"
                         />
                         {/* <h2 className="text-xl font-semibold text-gray-800">
                             Javi
                         </h2> */}
                     </div>
-                    <p className="text-gray-600 my-[12px] mb-3">
+                    <p className="text-gray-600 mt-1 mb-3">
                         Javi - giúp bạn học tiếng Nhật hiệu quả hơn mỗi ngày.
                     </p>
                     <ul className="space-y-2 text-gray-600 text-sm">
@@ -42,7 +42,7 @@ export default function Footer() {
                         </li>
                         <li className="flex items-center gap-2">
                             <MdPhone className="text-blue-500 text-xl" />
-                            <span>(+84) 123 456 789</span>
+                            <span>(+84) 97 602 4780</span>
                         </li>
                     </ul>
                 </div>

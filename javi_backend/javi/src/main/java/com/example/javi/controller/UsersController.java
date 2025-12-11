@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,7 +24,6 @@ import com.example.javi.entity.PremiumType;
 import com.example.javi.entity.Users;
 import com.example.javi.repository.UsersRepository;
 import com.example.javi.service.AvatarStorageService;
-import com.example.javi.service.FileService;
 import com.example.javi.service.UsersService;
 import com.example.javi.utils.SecurityUtil;
 import com.turkraft.springfilter.boot.Filter;
@@ -33,7 +31,6 @@ import com.turkraft.springfilter.boot.Filter;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -42,12 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class UsersController {
-    @Value("${javi.upload-file.base-uri}")
-    @NonFinal
-    String baseURI;
+    //    @Value("${javi.upload-file.base-uri}")
+    //    @NonFinal
+    //    String baseURI;
 
     UsersService usersService;
-    FileService fileService;
+    //    FileService fileService;
     SecurityUtil securityUtil;
     AvatarStorageService avatarStorageService;
     UsersRepository usersRepository;

@@ -86,7 +86,7 @@ public class CommentController {
     // Đã xử lý comment của user bị block sẽ không xuất hiện (trừ khi bị cache redis 6 tiếng)
     @GetMapping("/all")
     public ApiResponse<Page<CommentResponse>> getAllComments(
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<CommentResponse> responses = commentService.getAllComment(pageable);
 

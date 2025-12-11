@@ -24,7 +24,11 @@ export default function OAuthCallbackPage() {
                 const isSafe =
                     typeof redirect === "string" && redirect.startsWith("/");
 
-                if (!isSafe || redirect.startsWith("/login")) {
+                if (
+                    !isSafe ||
+                    redirect.startsWith("/login") ||
+                    redirect.startsWith("/register")
+                ) {
                     navigate("/search", { replace: true });
                 } else {
                     navigate(redirect, { replace: true });
